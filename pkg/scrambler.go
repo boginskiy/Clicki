@@ -22,7 +22,7 @@ func NewScrambler() *Scrambler {
 	return &Scrambler{
 		baseChars:         "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
 		ConvertBytes:      make(map[int]uint64, 10),
-		MemoryOfLongBytes: make([]uint8, 10, 10),
+		MemoryOfLongBytes: make([]uint8, 10),
 	}
 }
 
