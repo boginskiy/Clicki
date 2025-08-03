@@ -105,7 +105,7 @@ func (h HandlerForURL) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		// Формируем тело ответа
+		// Формируем тело ответа ...
 		resBody := fmt.Sprintf("http://%s/%s", req.Host, imitationPath)
 
 		res.Header().Set("Content-Type", "text/plain")
@@ -120,7 +120,7 @@ func (h HandlerForURL) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		// Формируем ...
+		// Формируем тело ответа ...
 		res.Header().Set("Location", originPath)
 		res.WriteHeader(http.StatusTemporaryRedirect)
 	}

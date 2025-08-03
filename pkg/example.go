@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 const baseChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -37,22 +36,4 @@ func convertFromBase62(str string) (uint64, error) {
 		multiplier *= 62
 	}
 	return num, nil
-}
-
-func main() {
-	number := uint64(123456789)
-	shortenedUrl := convertToBase62(number)
-	fmt.Printf("Original number: %d\nShortened URL: %s\n", number, shortenedUrl)
-
-	recoveredNumber, _ := convertFromBase62(shortenedUrl)
-	fmt.Printf("Recovered number: %d\n", recoveredNumber)
-
-	// Для тестирования произвольного числа
-	testNumberStr := "1234567890"
-	testNumber, _ := strconv.ParseUint(testNumberStr, 10, 64)
-	convertedTestString := convertToBase62(testNumber)
-	fmt.Printf("\nTesting conversion of %s:\nShortened URL: %s\n", testNumberStr, convertedTestString)
-
-	recoveredTestNumber, _ := convertFromBase62(convertedTestString)
-	fmt.Printf("Recovered number: %d\n", recoveredTestNumber)
 }

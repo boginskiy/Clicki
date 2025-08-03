@@ -105,18 +105,18 @@ func (s *Scrambler) Execute(line []byte, compression int) string {
 	return "QWER"
 }
 
-func main() {
+// func main() {
 
-	line := "https://practicum.yandex.ru/"
-	lineByte := []byte(line)
+// 	line := "https://practicum.yandex.ru/"
+// 	lineByte := []byte(line)
 
-	scrambler := NewScrambler()
-	scrambler.Execute(lineByte, 6)
+// 	scrambler := NewScrambler()
+// 	scrambler.Execute(lineByte, 6)
 
-	fmt.Println(scrambler.ConvertBytes)
+// 	fmt.Println(scrambler.ConvertBytes)
 
-	for _, v := range scrambler.MemoryOfLongBytes {
-		fmt.Printf("%08b\n", v)
-	}
+// 	for _, v := range scrambler.MemoryOfLongBytes {
+// 		fmt.Printf("%08b\n", v)
+// 	}
 
-}
+// }
