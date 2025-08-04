@@ -1,9 +1,26 @@
-package main
+package pkg
 
-import "fmt"
+import (
+	"fmt"
+	"math/rand"
+)
+
+var Symbols = []rune("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+
+// Scramble. temporary function instead of Scrambler
+func Scramble(quantityElems int) string {
+	slByte := make([]byte, quantityElems)
+
+	for i := range slByte {
+		slByte[i] = byte(Symbols[rand.Intn(len(Symbols))])
+	}
+	return string(slByte)
+}
 
 /*
 Description:
+
+	Attention! Need deep modification and test
 
 	Encryptor for the site domain
 
@@ -118,5 +135,4 @@ func (s *Scrambler) Execute(line []byte, compression int) string {
 // 	for _, v := range scrambler.MemoryOfLongBytes {
 // 		fmt.Printf("%08b\n", v)
 // 	}
-
 // }

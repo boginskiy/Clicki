@@ -4,53 +4,43 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
-	"regexp"
 	"strings"
+
+	"github.com/boginskiy/Clicki/pkg"
 )
 
-const CAP = 10
+const (
+	CAP  = 10
+	LONG = 8
+)
 
-type HandlerForURL struct {
-	Store        map[string]string
-	SetOfSymbols []rune
+type RootHandler struct {
+	Store map[string]string
+	pkg.Tools
 }
 
-func NewHandlerForURL() *HandlerForURL {
-	return &HandlerForURL{
-		Store:        make(map[string]string, CAP),
-		SetOfSymbols: Symbols,
+func NewRootHandler() *RootHandler {
+	return &RootHandler{
+		Store: make(map[string]string, CAP),
 	}
 }
 
-func (h *HandlerForURL) createImitationPath() string {
-	slByte := make([]byte, 8)
+// TODO Это бизнес логика. Перенеси ее туда сам знаешь куда.
+func (h *RootHandler) encryptionLongURL() (shortURL string) {
 	for {
-		for i := range slByte {
-			slByte[i] = byte(h.SetOfSymbols[rand.Intn(len(h.SetOfSymbols))])
-		}
+		// Вызов шифратора
+		shortURL = pkg.Scramble(LONG)
 		// Проверка на уникальность
-		if _, ok := h.Store[string(slByte)]; !ok {
+		if _, ok := h.Store[shortURL]; !ok {
 			break
 		}
 	}
-	return string(slByte)
+	return shortURL
 }
 
-// Костыль до использования иных библиотек с обработкой динамических url
-func (h *HandlerForURL) checkUpPath(path string) bool {
-	re := regexp.MustCompile(CheckPath)
-	return re.MatchString(path)
-}
-
-func (h *HandlerForURL) checkUpBody(body string) bool {
-	re := regexp.MustCompile(CheckDomain)
-	return re.MatchString(body)
-}
-
-func (h *HandlerForURL) checkUpPathAndMethod(path, method string) bool {
-	if h.checkUpPath(path) && method == "GET" {
+func (h *RootHandler) checkUpPathAndMethod(path, method string) bool {
+	if h.CheckUpPath(path) && method == "GET" {
 		return true
 	} else if path == "/" && method == "POST" {
 		return true
@@ -58,7 +48,7 @@ func (h *HandlerForURL) checkUpPathAndMethod(path, method string) bool {
 	return false
 }
 
-func (h *HandlerForURL) HandlerPostURL(req *http.Request) (string, error) {
+func (h *RootHandler) HandlerPost(req *http.Request) (string, error) {
 	// Тащим строку из тела запроса
 	tmpBody, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -66,17 +56,17 @@ func (h *HandlerForURL) HandlerPostURL(req *http.Request) (string, error) {
 	}
 
 	// Валидируем строку. Проверка, что строка является доменом сайта
-	if !h.checkUpBody(string(tmpBody)) {
+	if !h.CheckUpBody(string(tmpBody)) {
 		return "", errors.New(ErrBodyReq)
 	}
 
 	// Записываем домен под сгенерированным ключом
-	imitationPath := h.createImitationPath()
+	imitationPath := h.encryptionLongURL()
 	h.Store[imitationPath] = string(tmpBody)
 	return imitationPath, nil
 }
 
-func (h *HandlerForURL) HandlerGetURL(req *http.Request) (string, error) {
+func (h *RootHandler) HandlerGet(req *http.Request) (string, error) {
 	// Достаем оригинальный URL
 	tmpPath := req.URL.Path
 	originPath, ok := h.Store[strings.TrimLeft(tmpPath, "/")]
@@ -87,7 +77,7 @@ func (h *HandlerForURL) HandlerGetURL(req *http.Request) (string, error) {
 	return originPath, nil
 }
 
-func (h HandlerForURL) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (h RootHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	// Проверка валидности запроса и path
 	if !h.checkUpPathAndMethod(req.URL.Path, req.Method) {
 		http.Error(res, ErrPathAndMethod, http.StatusMethodNotAllowed)
@@ -98,7 +88,7 @@ func (h HandlerForURL) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 
 	case "POST":
-		imitationPath, err := h.HandlerPostURL(req)
+		imitationPath, err := h.HandlerPost(req)
 
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -113,7 +103,7 @@ func (h HandlerForURL) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte(resBody))
 
 	case "GET":
-		originPath, err := h.HandlerGetURL(req)
+		originPath, err := h.HandlerGet(req)
 
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusBadRequest)

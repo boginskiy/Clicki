@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/boginskiy/Clicki/internal/router"
+	"github.com/boginskiy/Clicki/internal/server"
 )
 
 func main() {
-	if err := router.Run(); err != nil {
+	if err := server.Run(); err != nil {
 		panic(err)
 	}
 }
