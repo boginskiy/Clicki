@@ -1,4 +1,4 @@
-package pkg
+package tools
 
 import "regexp"
 
@@ -9,6 +9,7 @@ const (
 )
 
 type Tools struct {
+	PreparatorRequest
 }
 
 func (t *Tools) CheckUpPath(path string) bool {
@@ -16,7 +17,7 @@ func (t *Tools) CheckUpPath(path string) bool {
 	return re.MatchString(path)
 }
 
-func (t *Tools) CheckUpBody(body string) bool {
+func (t *Tools) CheckUpURL(body string) bool {
 	re := regexp.MustCompile(CheckDomain)
 	return re.MatchString(body)
 }

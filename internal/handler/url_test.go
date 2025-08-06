@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/handler"
 )
 
@@ -72,8 +73,8 @@ func TestRootHandler(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := http.Handler(handler.NewRootHandler())
-			h.ServeHTTP(response, request)
+			h := handler.RootHandler{}
+			h.PostURL(response, request)
 
 			// Check >>
 
@@ -167,9 +168,9 @@ func TestRootHandler2(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.NewRootHandler()
-			h.Store = tt.store
-			h.ServeHTTP(response, request)
+			h := handler.RootHandler{}
+			db.Store = tt.store
+			h.GetURL(response, request)
 
 			// Check >>
 

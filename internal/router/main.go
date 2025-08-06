@@ -1,14 +1,18 @@
 package router
 
 import (
-	"net/http"
-
-	"github.com/boginskiy/Clicki/internal/handler"
+	h "github.com/boginskiy/Clicki/internal/handler"
+	"github.com/go-chi/chi"
 )
 
-func ServeMux() *http.ServeMux {
-	rootHandler := handler.NewRootHandler()
-	mux := http.NewServeMux()
-	mux.Handle("/", rootHandler)
-	return mux
+func Router() *chi.Mux {
+	h := h.RootHandler{}
+	r := chi.NewRouter()
+
+	// Деревце routes
+	r.Route("/", func(r chi.Router) {
+		r.Post("/", h.PostURL)
+		r.Get("/{id}", h.GetURL)
+	})
+	return r
 }
