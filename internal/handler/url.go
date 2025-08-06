@@ -91,5 +91,5 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusCreated)
 
 	// http//localhost:8080/Jgd63Kd8
-	fmt.Fprintf(res, "%s//%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationURL)
+	fmt.Fprintf(res, "%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationURL)
 }
