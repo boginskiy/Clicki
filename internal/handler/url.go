@@ -91,7 +91,11 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 
+	// Изменение порта при необходимости
+	if config.ArgsCLI.IsCh {
+		h.ChangePort(req, config.ArgsCLI.ResultPort)
+	}
+
 	// http//localhost:8080/Jgd63Kd8
-	h.ChangePort(req, config.ArgsCLI.ResultPort)
 	fmt.Fprintf(res, "%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationURL)
 }

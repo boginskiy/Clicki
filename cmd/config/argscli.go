@@ -2,12 +2,13 @@ package config
 
 import "flag"
 
-var defaultPort = "8080"
+var defaultPort = ":8080"
 var ArgsCLI *ArgumentsCLI
 
 type ArgumentsCLI struct {
-	StartPort  string
-	ResultPort string
+	StartPort  string // Порт запуска приложения
+	ResultPort string // Порт на который перенаправим новый URL
+	IsCh       bool   // Если новый URL был собран с новым портом, флаг покажет эти изменения
 }
 
 func ParseFlags() {
@@ -17,16 +18,22 @@ func ParseFlags() {
 	flag.Parse()
 
 	// Обработка особых случаев
-
 	switch {
+
+	// флага '-b' нет, уcтанавливаем значение как у флага '-a'
 	case ArgsCLI.StartPort != "" && ArgsCLI.ResultPort == "":
-		// флага '-b' нет, уcтанавливаем значение как у флага '-a'
 		ArgsCLI.ResultPort = ArgsCLI.StartPort
+
+	// флага '-a' нет, но есть флаг '-b'. Флаг '-a' задается с defaultPort
 	case ArgsCLI.StartPort == "" && ArgsCLI.ResultPort != "":
-		// флага '-a' нет, но есть флаг '-b'. Флаг '-a' задается с defaultPort
+		ArgsCLI.IsCh = true
 		ArgsCLI.StartPort = defaultPort
+
 	case ArgsCLI.StartPort == "" && ArgsCLI.ResultPort == "":
 		ArgsCLI.StartPort = defaultPort
 		ArgsCLI.ResultPort = defaultPort
+
+	default:
+		ArgsCLI.IsCh = true
 	}
 }
