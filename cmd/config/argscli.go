@@ -12,7 +12,7 @@ type ArgumentsCLI struct {
 func ParseFlags() {
 	ArgsCLI = new(ArgumentsCLI)
 	flag.StringVar(&ArgsCLI.StartPort, "a", "localhost:8080", "Start adress for application")
-	flag.StringVar(&ArgsCLI.ResultPort, "b", "http://localhost:8080/", "Result adress for application")
+	flag.StringVar(&ArgsCLI.ResultPort, "b", "http://localhost:8080", "Result adress for application")
 	flag.Parse()
 
 	// // Обработка особых случаев

@@ -76,7 +76,7 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	// 	"%s://%s%s",
 	// 	h.GetProtocol(req), host, req.URL.Path+imitationPath)
 
-	imitationURL := config.ArgsCLI.ResultPort + imitationPath
+	imitationURL := config.ArgsCLI.ResultPort + "/" + imitationPath
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
