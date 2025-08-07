@@ -9,6 +9,7 @@ import (
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/handler"
+	"github.com/boginskiy/Clicki/internal/service"
 )
 
 // TestRootHandler check only POST request
@@ -89,8 +90,8 @@ func TestPostURL(t *testing.T) {
 				tmpSl := strings.Split(response.Body.String(), "/")
 				shortURL := tmpSl[len(tmpSl)-1]
 
-				if len(shortURL) != handler.LONG {
-					t.Errorf("%s:\n\texpected: %v\n\tactual: %v", tt.name, len(shortURL), handler.LONG)
+				if len(shortURL) != service.LONG {
+					t.Errorf("%s:\n\texpected: %v\n\tactual: %v", tt.name, len(shortURL), service.LONG)
 				}
 			}
 			// <<

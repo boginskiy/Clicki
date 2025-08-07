@@ -6,27 +6,12 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/pkg"
+	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/pkg/tools"
 )
 
-const LONG = 8
-
 type RootHandler struct {
 	tools.Tools
-}
-
-// TODO - уберу
-func (h *RootHandler) encryptionLongURL() (imitationURL string) {
-	for {
-		// Вызов шифратора
-		imitationURL = pkg.Scramble(LONG)
-		// Проверка на уникальность
-		if _, ok := db.Store[imitationURL]; !ok {
-			break
-		}
-	}
-	return imitationURL
 }
 
 func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {
@@ -57,28 +42,15 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !h.CheckUpURL(originURL) || originURL == "" {
-		http.Error(res, ErrBodyReq, http.StatusBadRequest)
+		http.Error(res, "data not available or invalid", http.StatusBadRequest)
 		return
 	}
 
 	// Генерируем ключ. Записываем originURL.
-	imitationPath := h.encryptionLongURL()
+	imitationPath := service.ShortenerURL.EncryptionLongURL()
 	db.Store[imitationPath] = originURL
-
-	// Host
-	// host := req.Host
-	// if config.ArgsCLI.IsCh {
-	// 	host = h.ChangePort(req.Host, config.ArgsCLI.ResultPort)
-	// }
-
-	// Подготавливаем тело res. Формат 'http//localhost:8080/Jgd63Kd8'
-	// imitationURL := fmt.Sprintf(
-	// 	"%s://%s%s",
-	// 	h.GetProtocol(req), host, req.URL.Path+imitationPath)
-
-	imitationURL := config.ArgsCLI.ResultPort + "/" + imitationPath
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(imitationURL))
+	res.Write([]byte(config.ArgsCLI.ResultPort + "/" + imitationPath))
 }

@@ -9,7 +9,6 @@ import (
 )
 
 func Run() error {
-	routerStart := r.Router()
 	fmt.Printf("The server has started on port %s\n", c.ArgsCLI.StartPort)
-	return http.ListenAndServe(c.ArgsCLI.StartPort, routerStart)
+	return http.ListenAndServe(c.ArgsCLI.StartPort, r.Router())
 }
