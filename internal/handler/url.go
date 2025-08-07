@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -30,23 +29,7 @@ func (h *RootHandler) encryptionLongURL() (imitationURL string) {
 	return imitationURL
 }
 
-// TODO - уберу
-func (h *RootHandler) checkUpPathAndMethod(path, method string) bool {
-	if h.CheckUpPath(path) && method == "GET" {
-		return true
-	} else if path == "/" && method == "POST" {
-		return true
-	}
-	return false
-}
-
 func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {
-	// Костыль для прохождения тестов. Уберу
-	if !h.checkUpPathAndMethod(req.URL.Path, req.Method) {
-		http.Error(res, ErrPathAndMethod, http.StatusMethodNotAllowed)
-		return
-	}
-
 	// TODO. Оставил для прохождения локальных тестов
 	tmpPath := req.URL.Path
 
@@ -65,12 +48,6 @@ func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
-	// Костыль для прохождения тестов. Уберу
-	if !h.checkUpPathAndMethod(req.URL.Path, req.Method) {
-		http.Error(res, ErrPathAndMethod, http.StatusMethodNotAllowed)
-		return
-	}
-
 	// Вынимаем тело запроса
 	originURL, err := h.TakeAllBodyFromReq(req)
 	if err != nil {
@@ -88,22 +65,20 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	imitationPath := h.encryptionLongURL()
 	db.Store[imitationPath] = originURL
 
-	// Параметры для сборки ответа
-	typeProtocol := h.GetProtocol(req)
-
-	host := req.Host
-	if config.ArgsCLI.IsCh {
-		host = h.ChangePort(req.Host, config.ArgsCLI.ResultPort)
-	}
-
-	path := req.URL.Path + imitationPath
+	// Host
+	// host := req.Host
+	// if config.ArgsCLI.IsCh {
+	// 	host = h.ChangePort(req.Host, config.ArgsCLI.ResultPort)
+	// }
 
 	// Подготавливаем тело res. Формат 'http//localhost:8080/Jgd63Kd8'
-	imitationURL := fmt.Sprintf(
-		"%s://%s%s",
-		typeProtocol, host, path)
+	// imitationURL := fmt.Sprintf(
+	// 	"%s://%s%s",
+	// 	h.GetProtocol(req), host, req.URL.Path+imitationPath)
+
+	imitationURL := config.ArgsCLI.ResultPort + imitationPath
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(res, "%s", imitationURL)
+	res.Write([]byte(imitationURL))
 }

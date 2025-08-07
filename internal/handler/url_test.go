@@ -53,19 +53,6 @@ func TestPostURL(t *testing.T) {
 				host: "localhost:8080",
 			},
 		},
-
-		{
-			name: "Test POST not valid",
-			want: want{
-				contentType: "text/plain; charset=utf-8",
-				statusCode:  405,
-			},
-			req: req{
-				url:  "/344rmlLJPOIjPJPP",
-				body: "https://practicum.yandex.ru/",
-				host: "localhost:8080",
-			},
-		},
 	}
 
 	// Обработчик командной строки
@@ -150,19 +137,6 @@ func TestGetURL(t *testing.T) {
 			},
 			req: req{
 				url: "/N9KHHoG1",
-			},
-			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
-		},
-
-		{
-			name: "Test GET not valid",
-			want: want{
-				contentType: "text/plain; charset=utf-8",
-				statusCode:  405,
-				location:    "",
-			},
-			req: req{
-				url: "/",
 			},
 			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
 		},
