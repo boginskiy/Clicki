@@ -26,8 +26,8 @@ func ParseFlags() {
 
 	// флага '-a' нет, но есть флаг '-b'. Флаг '-a' задается с defaultPort
 	case ArgsCLI.StartPort == "" && ArgsCLI.ResultPort != "":
-		ArgsCLI.IsCh = true
 		ArgsCLI.StartPort = defaultPort
+		ArgsCLI.IsCh = true
 
 	case ArgsCLI.StartPort == "" && ArgsCLI.ResultPort == "":
 		ArgsCLI.StartPort = defaultPort
