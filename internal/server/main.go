@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
+	c "github.com/boginskiy/Clicki/cmd/config"
 	r "github.com/boginskiy/Clicki/internal/router"
 )
 
 func Run() error {
 	routerStart := r.Router()
-	fmt.Println("The server has started on port 8080")
-	return http.ListenAndServe(":8080", routerStart)
+	fmt.Printf("The server has started on port %s", c.ArgsCLI.StartPort)
+	return http.ListenAndServe(fmt.Sprintf(":%s", c.ArgsCLI.StartPort), routerStart)
 }

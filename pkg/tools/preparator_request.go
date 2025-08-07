@@ -4,10 +4,19 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // Структура для работы с Request-запросом
 type PreparatorRequest struct {
+}
+
+func (p *PreparatorRequest) ChangePort(req *http.Request, newPort string) string {
+	tmpSl := strings.Split(req.Host, ":")
+	tmpSl[1] = ":" + newPort
+	result := strings.Join(tmpSl, "")
+	req.Host = result
+	return result
 }
 
 func (p *PreparatorRequest) CanvertBytesToString(sl []byte) string {

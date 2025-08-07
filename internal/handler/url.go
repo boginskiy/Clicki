@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/pkg"
 	"github.com/boginskiy/Clicki/pkg/tools"
@@ -91,5 +92,6 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusCreated)
 
 	// http//localhost:8080/Jgd63Kd8
+	h.ChangePort(req, config.ArgsCLI.ResultPort)
 	fmt.Fprintf(res, "%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationURL)
 }
