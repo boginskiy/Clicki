@@ -6,15 +6,17 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/handler"
 )
 
 // TestRootHandler check only POST request
-func TestRootHandler(t *testing.T) {
+func TestPostURL(t *testing.T) {
 	type req struct {
 		url  string
 		body string
+		host string
 	}
 	type want struct {
 		contentType string
@@ -35,6 +37,7 @@ func TestRootHandler(t *testing.T) {
 			req: req{
 				url:  "/",
 				body: "https://practicum.yandex.ru/",
+				host: "localhost:8080",
 			},
 		},
 
@@ -47,6 +50,7 @@ func TestRootHandler(t *testing.T) {
 			req: req{
 				url:  "/",
 				body: "jo55jt45oJOJOJPJOJJPWJP34O53R/",
+				host: "localhost:8080",
 			},
 		},
 
@@ -59,9 +63,13 @@ func TestRootHandler(t *testing.T) {
 			req: req{
 				url:  "/344rmlLJPOIjPJPP",
 				body: "https://practicum.yandex.ru/",
+				host: "localhost:8080",
 			},
 		},
 	}
+
+	// Обработчик командной строки
+	config.ParseFlags()
 
 	//
 	for _, tt := range tests {
@@ -70,6 +78,7 @@ func TestRootHandler(t *testing.T) {
 
 			// Request
 			request := httptest.NewRequest(http.MethodPost, tt.req.url, strings.NewReader(tt.req.body))
+			request.Host = tt.req.host
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
@@ -103,7 +112,7 @@ func TestRootHandler(t *testing.T) {
 }
 
 // TestRootHandler2 check only GET request
-func TestRootHandler2(t *testing.T) {
+func TestGetURL(t *testing.T) {
 	type req struct {
 		url string
 	}
