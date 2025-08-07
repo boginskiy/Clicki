@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/pkg"
 	"github.com/boginskiy/Clicki/pkg/tools"
@@ -84,7 +83,7 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Генерируем ключ. Записываем домен.
+	// Генерируем ключ. Записываем originURL.
 	imitationURL := h.encryptionLongURL()
 	db.Store[imitationURL] = originURL
 
@@ -92,10 +91,12 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusCreated)
 
 	// Изменение порта при необходимости
-	if config.ArgsCLI.IsCh {
-		h.ChangePort(req, config.ArgsCLI.ResultPort)
-	}
+	// if config.ArgsCLI.IsCh {
+	// 	h.ChangePort(req, config.ArgsCLI.ResultPort)
+	// }
 
 	// http//localhost:8080/Jgd63Kd8
 	fmt.Fprintf(res, "%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationURL)
 }
+
+// Get "http://localhosthttp//localhost:44035/FlTJAlFz": dial tcp: lookup localhosthttp on 127.0.0.11:53: server misbehaving
