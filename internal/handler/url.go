@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/pkg"
 	"github.com/boginskiy/Clicki/pkg/tools"
@@ -52,7 +51,7 @@ func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {
 	tmpPath := req.URL.Path
 
 	// // Достаем параметр id
-	// imitationURL := chi.URLParam(req, "id")
+	// imitationPath := chi.URLParam(req, "id")
 
 	// Достаем origin URL
 	originURL, ok := db.Store[strings.TrimLeft(tmpPath, "/")]
@@ -86,21 +85,20 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Генерируем ключ. Записываем originURL.
-	imitationURL := h.encryptionLongURL()
-	db.Store[imitationURL] = originURL
+	imitationPath := h.encryptionLongURL()
+	db.Store[imitationPath] = originURL
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 
 	// Изменение порта при необходимости
-	if config.ArgsCLI.IsCh {
-		h.ChangePort(req, config.ArgsCLI.ResultPort)
-		log.Println("!>>", req.Host)
-	}
-	// TODO
-	imitationURL = fmt.Sprintf("%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationURL)
-	log.Println("!>>", imitationURL)
+	// if config.ArgsCLI.IsCh {
+	// 	h.ChangePort(req, config.ArgsCLI.ResultPort)
+	// 	log.Println("!>>", req.Host)
+	// }
 
-	// http//localhost:8080/Jgd63Kd8
-	fmt.Fprintf(res, "%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationURL)
+	// Подготавливаем тело res. Формат 'http//localhost:8080/Jgd63Kd8'
+	imitationURL := fmt.Sprintf("%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationPath)
+	log.Println("!>>", imitationURL)
+	fmt.Fprintf(res, "%s", imitationURL)
 }
