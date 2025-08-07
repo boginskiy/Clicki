@@ -11,11 +11,10 @@ import (
 type PreparatorRequest struct {
 }
 
-func (p *PreparatorRequest) ChangePort(req *http.Request, newPort string) string {
-	tmpSl := strings.Split(req.Host, ":")
+func (p *PreparatorRequest) ChangePort(host, newPort string) string {
+	tmpSl := strings.Split(host, ":")
 	tmpSl[1] = newPort
-	req.Host = strings.Join(tmpSl, "")
-	return req.Host
+	return strings.Join(tmpSl, "")
 }
 
 func (p *PreparatorRequest) CanvertBytesToString(sl []byte) string {

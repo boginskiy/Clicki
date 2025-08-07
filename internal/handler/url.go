@@ -2,10 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
+	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/pkg"
 	"github.com/boginskiy/Clicki/pkg/tools"
@@ -88,17 +88,22 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	imitationPath := h.encryptionLongURL()
 	db.Store[imitationPath] = originURL
 
-	res.Header().Set("Content-Type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
+	// Параметры для сборки ответа
+	typeProtocol := h.GetProtocol(req)
 
-	// Изменение порта при необходимости
-	// if config.ArgsCLI.IsCh {
-	// 	h.ChangePort(req, config.ArgsCLI.ResultPort)
-	// 	log.Println("!>>", req.Host)
-	// }
+	host := req.Host
+	if config.ArgsCLI.IsCh {
+		host = h.ChangePort(req.Host, config.ArgsCLI.ResultPort)
+	}
+
+	path := req.URL.Path + imitationPath
 
 	// Подготавливаем тело res. Формат 'http//localhost:8080/Jgd63Kd8'
-	imitationURL := fmt.Sprintf("%s://%s%s%s", h.GetProtocol(req), req.Host, req.URL.Path, imitationPath)
-	log.Println("!>>", imitationURL)
+	imitationURL := fmt.Sprintf(
+		"%s://%s%s",
+		typeProtocol, host, path)
+
+	res.Header().Set("Content-Type", "text/plain")
+	res.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(res, "%s", imitationURL)
 }
