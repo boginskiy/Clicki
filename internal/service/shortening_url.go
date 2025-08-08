@@ -24,7 +24,7 @@ type ShorteningURL struct {
 	imitationPath string
 	originURL     string
 	ExtraFuncer   p.ExtraFuncer
-	Db            db.Storage
+	DB            db.Storage
 	Checker       v.Checker
 }
 
