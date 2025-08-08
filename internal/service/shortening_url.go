@@ -1,0 +1,100 @@
+package service
+
+import (
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/pkg"
+	t "github.com/boginskiy/Clicki/pkg/tools"
+)
+
+const LONG = 8
+
+type ShortenerURL interface {
+	EncryptionLongURL() string
+	GetImitationPath() string
+	GetOriginURL() string
+	Execute(request *http.Request) error
+}
+
+type ShorteningURL struct {
+	imitationPath string
+	originURL     string
+	Db            db.Storage
+	t.Tools
+}
+
+func NewShorteningURL(db db.Storage) *ShorteningURL {
+	return &ShorteningURL{
+		Db: db,
+	}
+}
+
+func (s *ShorteningURL) EncryptionLongURL() (imitationPath string) {
+	for {
+		// Вызов шифратора
+		imitationPath = pkg.Scramble(LONG)
+		// Проверка на уникальность
+		if _, err := s.Db.GetValue(imitationPath); err != nil {
+			break
+		}
+	}
+	return imitationPath
+}
+
+// Getter. Слабое место для дальнейших расширений приложения
+func (s *ShorteningURL) GetImitationPath() string {
+	return s.imitationPath
+}
+
+// Getter. Слабое место для дальнейших расширений приложения
+func (s *ShorteningURL) GetOriginURL() string {
+	return s.originURL
+}
+
+func (s *ShorteningURL) executePostReq(req *http.Request) error {
+	// Вынимаем тело запроса
+	originURL, err := s.TakeAllBodyFromReq(req)
+	if err != nil {
+		return err
+	}
+
+	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
+	if !s.CheckUpURL(originURL) || originURL == "" {
+		return errors.New("data not available or invalid")
+	}
+
+	// Генерируем ключ
+	s.imitationPath = s.EncryptionLongURL()
+	// Кладем в Db данные
+	s.Db.PutValue(s.imitationPath, originURL)
+
+	return nil
+}
+
+func (s *ShorteningURL) executeGetReq(req *http.Request) error {
+	// Достаем параметр id                         \\
+	tmpPath := strings.TrimLeft(req.URL.Path, "/") // Вариант для прохождения inittests
+	// tmpPath := chi.URLParam(req, "id")         // Вариант из под коробки
+
+	// Достаем origin URL
+	tmpURL, err := s.Db.GetValue(tmpPath)
+	if err != nil {
+		return errors.New("data is not available")
+	}
+	s.originURL = tmpURL
+	return nil
+}
+
+func (s *ShorteningURL) Execute(req *http.Request) error {
+	switch req.Method {
+	case "POST":
+		return s.executePostReq(req)
+	case "GET":
+		return s.executeGetReq(req)
+	default:
+		return errors.New("request is not available")
+	}
+}

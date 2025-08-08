@@ -12,6 +12,10 @@ import (
 	"github.com/boginskiy/Clicki/internal/service"
 )
 
+var argsCLI = config.ArgumentsCLI{StartPort: "localhost:8080", ResultPort: "http://localhost:8081"}
+var database = db.NewDbStore()
+var shortingURL = service.NewShorteningURL(database)
+
 // TestRootHandler check only POST request
 func TestPostURL(t *testing.T) {
 	type req struct {
@@ -56,9 +60,6 @@ func TestPostURL(t *testing.T) {
 		},
 	}
 
-	// Обработчик командной строки
-	config.ParseFlags()
-
 	//
 	for _, tt := range tests {
 
@@ -70,7 +71,7 @@ func TestPostURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.RootHandler{}
+			h := handler.RootHandler{ShortingURL: shortingURL, ArgsCLI: &argsCLI}
 			h.PostURL(response, request)
 
 			// Check >>
@@ -151,9 +152,11 @@ func TestGetURL(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, tt.req.url, nil)
 			// Recorder
 			response := httptest.NewRecorder()
+			// Db
+			database.Store = tt.store
 			// Handler
-			h := handler.RootHandler{}
-			db.Store = tt.store
+			h := handler.RootHandler{ShortingURL: shortingURL, ArgsCLI: &argsCLI}
+
 			h.GetURL(response, request)
 
 			// Check >>
