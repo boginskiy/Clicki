@@ -32,7 +32,7 @@ func NewShorteningURL(db db.Storage, checker v.Checker, extraFuncer p.ExtraFunce
 	return &ShorteningURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
-		Db:          db,
+		DB:          db,
 	}
 }
 
@@ -41,7 +41,7 @@ func (s *ShorteningURL) EncryptionLongURL() (imitationPath string) {
 		// Вызов шифратора
 		imitationPath = pkg.Scramble(LONG)
 		// Проверка на уникальность
-		if _, err := s.Db.GetValue(imitationPath); err != nil {
+		if _, err := s.DB.GetValue(imitationPath); err != nil {
 			break
 		}
 	}
@@ -72,8 +72,8 @@ func (s *ShorteningURL) executePostReq(req *http.Request) error {
 
 	// Генерируем ключ
 	s.imitationPath = s.EncryptionLongURL()
-	// Кладем в Db данные
-	s.Db.PutValue(s.imitationPath, originURL)
+	// Кладем в DB данные
+	s.DB.PutValue(s.imitationPath, originURL)
 
 	return nil
 }
@@ -84,7 +84,7 @@ func (s *ShorteningURL) executeGetReq(req *http.Request) error {
 	// tmpPath := chi.URLParam(req, "id")         // Вариант из под коробки
 
 	// Достаем origin URL
-	tmpURL, err := s.Db.GetValue(tmpPath)
+	tmpURL, err := s.DB.GetValue(tmpPath)
 	if err != nil {
 		return errors.New("data is not available")
 	}
