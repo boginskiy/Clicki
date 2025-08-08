@@ -1,6 +1,9 @@
 package db
 
-import "errors"
+import (
+	"errors"
+	"sync"
+)
 
 const CAP = 10
 
@@ -10,17 +13,21 @@ type Storage interface {
 	PutValue(key string, value string)
 }
 
-type DbStore struct {
+type DBStore struct {
+	mu    sync.RWMutex
 	Store map[string]string
 }
 
-func NewDbStore() *DbStore {
-	return &DbStore{
+func NewDBStore() *DBStore {
+	return &DBStore{
 		Store: make(map[string]string, CAP),
 	}
 }
 
-func (db *DbStore) GetValue(key string) (value string, err error) {
+func (db *DBStore) GetValue(key string) (value string, err error) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
 	value, ok := db.Store[key]
 	if !ok {
 		return "", errors.New("data is not available")
@@ -28,6 +35,9 @@ func (db *DbStore) GetValue(key string) (value string, err error) {
 	return value, nil
 }
 
-func (db *DbStore) PutValue(key, value string) {
+func (db *DBStore) PutValue(key, value string) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
 	db.Store[key] = value
 }

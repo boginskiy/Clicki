@@ -9,12 +9,17 @@ import (
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/handler"
+	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
+	"github.com/boginskiy/Clicki/internal/validation"
 )
 
 var argsCLI = config.ArgumentsCLI{StartPort: "localhost:8080", ResultPort: "http://localhost:8081"}
-var database = db.NewDbStore()
-var shortingURL = service.NewShorteningURL(database)
+
+var extraFuncer = preparation.NewExtraFunc()
+var checker = validation.NewChecker()
+var database = db.NewDBStore()
+var shURL = service.NewShorteningURL(database, checker, extraFuncer)
 
 // TestRootHandler check only POST request
 func TestPostURL(t *testing.T) {
@@ -71,7 +76,7 @@ func TestPostURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.RootHandler{ShortingURL: shortingURL, ArgsCLI: &argsCLI}
+			h := handler.RootHandler{ShortingURL: shURL, ArgsCLI: &argsCLI}
 			h.PostURL(response, request)
 
 			// Check >>
@@ -155,7 +160,7 @@ func TestGetURL(t *testing.T) {
 			// Db
 			database.Store = tt.store
 			// Handler
-			h := handler.RootHandler{ShortingURL: shortingURL, ArgsCLI: &argsCLI}
+			h := handler.RootHandler{ShortingURL: shURL, ArgsCLI: &argsCLI}
 
 			h.GetURL(response, request)
 

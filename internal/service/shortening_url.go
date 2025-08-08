@@ -6,29 +6,33 @@ import (
 	"strings"
 
 	"github.com/boginskiy/Clicki/internal/db"
+	p "github.com/boginskiy/Clicki/internal/preparation"
+	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
-	t "github.com/boginskiy/Clicki/pkg/tools"
 )
 
 const LONG = 8
 
 type ShortenerURL interface {
+	Execute(request *http.Request) error
 	EncryptionLongURL() string
 	GetImitationPath() string
 	GetOriginURL() string
-	Execute(request *http.Request) error
 }
 
 type ShorteningURL struct {
 	imitationPath string
 	originURL     string
+	ExtraFuncer   p.ExtraFuncer
 	Db            db.Storage
-	t.Tools
+	Checker       v.Checker
 }
 
-func NewShorteningURL(db db.Storage) *ShorteningURL {
+func NewShorteningURL(db db.Storage, checker v.Checker, extraFuncer p.ExtraFuncer) *ShorteningURL {
 	return &ShorteningURL{
-		Db: db,
+		ExtraFuncer: extraFuncer,
+		Checker:     checker,
+		Db:          db,
 	}
 }
 
@@ -56,13 +60,13 @@ func (s *ShorteningURL) GetOriginURL() string {
 
 func (s *ShorteningURL) executePostReq(req *http.Request) error {
 	// Вынимаем тело запроса
-	originURL, err := s.TakeAllBodyFromReq(req)
+	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req)
 	if err != nil {
 		return err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
-	if !s.CheckUpURL(originURL) || originURL == "" {
+	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
 		return errors.New("data not available or invalid")
 	}
 

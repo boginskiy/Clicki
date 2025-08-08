@@ -5,13 +5,11 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/service"
-	"github.com/boginskiy/Clicki/pkg/tools"
 )
 
 type RootHandler struct {
-	ShortingURL service.ShortenerURL // Зависимость для ShortenerURL на interface
-	ArgsCLI     *config.ArgumentsCLI // Аргументы командной строки
-	tools.Tools                      // Вспомогательные инструменты
+	ShortingURL service.ShortenerURL // ShortingURL is the interface of business logic
+	ArgsCLI     *config.ArgumentsCLI // ArgsCLI is the args of command line interface
 }
 
 func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {
@@ -42,7 +40,3 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(h.ArgsCLI.ResultPort + "/" + h.ShortingURL.GetImitationPath()))
 }
-
-// TODO
-// На каналы перевести атрибуты структуры
-// Тестирование
