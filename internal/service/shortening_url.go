@@ -21,11 +21,16 @@ type ShortenerURL interface {
 }
 
 type ShorteningURL struct {
+	// TODO
+	// Общие данные являются причиной всех ошибок при конку-
+	// рентном программировании.
+	// >>
 	imitationPath string
 	originURL     string
-	ExtraFuncer   p.ExtraFuncer
-	DB            db.Storage
-	Checker       v.Checker
+	// <<
+	ExtraFuncer p.ExtraFuncer
+	DB          db.Storage
+	Checker     v.Checker
 }
 
 func NewShorteningURL(db db.Storage, checker v.Checker, extraFuncer p.ExtraFuncer) *ShorteningURL {

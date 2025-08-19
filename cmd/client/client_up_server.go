@@ -206,12 +206,12 @@ func TestApplication(chanErr chan error, path, port string) {
 	defer StopApplication(port)
 }
 
-func main() {
-	// Params
-	chanErr := make(chan error)
-	path := "./clicki"
-	port := ":8080"
+// func main() {
+// 	// Params
+// 	chanErr := make(chan error)
+// 	path := "./clicki"
+// 	port := ":8080"
 
-	//
-	TestApplication(chanErr, path, port)
-}
+// 	//
+// 	TestApplication(chanErr, path, port)
+// }
