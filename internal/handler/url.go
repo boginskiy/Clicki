@@ -39,5 +39,5 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 	// TODO. h.ArgsCLI.ResultPort
-	res.Write([]byte(h.Kwargs.GetBaseUrl() + "/" + h.ShortingURL.GetImitationPath()))
+	res.Write([]byte(h.Kwargs.GetBaseURL() + "/" + h.ShortingURL.GetImitationPath()))
 }

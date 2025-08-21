@@ -28,6 +28,6 @@ func (e *ArgsEnviron) GetSrvAddr() (ServerAddress string) {
 	return e.ServerAddress
 }
 
-func (e *ArgsEnviron) GetBaseUrl() (BaseURL string) {
+func (e *ArgsEnviron) GetBaseURL() (BaseURL string) {
 	return e.BaseURL
 }

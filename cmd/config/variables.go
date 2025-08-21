@@ -21,11 +21,11 @@ func (v *Variables) checkCondition(params1, params2 Variabler) {
 	}
 
 	// Look for priority for BaseURL
-	tmpUrl := params2.GetBaseUrl()
-	if tmpUrl != "" {
-		v.BaseURL = tmpUrl
+	tmpURL := params2.GetBaseURL()
+	if tmpURL != "" {
+		v.BaseURL = tmpURL
 	} else {
-		v.BaseURL = params1.GetBaseUrl()
+		v.BaseURL = params1.GetBaseURL()
 	}
 }
 
@@ -41,6 +41,6 @@ func (v *Variables) GetSrvAddr() (ServerAddress string) {
 	return v.ServerAddress
 }
 
-func (v *Variables) GetBaseUrl() (BaseURL string) {
+func (v *Variables) GetBaseURL() (BaseURL string) {
 	return v.BaseURL
 }

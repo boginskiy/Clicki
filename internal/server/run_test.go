@@ -83,6 +83,7 @@ func TestRouter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res, _ := ExecuteRequest(t, ts, tt.methodReq, tt.urlReq, tt.bodyReq)
+			defer res.Body.Close()
 			assert.Equal(t, tt.statusRes, res.StatusCode)
 			assert.Equal(t, tt.contentTypeRes, res.Header.Get(tt.contentViewRes))
 		})

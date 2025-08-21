@@ -23,6 +23,6 @@ func (c *ArgsCommandLine) GetSrvAddr() (ServerAddress string) {
 	return c.ServerAddress
 }
 
-func (c *ArgsCommandLine) GetBaseUrl() (BaseURL string) {
+func (c *ArgsCommandLine) GetBaseURL() (BaseURL string) {
 	return c.BaseURL
 }
