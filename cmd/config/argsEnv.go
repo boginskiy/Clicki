@@ -7,8 +7,8 @@ import (
 )
 
 type ArgsEnviron struct {
-	Server_address string `env:"SERVER_ADDRESS"`
-	Base_url       string `env:"BASE_URL"`
+	ServerAddress string `env:"SERVER_ADDRESS"`
+	BaseURL       string `env:"BASE_URL"`
 }
 
 func NewArgsEnviron() *ArgsEnviron {
@@ -24,10 +24,10 @@ func (e *ArgsEnviron) ParseFlags() {
 	}
 }
 
-func (e *ArgsEnviron) GetSrvAddr() (Server_address string) {
-	return e.Server_address
+func (e *ArgsEnviron) GetSrvAddr() (ServerAddress string) {
+	return e.ServerAddress
 }
 
-func (e *ArgsEnviron) GetBaseUrl() (Base_url string) {
-	return e.Base_url
+func (e *ArgsEnviron) GetBaseUrl() (BaseURL string) {
+	return e.BaseURL
 }

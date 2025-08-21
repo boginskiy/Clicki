@@ -14,7 +14,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-var kwargs = &config.Variables{Server_address: "localhost:8080", Base_url: "http://localhost:8081"}
+var kwargs = &config.Variables{ServerAddress: "localhost:8080", BaseURL: "http://localhost:8081"}
 
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()

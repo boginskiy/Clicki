@@ -33,7 +33,7 @@ func RunRouter() *chi.Mux {
 	return r.Router(shortingURL, kwargs)
 }
 
-func testRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {
+func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {
 	// New Req
 	req, err := http.NewRequest(method, ts.URL+url, strings.NewReader(body))
 	require.NoError(t, err)
@@ -82,7 +82,7 @@ func TestRouter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, _ := testRequest(t, ts, tt.methodReq, tt.urlReq, tt.bodyReq)
+			res, _ := ExecuteRequest(t, ts, tt.methodReq, tt.urlReq, tt.bodyReq)
 			assert.Equal(t, tt.statusRes, res.StatusCode)
 			assert.Equal(t, tt.contentTypeRes, res.Header.Get(tt.contentViewRes))
 		})

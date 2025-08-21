@@ -5,6 +5,6 @@ type Argsmenter interface {
 }
 
 type Variabler interface {
-	GetSrvAddr() (Server_address string)
-	GetBaseUrl() (Base_url string)
+	GetSrvAddr() (ServerAddress string)
+	GetBaseUrl() (BaseURL string)
 }

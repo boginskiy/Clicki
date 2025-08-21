@@ -1,8 +1,8 @@
 package config
 
 type Variables struct {
-	Server_address string
-	Base_url       string
+	ServerAddress string
+	BaseURL       string
 }
 
 func NewVariables() *Variables {
@@ -12,20 +12,20 @@ func NewVariables() *Variables {
 }
 
 func (v *Variables) checkCondition(params1, params2 Variabler) {
-	// Look for priority for Server_address
+	// Look for priority for ServerAddress
 	tmpAddress := params2.GetSrvAddr()
 	if tmpAddress != "" {
-		v.Server_address = tmpAddress
+		v.ServerAddress = tmpAddress
 	} else {
-		v.Server_address = params1.GetSrvAddr()
+		v.ServerAddress = params1.GetSrvAddr()
 	}
 
-	// Look for priority for Base_url
+	// Look for priority for BaseURL
 	tmpUrl := params2.GetBaseUrl()
 	if tmpUrl != "" {
-		v.Base_url = tmpUrl
+		v.BaseURL = tmpUrl
 	} else {
-		v.Base_url = params1.GetBaseUrl()
+		v.BaseURL = params1.GetBaseUrl()
 	}
 }
 
@@ -37,10 +37,10 @@ func (v *Variables) settingsArgs() {
 	v.checkCondition(argscli, argsenv)
 }
 
-func (v *Variables) GetSrvAddr() (Server_address string) {
-	return v.Server_address
+func (v *Variables) GetSrvAddr() (ServerAddress string) {
+	return v.ServerAddress
 }
 
-func (v *Variables) GetBaseUrl() (Base_url string) {
-	return v.Base_url
+func (v *Variables) GetBaseUrl() (BaseURL string) {
+	return v.BaseURL
 }
