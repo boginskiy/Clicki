@@ -19,7 +19,7 @@ import (
 )
 
 func RunRouter() *chi.Mux {
-	argsCLI := c.NewArgumentsCLI()  // agrs - атрибуты командной строки
+	kwargs := c.NewVariables()      // agrs - атрибуты командной строки
 	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные возможности
 	checker := v.NewChecker()       // checker - валидация данных
 	db := db.NewDBStore()           // db - слой базы данных 'DBStore'
@@ -30,7 +30,7 @@ func RunRouter() *chi.Mux {
 	// shortingURL - слой с бизнес логикой сервиса 'ShorteningURL'
 	shortingURL := s.NewShorteningURL(db, checker, extraFuncer)
 	//
-	return r.Router(shortingURL, argsCLI)
+	return r.Router(shortingURL, kwargs)
 }
 
 func testRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {

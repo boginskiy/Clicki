@@ -14,7 +14,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-var argsCLI = config.ArgumentsCLI{StartPort: "localhost:8080", ResultPort: "http://localhost:8081"}
+var kwargs = &config.Variables{Server_address: "localhost:8080", Base_url: "http://localhost:8081"}
 
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
@@ -76,7 +76,7 @@ func TestPostURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.RootHandler{ShortingURL: shURL, ArgsCLI: &argsCLI}
+			h := handler.RootHandler{ShortingURL: shURL, Kwargs: kwargs}
 			h.PostURL(response, request)
 
 			// Check >>
@@ -160,7 +160,7 @@ func TestGetURL(t *testing.T) {
 			// Db
 			database.Store = tt.store
 			// Handler
-			h := handler.RootHandler{ShortingURL: shURL, ArgsCLI: &argsCLI}
+			h := handler.RootHandler{ShortingURL: shURL, Kwargs: kwargs}
 
 			h.GetURL(response, request)
 

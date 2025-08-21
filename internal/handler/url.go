@@ -9,7 +9,7 @@ import (
 
 type RootHandler struct {
 	ShortingURL service.ShortenerURL // ShortingURL is the interface of business logic
-	ArgsCLI     *config.ArgumentsCLI // ArgsCLI is the args of command line interface
+	Kwargs      config.Variabler     // ArgsCLI is the args of command line interface
 }
 
 func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {
@@ -38,5 +38,6 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 	// Сборка ответа
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(h.ArgsCLI.ResultPort + "/" + h.ShortingURL.GetImitationPath()))
+	// TODO. h.ArgsCLI.ResultPort
+	res.Write([]byte(h.Kwargs.GetBaseUrl() + "/" + h.ShortingURL.GetImitationPath()))
 }

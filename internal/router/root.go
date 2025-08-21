@@ -14,8 +14,8 @@ import (
 // $go tool pprof http://localhost:8080/debug/pprof/profile
 // $ab -k -c 10 -n 100000 "http://127.0.0.1:8080/time"
 
-func Router(shortingURL s.ShortenerURL, argsCLI *c.ArgumentsCLI) *chi.Mux {
-	h := h.RootHandler{ShortingURL: shortingURL, ArgsCLI: argsCLI}
+func Router(shortingURL s.ShortenerURL, kwargs c.Variabler) *chi.Mux {
+	h := h.RootHandler{ShortingURL: shortingURL, Kwargs: kwargs}
 	r := chi.NewRouter()
 
 	// Tree routes

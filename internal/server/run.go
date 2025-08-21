@@ -12,9 +12,7 @@ import (
 	v "github.com/boginskiy/Clicki/internal/validation"
 )
 
-func Run() error {
-	// agrs - атрибуты командной строки
-	argsCLI := c.NewArgumentsCLI()
+func Run(kwargs c.Variabler) error {
 
 	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные возможности
 	checker := v.NewChecker()       // checker - валидация данных
@@ -23,6 +21,6 @@ func Run() error {
 	// shortingURL - слой с бизнес логикой сервиса 'ShorteningURL'
 	shortingURL := s.NewShorteningURL(db, checker, extraFuncer)
 
-	fmt.Printf("The server has started on port %s\n", argsCLI.StartPort)
-	return http.ListenAndServe(argsCLI.StartPort, r.Router(shortingURL, argsCLI))
+	fmt.Printf("The server has started on port %s\n", kwargs.GetSrvAddr())
+	return http.ListenAndServe(kwargs.GetSrvAddr(), r.Router(shortingURL, kwargs))
 }
