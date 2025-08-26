@@ -17,7 +17,7 @@ func Run(kwargs c.VarGetter) {
 	// Info Logger
 	infoLog := l.NewLogg(kwargs.GetNameLogInfo(), "INFO")
 	// Fatal Logger
-	fatalLog := l.NewLogg(kwargs.GetNameLogFatal(), "FATAL")
+	fatalLog := l.NewLogg(kwargs.GetNameLogFatal(), "ERROR")
 
 	defer fatalLog.CloseDesc()
 	defer infoLog.CloseDesc()
