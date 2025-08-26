@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/boginskiy/Clicki/internal/db"
+	l "github.com/boginskiy/Clicki/internal/logger"
 	p "github.com/boginskiy/Clicki/internal/preparation"
 	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
@@ -31,12 +32,19 @@ type ShorteningURL struct {
 	ExtraFuncer p.ExtraFuncer
 	DB          db.Storage
 	Checker     v.Checker
+	Log         l.Logger
 }
 
-func NewShorteningURL(db db.Storage, checker v.Checker, extraFuncer p.ExtraFuncer) *ShorteningURL {
+func NewShorteningURL(
+	db db.Storage,
+	checker v.Checker,
+	extraFuncer p.ExtraFuncer,
+	log l.Logger) *ShorteningURL {
+
 	return &ShorteningURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
+		Log:         log,
 		DB:          db,
 	}
 }

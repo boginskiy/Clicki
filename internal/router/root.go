@@ -6,22 +6,19 @@ import (
 
 	c "github.com/boginskiy/Clicki/cmd/config"
 	h "github.com/boginskiy/Clicki/internal/handler"
+	m "github.com/boginskiy/Clicki/internal/middleware"
 	s "github.com/boginskiy/Clicki/internal/service"
 	"github.com/go-chi/chi"
 )
 
-// PProf
-// $go tool pprof http://localhost:8080/debug/pprof/profile
-// $ab -k -c 10 -n 100000 "http://127.0.0.1:8080/time"
-
-func Router(shortingURL s.ShortenerURL, kwargs c.Variabler) *chi.Mux {
+func Router(kwargs c.VarGetter, mv m.Middlewarer, shortingURL s.ShortenerURL) *chi.Mux {
 	h := h.RootHandler{ShortingURL: shortingURL, Kwargs: kwargs}
 	r := chi.NewRouter()
 
 	// Tree routes
 	r.Route("/", func(r chi.Router) {
-		r.Post("/", http.HandlerFunc(h.PostURL))
-		r.Get("/{id}", http.HandlerFunc(h.GetURL))
+		r.Post("/", mv.WithInfoLogger(http.HandlerFunc(h.PostURL)))
+		r.Get("/{id}", mv.WithInfoLogger(http.HandlerFunc(h.GetURL)))
 
 		// PProf
 		r.Route("/debug/pprof/", func(r chi.Router) {

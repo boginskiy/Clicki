@@ -9,7 +9,7 @@ import (
 
 type RootHandler struct {
 	ShortingURL service.ShortenerURL // ShortingURL is the interface of business logic
-	Kwargs      config.Variabler     // ArgsCLI is the args of command line interface
+	Kwargs      config.VarGetter     // ArgsCLI is the args of command line interface
 }
 
 func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {

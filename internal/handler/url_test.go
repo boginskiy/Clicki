@@ -9,17 +9,23 @@ import (
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/handler"
+	"github.com/boginskiy/Clicki/internal/logger"
 	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-var kwargs = &config.Variables{ServerAddress: "localhost:8080", BaseURL: "http://localhost:8081"}
+var kwargs = &config.Variables{
+	ServerAddress: "localhost:8080",
+	BaseURL:       "http://localhost:8081",
+}
 
+var infoLog = logger.NewLogg("Test.log", "INFO")
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 var database = db.NewDBStore()
-var shURL = service.NewShorteningURL(database, checker, extraFuncer)
+
+var shURL = service.NewShorteningURL(database, checker, extraFuncer, infoLog)
 
 // TestRootHandler check only POST request
 func TestPostURL(t *testing.T) {

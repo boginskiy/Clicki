@@ -9,6 +9,8 @@ import (
 
 	c "github.com/boginskiy/Clicki/cmd/config"
 	db "github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/logger"
+	m "github.com/boginskiy/Clicki/internal/middleware"
 	p "github.com/boginskiy/Clicki/internal/preparation"
 	r "github.com/boginskiy/Clicki/internal/router"
 	s "github.com/boginskiy/Clicki/internal/service"
@@ -24,13 +26,16 @@ func RunRouter() *chi.Mux {
 	checker := v.NewChecker()       // checker - валидация данных
 	db := db.NewDBStore()           // db - слой базы данных 'DBStore'
 
+	infoLog := logger.NewLogg("Test.log", "INFO")
+	midWare := m.NewMiddleware(infoLog)
+
 	// Заполняем базу данных тестовыми данными
 	db.Store["DcKa7J8d"] = "https://translate.yandex.ru/"
 
 	// shortingURL - слой с бизнес логикой сервиса 'ShorteningURL'
-	shortingURL := s.NewShorteningURL(db, checker, extraFuncer)
+	shortingURL := s.NewShorteningURL(db, checker, extraFuncer, infoLog)
 	//
-	return r.Router(shortingURL, kwargs)
+	return r.Router(kwargs, midWare, shortingURL)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {
