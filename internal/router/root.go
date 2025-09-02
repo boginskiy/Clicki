@@ -19,11 +19,11 @@ func Router(kwargs c.VarGetter, mv m.Middlewarer, db db.Storage, logger l.Logger
 	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные возможности
 	checker := v.NewChecker()       // checker - валидация данных
 
-	apiShortURL := s.NewApiShortURL(db, logger, checker, extraFuncer) // Service 'ApiShortURL'
+	APIShortURL := s.NewAPIShortURL(db, logger, checker, extraFuncer) // Service 'APIShortURL'
 	shortURL := s.NewShortURL(db, logger, checker, extraFuncer)       // Service 'ShortURL'
 
 	hURL := h.HandlerURL{Service: shortURL, Kwargs: kwargs}
-	hApiURL := h.HandlerURL{Service: apiShortURL, Kwargs: kwargs}
+	hAPIURL := h.HandlerURL{Service: APIShortURL, Kwargs: kwargs}
 
 	r := chi.NewRouter()
 
@@ -33,9 +33,9 @@ func Router(kwargs c.VarGetter, mv m.Middlewarer, db db.Storage, logger l.Logger
 		r.Post("/", mv.WithInfoLogger(http.HandlerFunc(hURL.Post)))
 		r.Get("/{id}", mv.WithInfoLogger(http.HandlerFunc(hURL.Get)))
 
-		// apiShortURL
+		// APIShortURL
 		r.Route("/api/", func(r chi.Router) {
-			r.Post("/shorten", mv.WithInfoLogger(http.HandlerFunc(hApiURL.Post)))
+			r.Post("/shorten", mv.WithInfoLogger(http.HandlerFunc(hAPIURL.Post)))
 		})
 
 		// PProf

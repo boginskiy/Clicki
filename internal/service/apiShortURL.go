@@ -12,15 +12,15 @@ import (
 	"github.com/boginskiy/Clicki/pkg"
 )
 
-type ApiShortURL struct {
+type APIShortURL struct {
 	ExtraFuncer p.ExtraFuncer
 	DB          db.Storage
 	Checker     v.Checker
 	Log         l.Logger
 }
 
-func NewApiShortURL(db db.Storage, log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ApiShortURL {
-	return &ApiShortURL{
+func NewAPIShortURL(db db.Storage, log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *APIShortURL {
+	return &APIShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Log:         log,
@@ -28,7 +28,7 @@ func NewApiShortURL(db db.Storage, log l.Logger, checker v.Checker, extraFuncer 
 	}
 }
 
-func (s *ApiShortURL) encryptionLongURL() (imitationPath string) {
+func (s *APIShortURL) encryptionLongURL() (imitationPath string) {
 	for {
 		// Вызов шифратора
 		imitationPath = pkg.Scramble(LONG)
@@ -40,7 +40,7 @@ func (s *ApiShortURL) encryptionLongURL() (imitationPath string) {
 	return imitationPath
 }
 
-func (s *ApiShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, error) {
+func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, error) {
 	// Deserialization Body
 	baseLink := m.NewBaseLink()
 	err := s.ExtraFuncer.Deserialization(req, baseLink)
@@ -52,7 +52,8 @@ func (s *ApiShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(baseLink.URL) || baseLink.URL == "" {
-		s.Log.RaiseFatal(DataNotValidFatal, l.Fields{"error": ErrDataNotValid.Error()})
+		s.Log.RaiseError("APIShortURL.Create>CheckUpURL",
+			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
@@ -64,13 +65,14 @@ func (s *ApiShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	result, err := s.ExtraFuncer.Serialization(extraLink)
 
 	if err != nil {
-		s.Log.RaiseFatal(SerializFatal, l.Fields{"error": err.Error()})
+		s.Log.RaiseError("APIShortURL.Create>NewExtraLink",
+			l.Fields{"error": err.Error()})
 		return EmptyByteSlice, err
 	}
 
 	return result, nil
 }
 
-func (s *ApiShortURL) Read(req *http.Request) ([]byte, error) {
+func (s *APIShortURL) Read(req *http.Request) ([]byte, error) {
 	return EmptyByteSlice, nil
 }

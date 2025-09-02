@@ -66,21 +66,21 @@ func (e *Logg) RaiseWarn(msg string, dataMap Fields) {
 
 func (e *Logg) RaiseError(msg string, dataMap Fields) {
 	e.mu.Lock()
-	e.Log.WithFields(logrus.Fields(dataMap)).Error(msg)
 	fmt.Fprintln(os.Stdout, msg)
+	e.Log.WithFields(logrus.Fields(dataMap)).Error(msg)
 	e.mu.Unlock()
 }
 
 func (e *Logg) RaiseFatal(msg string, dataMap Fields) {
 	e.mu.Lock()
-	e.Log.WithFields(logrus.Fields(dataMap)).Fatal(msg)
 	fmt.Fprintln(os.Stdout, msg)
+	e.Log.WithFields(logrus.Fields(dataMap)).Fatal(msg)
 	e.mu.Unlock()
 }
 
 func (e *Logg) RaisePanic(msg string, dataMap Fields) {
 	e.mu.Lock()
-	e.Log.WithFields(logrus.Fields(dataMap)).Panic(msg)
 	fmt.Fprintln(os.Stdout, msg)
+	e.Log.WithFields(logrus.Fields(dataMap)).Panic(msg)
 	e.mu.Unlock()
 }

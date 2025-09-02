@@ -66,7 +66,6 @@ func TestRouter(t *testing.T) {
 		statusRes      int
 	}{
 		// POST
-
 		{"Test POST 1", "POST", "://docs.google.com/", "/", "Content-Type", "text/plain; charset=utf-8", 400},
 		{"Test POST 2", "POST", "https://docs.google.com/", "/", "Content-Type", "text/plain", 201},
 		{"Test POST 3", "POST", "", "/wwxwecq", "Content-Type", "", 405},
