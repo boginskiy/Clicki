@@ -25,9 +25,9 @@ var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 var database = db.NewDBStore()
 
-var shURL = service.NewShorteningURL(database, checker, extraFuncer, infoLog)
+var shURL = service.NewShortURL(database, infoLog, checker, extraFuncer)
 
-// TestRootHandler check only POST request
+// TestHandlerURL check only POST request
 func TestPostURL(t *testing.T) {
 	type req struct {
 		url  string
@@ -82,8 +82,8 @@ func TestPostURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.RootHandler{ShortingURL: shURL, Kwargs: kwargs}
-			h.PostURL(response, request)
+			h := handler.HandlerURL{Service: shURL, Kwargs: kwargs}
+			h.Post(response, request)
 
 			// Check >>
 
@@ -111,7 +111,7 @@ func TestPostURL(t *testing.T) {
 	}
 }
 
-// TestRootHandler2 check only GET request
+// TestHandlerURL2 check only GET request
 func TestGetURL(t *testing.T) {
 	type req struct {
 		url string
@@ -166,9 +166,9 @@ func TestGetURL(t *testing.T) {
 			// Db
 			database.Store = tt.store
 			// Handler
-			h := handler.RootHandler{ShortingURL: shURL, Kwargs: kwargs}
+			h := handler.HandlerURL{Service: shURL, Kwargs: kwargs}
 
-			h.GetURL(response, request)
+			h.Get(response, request)
 
 			// Check >>
 

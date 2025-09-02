@@ -1,17 +1,12 @@
 package preparation
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"strings"
 )
-
-type ExtraFuncer interface {
-	TakeAllBodyFromReq(req *http.Request) (string, error)
-	GetProtocolFromReq(req *http.Request) string
-	ChangePort(host, newPort string) string
-}
 
 type ExtraFunc struct {
 }
@@ -26,6 +21,13 @@ func (p *ExtraFunc) ChangePort(host, newPort string) string {
 	return strings.Join(tmpSl, "")
 }
 
+func (p *ExtraFunc) GetProtocolFromReq(req *http.Request) string {
+	if req.TLS != nil {
+		return "https"
+	}
+	return "http"
+}
+
 func (p *ExtraFunc) TakeAllBodyFromReq(req *http.Request) (string, error) {
 	originURL, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -34,9 +36,11 @@ func (p *ExtraFunc) TakeAllBodyFromReq(req *http.Request) (string, error) {
 	return string(originURL), nil
 }
 
-func (p *ExtraFunc) GetProtocolFromReq(req *http.Request) string {
-	if req.TLS != nil {
-		return "https"
-	}
-	return "http"
+func (p *ExtraFunc) Deserialization(req *http.Request, st any) error {
+	dec := json.NewDecoder(req.Body)
+	return dec.Decode(st)
+}
+
+func (p *ExtraFunc) Serialization(st any) ([]byte, error) {
+	return json.Marshal(st)
 }

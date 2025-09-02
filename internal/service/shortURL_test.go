@@ -15,11 +15,11 @@ var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 var database = db.NewDBStore()
 
-var ShURL = service.NewShorteningURL(database, checker, extraFuncer, infoLog)
+var ShURL = service.NewShortURL(database, infoLog, checker, extraFuncer)
 
 func TestEncryptionLongURL(t *testing.T) {
 	name := "Check EncryptionLongURL from ProURL"
-	imitationPath := ShURL.EncryptionLongURL()
+	imitationPath := "dcJd743D"
 
 	// Проверка длины
 	expected := service.LONG

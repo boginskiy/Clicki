@@ -11,20 +11,15 @@ import (
 	db "github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/middleware"
-	p "github.com/boginskiy/Clicki/internal/preparation"
 	r "github.com/boginskiy/Clicki/internal/router"
-	s "github.com/boginskiy/Clicki/internal/service"
-	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func RunRouter() *chi.Mux {
-	kwargs := c.NewVariables()      // agrs - атрибуты командной строки
-	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные возможности
-	checker := v.NewChecker()       // checker - валидация данных
-	db := db.NewDBStore()           // db - слой базы данных 'DBStore'
+	kwargs := c.NewVariables() // agrs - атрибуты командной строки
+	db := db.NewDBStore()      // db - слой базы данных 'DBStore'
 
 	infoLog := logger.NewLogg("Test.log", "INFO")
 	midWare := m.NewMiddleware(infoLog)
@@ -32,10 +27,7 @@ func RunRouter() *chi.Mux {
 	// Заполняем базу данных тестовыми данными
 	db.Store["DcKa7J8d"] = "https://translate.yandex.ru/"
 
-	// shortingURL - слой с бизнес логикой сервиса 'ShorteningURL'
-	shortingURL := s.NewShorteningURL(db, checker, extraFuncer, infoLog)
-	//
-	return r.Router(kwargs, midWare, shortingURL)
+	return r.Router(kwargs, midWare, db, infoLog)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {

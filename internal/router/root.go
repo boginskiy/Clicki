@@ -5,20 +5,38 @@ import (
 	"net/http/pprof"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/internal/db"
 	h "github.com/boginskiy/Clicki/internal/handler"
+	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/middleware"
+	p "github.com/boginskiy/Clicki/internal/preparation"
 	s "github.com/boginskiy/Clicki/internal/service"
+	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/go-chi/chi"
 )
 
-func Router(kwargs c.VarGetter, mv m.Middlewarer, shortingURL s.ShortenerURL) *chi.Mux {
-	h := h.RootHandler{ShortingURL: shortingURL, Kwargs: kwargs}
+func Router(kwargs c.VarGetter, mv m.Middlewarer, db db.Storage, logger l.Logger) *chi.Mux {
+	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные возможности
+	checker := v.NewChecker()       // checker - валидация данных
+
+	apiShortURL := s.NewApiShortURL(db, logger, checker, extraFuncer) // Service 'ApiShortURL'
+	shortURL := s.NewShortURL(db, logger, checker, extraFuncer)       // Service 'ShortURL'
+
+	hURL := h.HandlerURL{Service: shortURL, Kwargs: kwargs}
+	hApiURL := h.HandlerURL{Service: apiShortURL, Kwargs: kwargs}
+
 	r := chi.NewRouter()
 
-	// Tree routes
 	r.Route("/", func(r chi.Router) {
-		r.Post("/", mv.WithInfoLogger(http.HandlerFunc(h.PostURL)))
-		r.Get("/{id}", mv.WithInfoLogger(http.HandlerFunc(h.GetURL)))
+
+		// shortURL
+		r.Post("/", mv.WithInfoLogger(http.HandlerFunc(hURL.Post)))
+		r.Get("/{id}", mv.WithInfoLogger(http.HandlerFunc(hURL.Get)))
+
+		// apiShortURL
+		r.Route("/api/", func(r chi.Router) {
+			r.Post("/shorten", mv.WithInfoLogger(http.HandlerFunc(hApiURL.Post)))
+		})
 
 		// PProf
 		r.Route("/debug/pprof/", func(r chi.Router) {

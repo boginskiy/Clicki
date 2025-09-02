@@ -7,27 +7,26 @@ import (
 	"github.com/boginskiy/Clicki/internal/service"
 )
 
-type RootHandler struct {
-	ShortingURL service.ShortenerURL // ShortingURL is the interface of business logic
-	Kwargs      config.VarGetter     // ArgsCLI is the args of command line interface
+type HandlerURL struct {
+	Service service.CRUDer   // CRUDer is the interface of business logic
+	Kwargs  config.VarGetter // Kwargs is the args of command line interface
 }
 
-func (h *RootHandler) GetURL(res http.ResponseWriter, req *http.Request) {
-	// Запуск бизнес логики сервиса 'ShorteningURL'
-	err := h.ShortingURL.Execute(req)
-
+func (h *HandlerURL) Get(res http.ResponseWriter, req *http.Request) {
+	// Запуск бизнес логики сервиса 'Service'
+	body, err := h.Service.Read(req)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	// Сборка ответа
-	res.Header().Set("Location", h.ShortingURL.GetOriginURL())
+
+	res.Header().Set("Location", string(body))
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
-	// Запуск бизнес логики сервиса 'ShorteningURL'
-	err := h.ShortingURL.Execute(req)
+func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
+	// Запуск бизнес логики сервиса 'Service'
+	body, err := h.Service.Create(req, h.Kwargs)
 
 	// Проверка ошибок
 	if err != nil {
@@ -35,9 +34,18 @@ func (h *RootHandler) PostURL(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Сборка ответа
-	res.Header().Set("Content-Type", "text/plain")
+	// Примитивная проверка, что перед нами Json, в зависимости от этого меняем тип 'Content-Type'
+	tmpBody := []byte(h.Kwargs.GetBaseURL() + "/" + string(body))
+	tmpHeader := "text/plain"
+
+	if len(body) > 0 {
+		switch body[0] {
+		case '{', '[', '"':
+			tmpHeader = "application/json"
+			tmpBody = body
+		}
+	}
+	res.Header().Set("Content-Type", tmpHeader)
 	res.WriteHeader(http.StatusCreated)
-	// TODO. h.ArgsCLI.ResultPort
-	res.Write([]byte(h.Kwargs.GetBaseURL() + "/" + h.ShortingURL.GetImitationPath()))
+	res.Write(tmpBody)
 }
