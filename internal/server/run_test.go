@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"compress/gzip"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -51,9 +53,9 @@ func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string)
 	return res, string(resBody)
 }
 
-func TestRouter(t *testing.T) {
-	ts := httptest.NewServer(RunRouter())
-	defer ts.Close()
+func testRouter(t *testing.T, server *httptest.Server) {
+	// ts := httptest.NewServer(RunRouter())
+	// defer ts.Close()
 
 	// Tasts Cases
 	tests := []struct {
@@ -78,10 +80,87 @@ func TestRouter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, _ := ExecuteRequest(t, ts, tt.methodReq, tt.urlReq, tt.bodyReq)
+			res, _ := ExecuteRequest(t, server, tt.methodReq, tt.urlReq, tt.bodyReq)
 			defer res.Body.Close()
 			assert.Equal(t, tt.statusRes, res.StatusCode)
 			assert.Equal(t, tt.contentTypeRes, res.Header.Get(tt.contentViewRes))
 		})
 	}
+}
+
+func testCompress(t *testing.T, server *httptest.Server) {
+	// Request
+	requestBody := "https://practicum.yandex.ru"
+
+	// Test_1
+	t.Run("Test_compressing_data_in_request", func(t *testing.T) {
+		// Сжимаем клиентский запрос
+		buf := bytes.NewBuffer(nil)
+		wGzip := gzip.NewWriter(buf)
+		_, err := wGzip.Write([]byte(requestBody))
+		defer wGzip.Close()
+
+		require.NoError(t, err)
+		err = wGzip.Close()
+		require.NoError(t, err)
+
+		// Подготовка запроса
+		req := httptest.NewRequest("POST", server.URL, buf)
+		req.RequestURI = ""
+		req.Header.Set("Content-Encoding", "gzip")
+		req.Header.Set("Accept-Encoding", "")
+
+		// Отправка запроса
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, 201, res.StatusCode)
+		defer res.Body.Close()
+
+		// Check response body
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+
+		require.Contains(t, string(body), "http://localhost:8080")
+
+	})
+
+	// Test_2
+	t.Run("Test_compressing_data_in_response", func(t *testing.T) {
+		// Подготовка запроса
+		req := httptest.NewRequest("POST", server.URL, strings.NewReader(requestBody))
+		req.RequestURI = ""
+		req.Header.Set("Content-Type", "text/html")
+		req.Header.Set("Accept-Encoding", "gzip")
+
+		// Отправка запроса
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		require.Equal(t, 201, res.StatusCode)
+		require.Equal(t, res.Header.Get("Content-Encoding"), "gzip")
+		defer res.Body.Close()
+
+		// Checking Body
+		rGzip, err := gzip.NewReader(res.Body)
+		require.NoError(t, err)
+
+		defer rGzip.Close()
+
+		var b bytes.Buffer
+
+		_, err = b.ReadFrom(rGzip)
+		require.NoError(t, err)
+
+		require.Contains(t, b.String(), "http://localhost:8080")
+	})
+}
+
+func TestMain(t *testing.T) {
+	server := httptest.NewServer(RunRouter())
+	defer server.Close()
+
+	// Test Router
+	testRouter(t, server)
+
+	// Test Compress
+	testCompress(t, server)
 }

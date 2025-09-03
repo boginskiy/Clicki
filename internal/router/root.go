@@ -30,12 +30,12 @@ func Router(kwargs c.VarGetter, mv m.Middlewarer, db db.Storage, logger l.Logger
 	r.Route("/", func(r chi.Router) {
 
 		// shortURL
-		r.Post("/", mv.WithInfoLogger(http.HandlerFunc(hURL.Post)))
-		r.Get("/{id}", mv.WithInfoLogger(http.HandlerFunc(hURL.Get)))
+		r.Post("/", mv.Conveyor(http.HandlerFunc(hURL.Post)))
+		r.Get("/{id}", mv.Conveyor(http.HandlerFunc(hURL.Get)))
 
 		// APIShortURL
 		r.Route("/api/", func(r chi.Router) {
-			r.Post("/shorten", mv.WithInfoLogger(http.HandlerFunc(hAPIURL.Post)))
+			r.Post("/shorten", mv.Conveyor(http.HandlerFunc(hAPIURL.Post)))
 		})
 
 		// PProf
