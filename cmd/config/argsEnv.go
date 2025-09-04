@@ -8,6 +8,7 @@ import (
 
 type ArgsEnviron struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
+	PathToStore   string `env:"FILE_STORAGE_PATH"`
 	BaseURL       string `env:"BASE_URL"`
 	NameLogInfo   string `env:"NAME_LOG_INFO"`
 	NameLogFatal  string `env:"NAME_LOG_FATAL"`
@@ -39,4 +40,8 @@ func (e *ArgsEnviron) GetSrvAddr() (ServerAddress string) {
 
 func (e *ArgsEnviron) GetBaseURL() (BaseURL string) {
 	return e.BaseURL
+}
+
+func (e *ArgsEnviron) GetPathToStore() (PathToStore string) {
+	return e.PathToStore
 }

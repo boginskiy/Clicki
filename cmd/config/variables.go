@@ -2,6 +2,7 @@ package config
 
 type Variables struct {
 	ServerAddress   string
+	PathToStore     string
 	BaseURL         string
 	ArgsCommandLine *ArgsCommandLine
 	ArgsEnviron     *ArgsEnviron
@@ -32,6 +33,14 @@ func (v *Variables) extSettingsArgs() {
 	} else {
 		v.BaseURL = v.ArgsCommandLine.GetBaseURL()
 	}
+
+	// Look for priority for PathToStore
+	tmpPath := v.ArgsEnviron.GetPathToStore()
+	if tmpPath != "" {
+		v.PathToStore = tmpPath
+	} else {
+		v.PathToStore = v.ArgsCommandLine.GetPathToStore()
+	}
 }
 
 func (v *Variables) GetSrvAddr() (ServerAddress string) {
@@ -40,6 +49,10 @@ func (v *Variables) GetSrvAddr() (ServerAddress string) {
 
 func (v *Variables) GetBaseURL() (BaseURL string) {
 	return v.BaseURL
+}
+
+func (v *Variables) GetPathToStore() (PathToStore string) {
+	return v.PathToStore
 }
 
 func (v *Variables) GetNameLogInfo() (NameLogInfo string) {

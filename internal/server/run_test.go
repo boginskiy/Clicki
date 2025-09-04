@@ -21,7 +21,8 @@ import (
 
 func RunRouter() *chi.Mux {
 	kwargs := c.NewVariables() // agrs - атрибуты командной строки
-	db := db.NewDBStore()      // db - слой базы данных 'DBStore'
+	fwork, _ := db.NewFileWorking("test")
+	db := db.NewDBStore(fwork) // db - слой базы данных 'DBStore'
 
 	infoLog := logger.NewLogg("Test.log", "INFO")
 	midWare := m.NewMiddleware(infoLog)

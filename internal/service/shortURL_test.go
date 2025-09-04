@@ -13,7 +13,8 @@ import (
 var infoLog = logger.NewLogg("Test.log", "INFO")
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
-var database = db.NewDBStore()
+var fileWorker, _ = db.NewFileWorking("test")
+var database = db.NewDBStore(fileWorker)
 
 var ShURL = service.NewShortURL(database, infoLog, checker, extraFuncer)
 

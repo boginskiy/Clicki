@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
@@ -21,7 +22,13 @@ func Run(kwargs c.VarGetter) {
 	midWare := m.NewMiddleware(infoLog)
 
 	// Db
-	db := db.NewDBStore()
+	writerFile, err := db.NewFileWorking(kwargs.GetPathToStore())
+	if err != nil {
+		fatalLog.RaiseError("Run", l.Fields{"error": err.Error()})
+	}
+	db := db.NewDBStore(writerFile)
+	fmt.Println(db.Store) // Delete
+	defer writerFile.Close()
 
 	// writing log...
 	infoLog.RaiseInfo(l.StartedServInfo,
@@ -29,7 +36,7 @@ func Run(kwargs c.VarGetter) {
 	)
 
 	// Start server
-	err := http.ListenAndServe(kwargs.GetSrvAddr(),
+	err = http.ListenAndServe(kwargs.GetSrvAddr(),
 		r.Router(kwargs, midWare, db, fatalLog))
 
 	// writing log...
