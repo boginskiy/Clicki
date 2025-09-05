@@ -46,13 +46,13 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	err := s.ExtraFuncer.Deserialization(req, baseLink)
 
 	if err != nil {
-		s.Log.RaiseFatal(DeserializFatal, l.Fields{"error": err.Error()})
+		s.Log.RaiseFatal(err, DeserializFatal, l.Fields{"error": err.Error()})
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(baseLink.URL) || baseLink.URL == "" {
-		s.Log.RaiseError("APIShortURL.Create>CheckUpURL",
+		s.Log.RaiseInfo("APIShortURL.Create>CheckUpURL",
 			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
@@ -65,7 +65,7 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	result, err := s.ExtraFuncer.Serialization(extraLink)
 
 	if err != nil {
-		s.Log.RaiseError("APIShortURL.Create>NewExtraLink",
+		s.Log.RaiseError(err, "APIShortURL.Create>NewExtraLink",
 			l.Fields{"error": err.Error()})
 		return EmptyByteSlice, err
 	}

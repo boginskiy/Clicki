@@ -1,46 +1,45 @@
 package config
 
+import (
+	"strings"
+)
+
 type Variables struct {
-	ServerAddress   string
-	PathToStore     string
-	BaseURL         string
-	ArgsCommandLine *ArgsCommandLine
-	ArgsEnviron     *ArgsEnviron
+	ServerAddress string
+	PathToStore   string
+	BaseURL       string
+	ArgsCLI       *ArgsCLI
+	ArgsENV       *ArgsENV
 }
 
 func NewVariables() *Variables {
 	tmpVar := &Variables{
-		ArgsCommandLine: NewArgsCommandLine(),
-		ArgsEnviron:     NewArgsEnviron(),
+		ArgsCLI: NewArgsCLI(),
+		ArgsENV: NewArgsENV(),
 	}
 	tmpVar.extSettingsArgs()
 	return tmpVar
 }
 
+func (v *Variables) argsTrim(arg string) string {
+	return strings.TrimSpace(arg)
+}
+
+func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
+	arg := envFunc()      // Get arg
+	arg = v.argsTrim(arg) // Clean arg
+
+	if len(arg) > 0 {
+		return arg
+	} else {
+		return cliFunc()
+	}
+}
+
 func (v *Variables) extSettingsArgs() {
-	// Look for priority for ServerAddress
-	tmpAddress := v.ArgsEnviron.GetSrvAddr()
-	if tmpAddress != "" {
-		v.ServerAddress = tmpAddress
-	} else {
-		v.ServerAddress = v.ArgsCommandLine.GetSrvAddr()
-	}
-
-	// Look for priority for BaseURL
-	tmpURL := v.ArgsEnviron.GetBaseURL()
-	if tmpURL != "" {
-		v.BaseURL = tmpURL
-	} else {
-		v.BaseURL = v.ArgsCommandLine.GetBaseURL()
-	}
-
-	// Look for priority for PathToStore
-	tmpPath := v.ArgsEnviron.GetPathToStore()
-	if tmpPath != "" {
-		v.PathToStore = tmpPath
-	} else {
-		v.PathToStore = v.ArgsCommandLine.GetPathToStore()
-	}
+	v.PathToStore = v.argsPrioryty(v.ArgsENV.GetPathToStore, v.ArgsCLI.GetPathToStore)
+	v.ServerAddress = v.argsPrioryty(v.ArgsENV.GetSrvAddr, v.ArgsCLI.GetSrvAddr)
+	v.BaseURL = v.argsPrioryty(v.ArgsENV.GetBaseURL, v.ArgsCLI.GetBaseURL)
 }
 
 func (v *Variables) GetSrvAddr() (ServerAddress string) {
@@ -56,9 +55,9 @@ func (v *Variables) GetPathToStore() (PathToStore string) {
 }
 
 func (v *Variables) GetNameLogInfo() (NameLogInfo string) {
-	return v.ArgsEnviron.NameLogInfo
+	return v.ArgsENV.NameLogInfo
 }
 
 func (v *Variables) GetNameLogFatal() (NameLogFatal string) {
-	return v.ArgsEnviron.NameLogFatal
+	return v.ArgsENV.NameLogFatal
 }

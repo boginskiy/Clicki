@@ -5,25 +5,15 @@ import (
 	"net/http/pprof"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/internal/db"
 	h "github.com/boginskiy/Clicki/internal/handler"
-	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/middleware"
-	p "github.com/boginskiy/Clicki/internal/preparation"
 	s "github.com/boginskiy/Clicki/internal/service"
-	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/go-chi/chi"
 )
 
-func Router(kwargs c.VarGetter, mv m.Middlewarer, db db.Storage, logger l.Logger) *chi.Mux {
-	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные возможности
-	checker := v.NewChecker()       // checker - валидация данных
-
-	APIShortURL := s.NewAPIShortURL(db, logger, checker, extraFuncer) // Service 'APIShortURL'
-	shortURL := s.NewShortURL(db, logger, checker, extraFuncer)       // Service 'ShortURL'
-
-	hURL := h.HandlerURL{Service: shortURL, Kwargs: kwargs}
-	hAPIURL := h.HandlerURL{Service: APIShortURL, Kwargs: kwargs}
+func Router(kwargs c.VarGetter, mv m.Middlewarer, apiURL, shortuRL s.CRUDer) *chi.Mux {
+	hAPIURL := h.HandlerURL{Service: apiURL, Kwargs: kwargs}
+	hURL := h.HandlerURL{Service: shortuRL, Kwargs: kwargs}
 
 	r := chi.NewRouter()
 

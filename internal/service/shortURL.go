@@ -45,14 +45,14 @@ func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, e
 	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req)
 
 	if err != nil {
-		s.Log.RaiseFatal("ShortURL.Create>TakeAllBodyFromReq",
+		s.Log.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq",
 			l.Fields{"error": err.Error()})
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
-		s.Log.RaiseError("ShortURL.Create>CheckUpURL",
+		s.Log.RaiseInfo("ShortURL.Create>CheckUpURL",
 			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
@@ -74,7 +74,7 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	tmpURL, err := s.DB.GetValue(tmpPath)
 
 	if err != nil {
-		s.Log.RaiseError("ShortURL.Read>GetValue",
+		s.Log.RaiseError(err, "ShortURL.Read>GetValue",
 			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}

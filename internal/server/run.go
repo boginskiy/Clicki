@@ -1,14 +1,16 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/middleware"
+	p "github.com/boginskiy/Clicki/internal/preparation"
 	r "github.com/boginskiy/Clicki/internal/router"
+	s "github.com/boginskiy/Clicki/internal/service"
+	v "github.com/boginskiy/Clicki/internal/validation"
 )
 
 func Run(kwargs c.VarGetter) {
@@ -23,26 +25,25 @@ func Run(kwargs c.VarGetter) {
 
 	// Db
 	writerFile, err := db.NewFileWorking(kwargs.GetPathToStore())
-	if err != nil {
-		fatalLog.RaiseError("Run", l.Fields{"error": err.Error()})
-	}
+	fatalLog.RaiseError(err, "Run", l.Fields{"error": err.Error()})
 	db := db.NewDBStore(writerFile)
-	fmt.Println(db.Store) // Delete
 	defer writerFile.Close()
 
+	// Extra
+	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные функции
+	checker := v.NewChecker()       // checker - валидация данных
+
+	// Services
+	APIShortURL := s.NewAPIShortURL(db, fatalLog, checker, extraFuncer)
+	ShortURL := s.NewShortURL(db, fatalLog, checker, extraFuncer)
+
 	// writing log...
-	infoLog.RaiseInfo(l.StartedServInfo,
-		l.Fields{"port": kwargs.GetSrvAddr()},
-	)
+	infoLog.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
 	err = http.ListenAndServe(kwargs.GetSrvAddr(),
-		r.Router(kwargs, midWare, db, fatalLog))
+		r.Router(kwargs, midWare, APIShortURL, ShortURL))
 
 	// writing log...
-	if err != nil {
-		fatalLog.RaiseFatal(l.StartedServFatal,
-			l.Fields{"port": kwargs.GetSrvAddr()},
-		)
-	}
+	fatalLog.RaiseFatal(err, l.StartedServFatal, l.Fields{"port": kwargs.GetSrvAddr()})
 }
