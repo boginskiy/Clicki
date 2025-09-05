@@ -1,13 +1,11 @@
 package main
 
 import (
-	"log"
-
+	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/server"
 )
 
 func main() {
-	if err := server.Run(); err != nil {
-		log.Fatal(err)
-	}
+	Variables := config.NewVariables()
+	server.Run(Variables)
 }
