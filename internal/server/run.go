@@ -25,7 +25,7 @@ func Run(kwargs c.VarGetter) {
 
 	// Db
 	writerFile, err := db.NewFileWorking(kwargs.GetPathToStore())
-	fatalLog.RaiseError(err, "Run", l.Fields{"error": err.Error()})
+	fatalLog.RaiseError(err, "Run", nil)
 	db := db.NewDBStore(writerFile)
 	defer writerFile.Close()
 

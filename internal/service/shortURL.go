@@ -45,8 +45,7 @@ func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, e
 	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req)
 
 	if err != nil {
-		s.Log.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq",
-			l.Fields{"error": err.Error()})
+		s.Log.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
 	}
 
@@ -74,8 +73,7 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	tmpURL, err := s.DB.GetValue(tmpPath)
 
 	if err != nil {
-		s.Log.RaiseError(err, "ShortURL.Read>GetValue",
-			l.Fields{"error": ErrDataNotValid.Error()})
+		s.Log.RaiseError(err, "ShortURL.Read>GetValue", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 

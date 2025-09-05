@@ -46,7 +46,7 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	err := s.ExtraFuncer.Deserialization(req, baseLink)
 
 	if err != nil {
-		s.Log.RaiseFatal(err, DeserializFatal, l.Fields{"error": err.Error()})
+		s.Log.RaiseFatal(err, DeserializFatal, nil)
 		return EmptyByteSlice, err
 	}
 
@@ -65,11 +65,9 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	result, err := s.ExtraFuncer.Serialization(extraLink)
 
 	if err != nil {
-		s.Log.RaiseError(err, "APIShortURL.Create>NewExtraLink",
-			l.Fields{"error": err.Error()})
+		s.Log.RaiseError(err, "APIShortURL.Create>NewExtraLink", nil)
 		return EmptyByteSlice, err
 	}
-
 	return result, nil
 }
 

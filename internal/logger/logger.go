@@ -68,7 +68,12 @@ func (e *Logg) RaiseError(err error, msg string, dataMap Fields) {
 	if err != nil {
 		e.mu.Lock()
 		fmt.Fprintln(os.Stdout, msg)
-		e.Log.WithFields(logrus.Fields(dataMap)).Error(msg)
+
+		if dataMap != nil {
+			e.Log.WithFields(logrus.Fields(dataMap)).Error(msg)
+		} else {
+			e.Log.WithFields(logrus.Fields(Fields{"error": err.Error()})).Error(msg)
+		}
 		e.mu.Unlock()
 	}
 }
@@ -77,7 +82,12 @@ func (e *Logg) RaiseFatal(err error, msg string, dataMap Fields) {
 	if err != nil {
 		e.mu.Lock()
 		fmt.Fprintln(os.Stdout, msg)
-		e.Log.WithFields(logrus.Fields(dataMap)).Fatal(msg)
+
+		if dataMap != nil {
+			e.Log.WithFields(logrus.Fields(dataMap)).Fatal(msg)
+		} else {
+			e.Log.WithFields(logrus.Fields(Fields{"fatal": err.Error()})).Fatal(msg)
+		}
 		e.mu.Unlock()
 	}
 }
