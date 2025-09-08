@@ -13,43 +13,52 @@ import (
 	"time"
 )
 
+var (
+	ApplWasStopedInfo = "INFO: the application was successfully stopped"
+	TerminalCommErr   = "ERROR: error in terminal command"
+	NotPidProcInfo    = "INFO: there is no PID process"
+)
+
 /*
 Description:
 	Testing Appl with real start web-server of Appl
 */
 
-func StartApplication(err chan<- error, path string) {
-	// Запуск программы для тестирования
-	cmd := exec.Command(path)
-	// устанавливаем стандартные потоки
+func commandKill(pid string) {
+	if pid == "" {
+		fmt.Fprintln(os.Stderr, NotPidProcInfo)
+		return
+	}
+
+	cmd := exec.Command("kill", pid)
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err <- cmd.Run()
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, TerminalCommErr, err.Error())
+		return
+	}
+	fmt.Fprintln(os.Stdout, ApplWasStopedInfo)
 }
 
-func StopApplication(port string) {
-	// Starting info of Appl
+func showOpenProc(port string, out *bytes.Buffer) {
 	cmd := exec.Command("lsof", "-i", port)
 
 	// out:
 	// 	   COMMAND    PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 	//     clicki  118361  ali    3u  IPv4 447949      0t0  TCP localhost:http-alt (LISTEN)
 
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
+	cmd.Stdout = out
 	err := cmd.Run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERR: error in terminal command: %v\n", err)
+		fmt.Fprintln(os.Stderr, TerminalCommErr, err.Error())
 		return
 	}
+}
 
-	// Take PID process
+func takePidProc(out *bytes.Buffer) string {
 	scanner := bufio.NewScanner(bytes.NewReader(out.Bytes()))
 	pid := ""
-
-	// pid:
-	//     118361
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -58,23 +67,24 @@ func StopApplication(port string) {
 			pid = fields[1]
 		}
 	}
+	return pid
+}
 
-	// Kill process
-	if pid == "" {
-		fmt.Fprintln(os.Stderr, "INFO: there is no PID process")
-		return
-	}
+func StopApplication(port string) {
+	var out bytes.Buffer
 
-	cmd = exec.Command("kill", pid)
+	showOpenProc(port, &out) // Starting info of Appl
+	pid := takePidProc(&out) // Take PID process
+	commandKill(pid)         // Kill process
+}
+
+func StartApplication(err chan<- error, path string) {
+	// Запуск программы для тестирования
+	cmd := exec.Command(path)
+	// устанавливаем стандартные потоки
 	cmd.Stdout = os.Stdout
-	err = cmd.Run()
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERR: error in terminal command: %v\n", err)
-		return
-	}
-
-	fmt.Fprintln(os.Stdout, "INFO: the application was successfully stopped")
+	cmd.Stderr = os.Stderr
+	err <- cmd.Run()
 }
 
 func CheckResBody(body string, reqular string) bool {

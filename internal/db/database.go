@@ -7,20 +7,16 @@ import (
 
 const CAP = 10
 
-// Интерфейс Storage описывает операции над хранилищем данных
-type Storage interface {
-	GetValue(key string) (value string, err error)
-	PutValue(key string, value string)
-}
-
 type DBStore struct {
-	mu    sync.RWMutex
-	Store map[string]string
+	mu         sync.RWMutex
+	Store      map[string]string
+	fileWorker FileWorker
 }
 
-func NewDBStore() *DBStore {
+func NewDBStore(fileWorker FileWorker) *DBStore {
 	return &DBStore{
-		Store: make(map[string]string, CAP),
+		Store:      fileWorker.DataRecovery(&StoreModel{}),
+		fileWorker: fileWorker,
 	}
 }
 
@@ -39,5 +35,10 @@ func (db *DBStore) PutValue(key, value string) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
+	// Добавление записи в map
 	db.Store[key] = value
+
+	// Добавление записи в файл
+	nextLine := db.fileWorker.GetNextLine()
+	db.fileWorker.Save(NewStoreModel(nextLine, key, value))
 }

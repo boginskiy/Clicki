@@ -6,6 +6,7 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/db2"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	p "github.com/boginskiy/Clicki/internal/preparation"
 	v "github.com/boginskiy/Clicki/internal/validation"
@@ -15,16 +16,20 @@ import (
 type ShortURL struct {
 	ExtraFuncer p.ExtraFuncer
 	DB          db.Storage
+	DB2         db2.DBConnecter
 	Checker     v.Checker
 	Log         l.Logger
 }
 
-func NewShortURL(db db.Storage, log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+func NewShortURL(db db.Storage, db2 db2.DBConnecter,
+	log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Log:         log,
 		DB:          db,
+		DB2:         db2,
 	}
 }
 
@@ -45,14 +50,13 @@ func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, e
 	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req)
 
 	if err != nil {
-		s.Log.RaiseFatal("ShortURL.Create>TakeAllBodyFromReq",
-			l.Fields{"error": err.Error()})
+		s.Log.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
-		s.Log.RaiseError("ShortURL.Create>CheckUpURL",
+		s.Log.RaiseInfo("ShortURL.Create>CheckUpURL",
 			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
@@ -74,10 +78,18 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	tmpURL, err := s.DB.GetValue(tmpPath)
 
 	if err != nil {
-		s.Log.RaiseError("ShortURL.Read>GetValue",
-			l.Fields{"error": ErrDataNotValid.Error()})
+		s.Log.RaiseError(err, "ShortURL.Read>GetValue", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
 	return []byte(tmpURL), nil
+}
+
+// CheckPing - check of connection DB
+func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
+	err := s.DB2.GetDB().Ping()
+	if err != nil {
+		return EmptyByteSlice, err
+	}
+	return ConnDBIsSucces, nil
 }

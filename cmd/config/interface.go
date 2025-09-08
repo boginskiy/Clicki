@@ -5,13 +5,16 @@ type Argsmenter interface {
 }
 
 type ArgsGetter interface {
+	GetPathToStore() (PathToStore string)
 	GetSrvAddr() (ServerAddress string)
 	GetBaseURL() (BaseURL string)
+	GetDB() (DB string)
 }
 
 type VarGetter interface {
-	GetNameLogFatal() (NameLogFatal string)
-	GetNameLogInfo() (NameLogInfo string)
+	GetPathToStore() (PathToStore string)
 	GetSrvAddr() (ServerAddress string)
+	GetLogFile() (LogFile string)
 	GetBaseURL() (BaseURL string)
+	GetDB() (DB string)
 }

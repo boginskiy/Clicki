@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/db2"
 	"github.com/boginskiy/Clicki/internal/logger"
 	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
@@ -11,11 +12,15 @@ import (
 )
 
 var infoLog = logger.NewLogg("Test.log", "INFO")
+var dbase2 = &db2.ConnDB{}
+
+var fileWorker, _ = db.NewFileWorking("test")
+var dbase = db.NewDBStore(fileWorker)
+
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
-var database = db.NewDBStore()
 
-var ShURL = service.NewShortURL(database, infoLog, checker, extraFuncer)
+var ShURL = service.NewShortURL(dbase, dbase2, infoLog, checker, extraFuncer)
 
 func TestEncryptionLongURL(t *testing.T) {
 	name := "Check EncryptionLongURL from ProURL"

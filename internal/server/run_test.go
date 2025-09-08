@@ -11,25 +11,38 @@ import (
 
 	c "github.com/boginskiy/Clicki/cmd/config"
 	db "github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/db2"
 	"github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/middleware"
+	p "github.com/boginskiy/Clicki/internal/preparation"
 	r "github.com/boginskiy/Clicki/internal/router"
+	s "github.com/boginskiy/Clicki/internal/service"
+	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func RunRouter() *chi.Mux {
-	kwargs := c.NewVariables() // agrs - атрибуты командной строки
-	db := db.NewDBStore()      // db - слой базы данных 'DBStore'
-
 	infoLog := logger.NewLogg("Test.log", "INFO")
+	kwargs := c.NewVariables(infoLog) // agrs - атрибуты командной строки
+	db2 := &db2.ConnDB{}
+
+	fwork, _ := db.NewFileWorking("test")
+	db := db.NewDBStore(fwork) // db - слой базы данных 'DBStore'
+
 	midWare := m.NewMiddleware(infoLog)
+	extraFuncer := p.NewExtraFunc()
+	checker := v.NewChecker()
+
+	// Services
+	APIShortURL := s.NewAPIShortURL(db, db2, infoLog, checker, extraFuncer) // Service 'APIShortURL'
+	ShortURL := s.NewShortURL(db, db2, infoLog, checker, extraFuncer)
 
 	// Заполняем базу данных тестовыми данными
 	db.Store["DcKa7J8d"] = "https://translate.yandex.ru/"
 
-	return r.Router(kwargs, midWare, db, infoLog)
+	return r.Router(kwargs, midWare, APIShortURL, ShortURL)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {

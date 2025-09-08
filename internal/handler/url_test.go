@@ -8,6 +8,7 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/db2"
 	"github.com/boginskiy/Clicki/internal/handler"
 	"github.com/boginskiy/Clicki/internal/logger"
 	"github.com/boginskiy/Clicki/internal/preparation"
@@ -15,17 +16,20 @@ import (
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
+var infoLog = logger.NewLogg("Test.log", "INFO")
 var kwargs = &config.Variables{
 	ServerAddress: "localhost:8080",
 	BaseURL:       "http://localhost:8081",
 }
+var dbase2 = db2.NewConnDB(kwargs, infoLog)
 
-var infoLog = logger.NewLogg("Test.log", "INFO")
+var fileWorker, _ = db.NewFileWorking("test")
+var dbase = db.NewDBStore(fileWorker)
+
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
-var database = db.NewDBStore()
 
-var shURL = service.NewShortURL(database, infoLog, checker, extraFuncer)
+var shURL = service.NewShortURL(dbase, dbase2, infoLog, checker, extraFuncer)
 
 // TestHandlerURL check only POST request
 func TestPostURL(t *testing.T) {
@@ -164,7 +168,7 @@ func TestGetURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Db
-			database.Store = tt.store
+			dbase.Store = tt.store
 			// Handler
 			h := handler.HandlerURL{Service: shURL, Kwargs: kwargs}
 

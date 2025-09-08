@@ -3,6 +3,8 @@ package handler
 import (
 	"net/http"
 
+	_ "github.com/lib/pq"
+
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/service"
 )
@@ -25,10 +27,10 @@ func (h *HandlerURL) Get(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
-	// Запуск бизнес логики сервиса 'Service'
+	// Start of 'Service'
 	body, err := h.Service.Create(req, h.Kwargs)
 
-	// Проверка ошибок
+	// Check err
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
@@ -48,4 +50,15 @@ func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", tmpHeader)
 	res.WriteHeader(http.StatusCreated)
 	res.Write(tmpBody)
+}
+
+func (h *HandlerURL) Check(res http.ResponseWriter, req *http.Request) {
+	body, err := h.Service.CheckPing(req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	res.Header().Set("Content-Type", "text/plain")
+	res.WriteHeader(http.StatusOK)
+	res.Write(body)
 }

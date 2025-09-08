@@ -10,15 +10,6 @@ import (
 
 type Fields map[string]any
 
-type Logger interface {
-	RaiseInfo(string, Fields)
-	RaiseWarn(string, Fields)
-	RaiseError(string, Fields)
-	RaiseFatal(string, Fields)
-	RaisePanic(string, Fields)
-	CloseDesc()
-}
-
 var LEVEL = map[string]logrus.Level{
 	"DEBUG": logrus.DebugLevel,
 	"INFO":  logrus.InfoLevel,
@@ -64,23 +55,39 @@ func (e *Logg) RaiseWarn(msg string, dataMap Fields) {
 	e.mu.Unlock()
 }
 
-func (e *Logg) RaiseError(msg string, dataMap Fields) {
-	e.mu.Lock()
-	fmt.Fprintln(os.Stdout, msg)
-	e.Log.WithFields(logrus.Fields(dataMap)).Error(msg)
-	e.mu.Unlock()
+func (e *Logg) RaiseError(err error, msg string, dataMap Fields) {
+	if err != nil {
+		e.mu.Lock()
+		fmt.Fprintln(os.Stdout, msg)
+
+		if dataMap != nil {
+			e.Log.WithFields(logrus.Fields(dataMap)).Error(msg)
+		} else {
+			e.Log.WithFields(logrus.Fields(Fields{"error": err.Error()})).Error(msg)
+		}
+		e.mu.Unlock()
+	}
 }
 
-func (e *Logg) RaiseFatal(msg string, dataMap Fields) {
-	e.mu.Lock()
-	fmt.Fprintln(os.Stdout, msg)
-	e.Log.WithFields(logrus.Fields(dataMap)).Fatal(msg)
-	e.mu.Unlock()
+func (e *Logg) RaiseFatal(err error, msg string, dataMap Fields) {
+	if err != nil {
+		e.mu.Lock()
+		fmt.Fprintln(os.Stdout, msg)
+
+		if dataMap != nil {
+			e.Log.WithFields(logrus.Fields(dataMap)).Fatal(msg)
+		} else {
+			e.Log.WithFields(logrus.Fields(Fields{"fatal": err.Error()})).Fatal(msg)
+		}
+		e.mu.Unlock()
+	}
 }
 
-func (e *Logg) RaisePanic(msg string, dataMap Fields) {
-	e.mu.Lock()
-	fmt.Fprintln(os.Stdout, msg)
-	e.Log.WithFields(logrus.Fields(dataMap)).Panic(msg)
-	e.mu.Unlock()
+func (e *Logg) RaisePanic(err error, msg string, dataMap Fields) {
+	if err != nil {
+		e.mu.Lock()
+		fmt.Fprintln(os.Stdout, msg)
+		e.Log.WithFields(logrus.Fields(dataMap)).Panic(msg)
+		e.mu.Unlock()
+	}
 }

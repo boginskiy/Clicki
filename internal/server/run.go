@@ -5,37 +5,45 @@ import (
 
 	c "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/db2"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/middleware"
+	p "github.com/boginskiy/Clicki/internal/preparation"
 	r "github.com/boginskiy/Clicki/internal/router"
+	s "github.com/boginskiy/Clicki/internal/service"
+	v "github.com/boginskiy/Clicki/internal/validation"
 )
 
-func Run(kwargs c.VarGetter) {
-	// Logger
-	fatalLog := l.NewLogg(kwargs.GetNameLogFatal(), "ERROR")
-	infoLog := l.NewLogg(kwargs.GetNameLogInfo(), "INFO")
-	defer fatalLog.CloseDesc()
+func Run(kwargs c.VarGetter, logger l.Logger, db2 db2.DBConnecter) {
+	// Info Logger
+	infoLog := l.NewLogg(kwargs.GetLogFile(), "INFO")
 	defer infoLog.CloseDesc()
 
 	// Middleware
 	midWare := m.NewMiddleware(infoLog)
 
 	// Db
-	db := db.NewDBStore()
+	writerFile, err := db.NewFileWorking(kwargs.GetPathToStore())
+	logger.RaiseError(err, "Run", nil)
+	db := db.NewDBStore(writerFile)
+	defer writerFile.Close()
+
+	// Extra
+	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные функции
+	checker := v.NewChecker()       // checker - валидация данных
+
+	// Services
+	APIShortURL := s.NewAPIShortURL(db, db2, logger, checker, extraFuncer)
+	ShortURL := s.NewShortURL(db, db2, logger, checker, extraFuncer)
 
 	// writing log...
-	infoLog.RaiseInfo(l.StartedServInfo,
-		l.Fields{"port": kwargs.GetSrvAddr()},
-	)
+	logger.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
-	err := http.ListenAndServe(kwargs.GetSrvAddr(),
-		r.Router(kwargs, midWare, db, fatalLog))
+	err = http.ListenAndServe(kwargs.GetSrvAddr(),
+		r.Router(kwargs, midWare, APIShortURL, ShortURL))
 
 	// writing log...
-	if err != nil {
-		fatalLog.RaiseFatal(l.StartedServFatal,
-			l.Fields{"port": kwargs.GetSrvAddr()},
-		)
-	}
+	logger.RaiseFatal(err, l.StartedServFatal, l.Fields{"port": kwargs.GetSrvAddr()})
+
 }

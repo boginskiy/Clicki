@@ -2,41 +2,51 @@ package config
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"github.com/caarlos0/env"
 )
 
-type ArgsEnviron struct {
+type ArgsENV struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
+	PathToStore   string `env:"FILE_STORAGE_PATH"`
+	DB            string `env:"DATABASE_DSN"`
 	BaseURL       string `env:"BASE_URL"`
-	NameLogInfo   string `env:"NAME_LOG_INFO"`
-	NameLogFatal  string `env:"NAME_LOG_FATAL"`
+	LogFile       string `env:"LOG_FILE"`
 }
 
-func NewArgsEnviron() *ArgsEnviron {
-	ArgsEnv := new(ArgsEnviron)
-	ArgsEnv.ParseFlags()
-	return ArgsEnv
+func NewArgsENV() *ArgsENV {
+	args := new(ArgsENV)
+	args.ParseFlags()
+	return args
 }
 
-func (e *ArgsEnviron) ParseFlags() {
+func (e *ArgsENV) ParseFlags() {
 	err := env.Parse(e)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// Default
-	if e.NameLogInfo == "" {
-		e.NameLogInfo = "LogInfo.log"
-	}
-	if e.NameLogFatal == "" {
-		e.NameLogFatal = "LogFatal.log"
+	valueLogFile := strings.TrimSpace(os.Getenv("LOG_FILE"))
+	if len(valueLogFile) == 0 {
+		e.LogFile = "LogInfo.log"
 	}
 }
 
-func (e *ArgsEnviron) GetSrvAddr() (ServerAddress string) {
+func (e *ArgsENV) GetSrvAddr() (ServerAddress string) {
 	return e.ServerAddress
 }
 
-func (e *ArgsEnviron) GetBaseURL() (BaseURL string) {
+func (e *ArgsENV) GetBaseURL() (BaseURL string) {
 	return e.BaseURL
+}
+
+func (e *ArgsENV) GetPathToStore() (PathToStore string) {
+	return e.PathToStore
+}
+
+func (e *ArgsENV) GetDB() (DB string) {
+	return e.DB
 }
