@@ -18,16 +18,16 @@ type ShortURL struct {
 	DB          db.Storage
 	DB2         db2.DBConnecter
 	Checker     v.Checker
-	Log         l.Logger
+	Logger      l.Logger
 }
 
 func NewShortURL(db db.Storage, db2 db2.DBConnecter,
-	log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+	logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
 
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
-		Log:         log,
+		Logger:      logger,
 		DB:          db,
 		DB2:         db2,
 	}
@@ -50,13 +50,13 @@ func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, e
 	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req)
 
 	if err != nil {
-		s.Log.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
+		s.Logger.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
-		s.Log.RaiseInfo("ShortURL.Create>CheckUpURL",
+		s.Logger.RaiseInfo("ShortURL.Create>CheckUpURL",
 			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
@@ -78,7 +78,7 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	tmpURL, err := s.DB.GetValue(tmpPath)
 
 	if err != nil {
-		s.Log.RaiseError(err, "ShortURL.Read>GetValue", nil)
+		s.Logger.RaiseError(err, "ShortURL.Read>GetValue", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 

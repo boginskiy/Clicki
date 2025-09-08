@@ -14,7 +14,7 @@ import (
 	v "github.com/boginskiy/Clicki/internal/validation"
 )
 
-func Run(kwargs c.VarGetter, logger l.Logger, db2 db2.DBConnecter) {
+func Run(kwargs c.VarGetter, baseLog l.Logger, db2 db2.DBConnecter) {
 	// Info Logger
 	infoLog := l.NewLogg(kwargs.GetLogFile(), "INFO")
 	defer infoLog.CloseDesc()
@@ -24,7 +24,7 @@ func Run(kwargs c.VarGetter, logger l.Logger, db2 db2.DBConnecter) {
 
 	// Db
 	writerFile, err := db.NewFileWorking(kwargs.GetPathToStore())
-	logger.RaiseError(err, "Run", nil)
+	baseLog.RaiseError(err, "Run", nil)
 	db := db.NewDBStore(writerFile)
 	defer writerFile.Close()
 
@@ -33,17 +33,17 @@ func Run(kwargs c.VarGetter, logger l.Logger, db2 db2.DBConnecter) {
 	checker := v.NewChecker()       // checker - валидация данных
 
 	// Services
-	APIShortURL := s.NewAPIShortURL(db, db2, logger, checker, extraFuncer)
-	ShortURL := s.NewShortURL(db, db2, logger, checker, extraFuncer)
+	APIShortURL := s.NewAPIShortURL(db, db2, baseLog, checker, extraFuncer)
+	ShortURL := s.NewShortURL(db, db2, baseLog, checker, extraFuncer)
 
 	// writing log...
-	logger.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
+	baseLog.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
 	err = http.ListenAndServe(kwargs.GetSrvAddr(),
 		r.Router(kwargs, midWare, APIShortURL, ShortURL))
 
 	// writing log...
-	logger.RaiseFatal(err, l.StartedServFatal, l.Fields{"port": kwargs.GetSrvAddr()})
+	baseLog.RaiseFatal(err, l.StartedServFatal, l.Fields{"port": kwargs.GetSrvAddr()})
 
 }

@@ -18,16 +18,16 @@ type APIShortURL struct {
 	DB          db.Storage
 	DB2         db2.DBConnecter
 	Checker     v.Checker
-	Log         l.Logger
+	Logger      l.Logger
 }
 
 func NewAPIShortURL(db db.Storage, db2 db2.DBConnecter,
-	log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *APIShortURL {
+	logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *APIShortURL {
 
 	return &APIShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
-		Log:         log,
+		Logger:      logger,
 		DB:          db,
 		DB2:         db2,
 	}
@@ -51,13 +51,13 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	err := s.ExtraFuncer.Deserialization(req, baseLink)
 
 	if err != nil {
-		s.Log.RaiseFatal(err, DeserializFatal, nil)
+		s.Logger.RaiseFatal(err, DeserializFatal, nil)
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(baseLink.URL) || baseLink.URL == "" {
-		s.Log.RaiseInfo("APIShortURL.Create>CheckUpURL",
+		s.Logger.RaiseInfo("APIShortURL.Create>CheckUpURL",
 			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
@@ -70,7 +70,7 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	result, err := s.ExtraFuncer.Serialization(extraLink)
 
 	if err != nil {
-		s.Log.RaiseError(err, "APIShortURL.Create>NewExtraLink", nil)
+		s.Logger.RaiseError(err, "APIShortURL.Create>NewExtraLink", nil)
 		return EmptyByteSlice, err
 	}
 	return result, nil
