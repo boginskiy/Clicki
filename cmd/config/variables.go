@@ -1,15 +1,22 @@
 package config
 
+import (
+	l "github.com/boginskiy/Clicki/internal/logger"
+)
+
 type Variables struct {
+	Logger          l.Logger
 	ServerAddress   string
 	PathToStore     string
 	BaseURL         string
+	DB              string
 	ArgsCommandLine *ArgsCommandLine
 	ArgsEnviron     *ArgsEnviron
 }
 
-func NewVariables() *Variables {
+func NewVariables(logger l.Logger) *Variables {
 	tmpVar := &Variables{
+		Logger:          logger,
 		ArgsCommandLine: NewArgsCommandLine(),
 		ArgsEnviron:     NewArgsEnviron(),
 	}
@@ -41,6 +48,14 @@ func (v *Variables) extSettingsArgs() {
 	} else {
 		v.PathToStore = v.ArgsCommandLine.GetPathToStore()
 	}
+
+	// Look for priority for DB
+	tmpDB := v.ArgsEnviron.GetDB()
+	if tmpDB != "" {
+		v.DB = tmpDB
+	} else {
+		v.DB = v.ArgsCommandLine.GetDB()
+	}
 }
 
 func (v *Variables) GetSrvAddr() (ServerAddress string) {
@@ -55,10 +70,10 @@ func (v *Variables) GetPathToStore() (PathToStore string) {
 	return v.PathToStore
 }
 
-func (v *Variables) GetNameLogInfo() (NameLogInfo string) {
-	return v.ArgsEnviron.NameLogInfo
+func (v *Variables) GetLogFile() (LogFile string) {
+	return v.ArgsEnviron.LogFile
 }
 
-func (v *Variables) GetNameLogFatal() (NameLogFatal string) {
-	return v.ArgsEnviron.NameLogFatal
+func (v *Variables) GetDB() (DB string) {
+	return v.DB
 }

@@ -6,6 +6,7 @@ type ArgsCommandLine struct {
 	ServerAddress string // StartPort is the port for start application
 	PathToStore   string // PathToStore is the path to store URL
 	BaseURL       string // ResultPort is the port after changing
+	DB            string // Data of connected DB
 }
 
 func NewArgsCommandLine() *ArgsCommandLine {
@@ -15,9 +16,12 @@ func NewArgsCommandLine() *ArgsCommandLine {
 }
 
 func (c *ArgsCommandLine) ParseFlags() {
+	defaultConnDB := "postgres://videos:userpassword@localhost:5432/videos?sslmode=disable"
+
 	flag.StringVar(&c.BaseURL, "b", "http://localhost:8080", "Result adress for application")
 	flag.StringVar(&c.ServerAddress, "a", "localhost:8080", "Start adress for application")
 	flag.StringVar(&c.PathToStore, "f", "store", "Path to file of store URL")
+	flag.StringVar(&c.DB, "d", defaultConnDB, "Data of connected DB")
 	flag.Parse()
 }
 
@@ -31,4 +35,8 @@ func (c *ArgsCommandLine) GetBaseURL() (BaseURL string) {
 
 func (c *ArgsCommandLine) GetPathToStore() (PathToStore string) {
 	return c.PathToStore
+}
+
+func (c *ArgsCommandLine) GetDB() (DB string) {
+	return c.DB
 }

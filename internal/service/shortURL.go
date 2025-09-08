@@ -6,6 +6,7 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/db2"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	p "github.com/boginskiy/Clicki/internal/preparation"
 	v "github.com/boginskiy/Clicki/internal/validation"
@@ -15,16 +16,20 @@ import (
 type ShortURL struct {
 	ExtraFuncer p.ExtraFuncer
 	DB          db.Storage
+	DB2         db2.DBConnecter
 	Checker     v.Checker
 	Log         l.Logger
 }
 
-func NewShortURL(db db.Storage, log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+func NewShortURL(db db.Storage, db2 db2.DBConnecter,
+	log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Log:         log,
 		DB:          db,
+		DB2:         db2,
 	}
 }
 
@@ -80,4 +85,13 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	}
 
 	return []byte(tmpURL), nil
+}
+
+// CheckPing - check of connection DB
+func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
+	err := s.DB2.GetDB().Ping()
+	if err != nil {
+		return EmptyByteSlice, err
+	}
+	return ConnDBIsSucces, nil
 }

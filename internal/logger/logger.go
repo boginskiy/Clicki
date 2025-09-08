@@ -10,15 +10,6 @@ import (
 
 type Fields map[string]any
 
-type Logger interface {
-	RaiseInfo(string, Fields)
-	RaiseWarn(string, Fields)
-	RaiseError(string, Fields)
-	RaiseFatal(string, Fields)
-	RaisePanic(string, Fields)
-	CloseDesc()
-}
-
 var LEVEL = map[string]logrus.Level{
 	"DEBUG": logrus.DebugLevel,
 	"INFO":  logrus.InfoLevel,

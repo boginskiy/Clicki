@@ -8,12 +8,12 @@ type ArgsGetter interface {
 	GetPathToStore() (PathToStore string)
 	GetSrvAddr() (ServerAddress string)
 	GetBaseURL() (BaseURL string)
+	GetDB() (DB string)
 }
 
 type VarGetter interface {
-	GetNameLogFatal() (NameLogFatal string)
 	GetPathToStore() (PathToStore string)
-	GetNameLogInfo() (NameLogInfo string)
 	GetSrvAddr() (ServerAddress string)
+	GetLogFile() (LogFile string)
 	GetBaseURL() (BaseURL string)
 }

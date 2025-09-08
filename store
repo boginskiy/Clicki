@@ -1,20 +1,22 @@
-{"uuid":1,"short_url":"DLzKf3KV","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"ZmnbG9fq","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"PFSBT5jV","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"qdwdchxM","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"loOxsza2","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"hkqNbznC","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"nptY7xz7","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"ISTBNlDv","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"mHCzO64j","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"xzK4EZVU","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"vL2tix6c","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"URbcNCWe","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"WjjwxtnS","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"V5hDenRN","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"scbrw3lt","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"txtGBlW2","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"qZ9M6out","original_url":"https://practicum.yandex.ru"}
-{"uuid":1,"short_url":"iFkttTxM","original_url":"https://practicum.yandex.ru"}
-{"uuid":2,"short_url":"OSaUJdhg","original_url":"https://practicum.yandex.ru"}
-{"uuid":2,"short_url":"fa3udHGC","original_url":"https://practicum.yandex.ru"}
+[
+    {"uuid":1,"short_url":"DLzKf3KV","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"ZmnbG9fq","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"PFSBT5jV","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"qdwdchxM","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"loOxsza2","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"hkqNbznC","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"nptY7xz7","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"ISTBNlDv","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"mHCzO64j","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"xzK4EZVU","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"vL2tix6c","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"URbcNCWe","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"WjjwxtnS","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"V5hDenRN","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"scbrw3lt","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"txtGBlW2","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"qZ9M6out","original_url":"https://practicum.yandex.ru"}
+    {"uuid":1,"short_url":"iFkttTxM","original_url":"https://practicum.yandex.ru"}
+    {"uuid":2,"short_url":"OSaUJdhg","original_url":"https://practicum.yandex.ru"}
+    {"uuid":2,"short_url":"fa3udHGC","original_url":"https://practicum.yandex.ru"}
+]

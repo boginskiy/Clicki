@@ -9,9 +9,9 @@ import (
 type ArgsEnviron struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
 	PathToStore   string `env:"FILE_STORAGE_PATH"`
+	DB            string `env:"DATABASE_DSN"`
 	BaseURL       string `env:"BASE_URL"`
-	NameLogInfo   string `env:"NAME_LOG_INFO"`
-	NameLogFatal  string `env:"NAME_LOG_FATAL"`
+	LogFile       string `env:"LOG_FILE"`
 }
 
 func NewArgsEnviron() *ArgsEnviron {
@@ -26,12 +26,10 @@ func (e *ArgsEnviron) ParseFlags() {
 		log.Fatal(err)
 	}
 	// Default
-	if e.NameLogInfo == "" {
-		e.NameLogInfo = "LogInfo.log"
+	if e.LogFile == "" {
+		e.LogFile = "LogInfo.log"
 	}
-	if e.NameLogFatal == "" {
-		e.NameLogFatal = "LogFatal.log"
-	}
+
 }
 
 func (e *ArgsEnviron) GetSrvAddr() (ServerAddress string) {
@@ -44,4 +42,8 @@ func (e *ArgsEnviron) GetBaseURL() (BaseURL string) {
 
 func (e *ArgsEnviron) GetPathToStore() (PathToStore string) {
 	return e.PathToStore
+}
+
+func (e *ArgsEnviron) GetDB() (DB string) {
+	return e.DB
 }
