@@ -5,6 +5,7 @@ import (
 	"net/http/pprof"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
+
 	h "github.com/boginskiy/Clicki/internal/handler"
 	m "github.com/boginskiy/Clicki/internal/middleware"
 	s "github.com/boginskiy/Clicki/internal/service"
@@ -22,6 +23,7 @@ func Router(kwargs c.VarGetter, mv m.Middlewarer, apiURL, shortuRL s.CRUDer) *ch
 		// shortURL
 		r.Post("/", mv.Conveyor(http.HandlerFunc(hURL.Post)))
 		r.Get("/{id}", mv.Conveyor(http.HandlerFunc(hURL.Get)))
+		r.Get("/ping", mv.WithInfoLogger(http.HandlerFunc(hURL.Check)))
 
 		// APIShortURL
 		r.Route("/api/", func(r chi.Router) {

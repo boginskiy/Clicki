@@ -2,18 +2,23 @@ package config
 
 import (
 	"strings"
+
+	l "github.com/boginskiy/Clicki/internal/logger"
 )
 
 type Variables struct {
+	Logger        l.Logger
 	ServerAddress string
 	PathToStore   string
 	BaseURL       string
+	DB            string
 	ArgsCLI       *ArgsCLI
 	ArgsENV       *ArgsENV
 }
 
-func NewVariables() *Variables {
+func NewVariables(logger l.Logger) *Variables {
 	tmpVar := &Variables{
+		Logger:  logger,
 		ArgsCLI: NewArgsCLI(),
 		ArgsENV: NewArgsENV(),
 	}
@@ -40,6 +45,7 @@ func (v *Variables) extSettingsArgs() {
 	v.PathToStore = v.argsPrioryty(v.ArgsENV.GetPathToStore, v.ArgsCLI.GetPathToStore)
 	v.ServerAddress = v.argsPrioryty(v.ArgsENV.GetSrvAddr, v.ArgsCLI.GetSrvAddr)
 	v.BaseURL = v.argsPrioryty(v.ArgsENV.GetBaseURL, v.ArgsCLI.GetBaseURL)
+	v.DB = v.argsPrioryty(v.ArgsENV.GetDB, v.ArgsCLI.GetDB)
 }
 
 func (v *Variables) GetSrvAddr() (ServerAddress string) {
@@ -54,10 +60,10 @@ func (v *Variables) GetPathToStore() (PathToStore string) {
 	return v.PathToStore
 }
 
-func (v *Variables) GetNameLogInfo() (NameLogInfo string) {
-	return v.ArgsENV.NameLogInfo
+func (v *Variables) GetLogFile() (LogFile string) {
+	return v.ArgsENV.LogFile
 }
 
-func (v *Variables) GetNameLogFatal() (NameLogFatal string) {
-	return v.ArgsENV.NameLogFatal
+func (v *Variables) GetDB() (DB string) {
+	return v.DB
 }
