@@ -94,7 +94,8 @@ func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
 	rows, err := s.DB.GetDB().Query(
 		`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';`)
 	if err != nil {
-		log.Println("Err", err)
+		log.Println(">>Err", err)
+		return EmptyByteSlice, err
 	}
 	defer rows.Close()
 
@@ -108,7 +109,7 @@ func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
 		tables = append(tables, tableName)
 	}
 
-	log.Println("Tables", tables)
+	log.Println(">>Tables", tables)
 
 	// Delete <<
 

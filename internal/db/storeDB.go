@@ -34,7 +34,7 @@ func NewStoreDB(kwargs c.VarGetter, logger l.Logger) (*StoreDB, error) {
 
 	// db, err := sql.Open("postgres", kwargs.GetDB())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(">>NewStoreDB", err)
 	}
 
 	// Применяем миграции сразу после открытия соединения с базой данных

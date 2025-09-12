@@ -55,7 +55,8 @@ func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
 
 func (h *HandlerURL) Check(res http.ResponseWriter, req *http.Request) {
 	body, err := h.Service.CheckPing(req)
-	log.Println("body", body)
+	log.Println(">>body", string(body))
+
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return

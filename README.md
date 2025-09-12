@@ -45,3 +45,4 @@ git fetch template && git checkout template/main .github
 
 // TODO!
 // - Сделать Docker-Compose для БД и приложения и запустить
+// Как организовать _db при подключении библиотеки...

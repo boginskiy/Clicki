@@ -3,6 +3,7 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/lib/pq"
 )
@@ -40,6 +41,7 @@ func OpenDatabase(c *Config) (*sql.DB, error) {
 	}
 	err = db.Ping()
 	if err != nil {
+		log.Println(">>OpenDb", err)
 		return nil, err
 	}
 	return db, nil
