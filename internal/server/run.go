@@ -42,7 +42,7 @@ func Run(kwargs c.VarGetter, baseLog l.Logger, repo rp.URLRepository) {
 	baseLog.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
-	err := http.ListenAndServe(kwargs.GetSrvAddr(),
+	err = http.ListenAndServe(kwargs.GetSrvAddr(),
 		r.Router(kwargs, midWare, APIShortURL, ShortURL))
 
 	// writing log...
