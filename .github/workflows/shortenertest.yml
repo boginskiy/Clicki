@@ -48,7 +48,10 @@ jobs:
           fileName: "*"
           out-file-path: .tools
           token: ${{ secrets.GITHUB_TOKEN }}
-      # Add "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable"
+      # Установка
+      - name: Install migrate tool
+        run: go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+      # Миграции
       - name: Run migrations
         run: |
           migrate -source file://./migrations -database ${DATABASE_CONN_STRING} up
