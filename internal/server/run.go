@@ -23,7 +23,12 @@ func Run(kwargs c.VarGetter, baseLog l.Logger, repo rp.URLRepository) {
 	// Middleware
 	midWare := m.NewMiddleware(infoLog)
 
-	log.Println(">>DB-2", repo.GetDB())
+	err := repo.GetDB().Ping()
+	if err != nil {
+		log.Println(">>2> Database connection is closed:", err)
+	} else {
+		log.Println(">>2> Database connection is active.")
+	}
 
 	// Extra
 	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные функции

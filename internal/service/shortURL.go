@@ -89,7 +89,14 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 
 // CheckPing - check of connection db
 func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
-	log.Println("DB-4", s.Repo.GetDB())
+
+	err := s.Repo.GetDB().Ping()
+	if err != nil {
+		log.Println(">>4> Database connection is closed:", err)
+	} else {
+		log.Println(">>4> Database connection is active.")
+	}
+
 	// TODO! >>
 	rows, err := s.Repo.GetDB().Query(
 		`SELECT urls FROM information_schema.tables WHERE table_schema = 'public';`)

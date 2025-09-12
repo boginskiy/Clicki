@@ -42,7 +42,12 @@ func NewStoreDB(kwargs c.VarGetter, logger l.Logger) (*StoreDB, error) {
 		log.Fatalf("Error applying migrations: %v\\n", err)
 	}
 
-	log.Println(">>DB-2", db)
+	err = db.Ping()
+	if err != nil {
+		log.Println(">>1> Database connection is closed:", err)
+	} else {
+		log.Println(">>1> Database connection is active.")
+	}
 
 	return &StoreDB{
 		Logger: logger,
