@@ -10,7 +10,6 @@ import (
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/handler"
 	"github.com/boginskiy/Clicki/internal/logger"
-	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
@@ -127,7 +126,7 @@ func TestGetURL(t *testing.T) {
 		name  string
 		want  want
 		req   req
-		store map[string]*model.URLTb
+		store map[string]string
 	}{
 		{
 			name: "Test GET positive",
@@ -139,9 +138,7 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/H3HIkks3",
 			},
-			store: map[string]*model.URLTb{
-				"H3HIkks3": {ShortURL: "H3HIkks3", OriginalURL: "https://practicum.yandex.ru/"},
-			},
+			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
 		},
 
 		{
@@ -154,9 +151,7 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/N9KHHoG1",
 			},
-			store: map[string]*model.URLTb{
-				"H3HIkks3": {ShortURL: "H3HIkks3", OriginalURL: "https://practicum.yandex.ru/"},
-			},
+			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
 		},
 	}
 

@@ -85,7 +85,7 @@ func (sf *StoreFile) Read(shortURL string) (any, error) {
 func (sf *StoreFile) Create(record any) error {
 	row, ok := record.(*m.URLFile)
 	if !ok {
-		return errors.New("Error in StoreFile>Create")
+		return errors.New("error in StoreFile>Create")
 	}
 
 	sf.mu.Lock()

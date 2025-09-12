@@ -7,5 +7,5 @@
 
 // Заход в БД от имени postgres
 $sudo su - postgres
-
+$psql
 //

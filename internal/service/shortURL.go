@@ -78,6 +78,8 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 		return []byte(r.OriginalURL), nil
 	case *m.URLTb:
 		return []byte(r.OriginalURL), nil
+	case string:
+		return []byte(r), nil
 	default:
 		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
 		return EmptyByteSlice, ErrDataNotValid

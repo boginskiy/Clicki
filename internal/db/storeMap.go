@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"sync"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
@@ -12,13 +11,13 @@ import (
 )
 
 type StoreMap struct {
-	Store map[string]*m.URLTb
+	Store map[string]string
 	mu    sync.RWMutex
 }
 
 func NewStoreMap(_ c.VarGetter, _ l.Logger) (*StoreMap, error) {
 	return &StoreMap{
-		Store: make(map[string]*m.URLTb, SIZE),
+		Store: make(map[string]string, SIZE),
 	}, nil
 }
 
@@ -35,8 +34,6 @@ func (sm *StoreMap) Read(shortURL string) (any, error) {
 
 	record, ok := sm.Store[shortURL]
 	if !ok {
-		fmt.Println(">>", shortURL)
-		fmt.Println(">>", sm.Store)
 		return nil, errors.New("data is not available")
 	}
 	return record, nil
@@ -52,7 +49,7 @@ func (sm *StoreMap) Create(record any) error {
 	defer sm.mu.Unlock()
 
 	// Добавление записи в map
-	sm.Store[row.ShortURL] = row
+	sm.Store[row.ShortURL] = row.OriginalURL
 	return nil
 }
 
