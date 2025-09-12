@@ -2,8 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"errors"
-	"fmt"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
 	l "github.com/boginskiy/Clicki/internal/logger"
@@ -16,11 +14,6 @@ type StoreDB struct {
 
 func NewStoreDB(kwargs c.VarGetter, logger l.Logger) (*StoreDB, error) {
 	db, err := sql.Open("postgres", kwargs.GetDB())
-
-	// TODO!
-	l := fmt.Sprintf("PingDB:%v\n", db.Ping())
-	logger.RaiseError(errors.New("POSTGRES3"), l, nil)
-
 	if err != nil {
 		return nil, err
 	}
@@ -37,3 +30,6 @@ func (d *StoreDB) CloseDB() {
 func (d *StoreDB) GetDB() *sql.DB {
 	return d.DB
 }
+
+// TODO!
+// У меня не срабатывают миграции перед запуском приложения

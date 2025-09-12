@@ -1,8 +1,6 @@
 package config
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 
 	l "github.com/boginskiy/Clicki/internal/logger"
@@ -36,10 +34,6 @@ func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
 	arg := v.argsTrim(envFunc())  // Clean arg
 	arg2 := v.argsTrim(cliFunc()) // Clean arg
 
-	// TODO!
-	l := fmt.Sprintf("ENV:%v CLI:%v\n", arg, arg2)
-	v.Logger.RaiseError(errors.New("POSTGRES1"), l, nil)
-
 	if len(arg) > 0 {
 		return arg
 	} else {
@@ -71,9 +65,5 @@ func (v *Variables) GetLogFile() (LogFile string) {
 }
 
 func (v *Variables) GetDB() (DB string) {
-	// TODO!
-	l := fmt.Sprintf("GetDB:%v\n", v.DB)
-	v.Logger.RaiseError(errors.New("POSTGRES2"), l, nil)
-
 	return v.DB
 }
