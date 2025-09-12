@@ -10,40 +10,40 @@ import (
 	m "github.com/boginskiy/Clicki/internal/model"
 )
 
-type SqlURLRepository struct {
+type SQLURLRepository struct {
 	DB db.DBer
 }
 
-func NewSqlURLRepository(db db.DBer) *SqlURLRepository {
-	return &SqlURLRepository{
+func NewSQLURLRepository(db db.DBer) *SQLURLRepository {
+	return &SQLURLRepository{
 		DB: db,
 	}
 }
 
-func (s *SqlURLRepository) convertTimeToStr(tm time.Time, pattern string) string {
+func (s *SQLURLRepository) convertTimeToStr(tm time.Time, pattern string) string {
 	return tm.Format(pattern)
 }
 
-func (s *SqlURLRepository) convertStrToTime(tm string, pattern string) (time.Time, error) {
+func (s *SQLURLRepository) convertStrToTime(tm string, pattern string) (time.Time, error) {
 	return time.Parse(pattern, tm)
 }
 
-func (s *SqlURLRepository) NewRow(originURL, shortURL string) any {
+func (s *SQLURLRepository) NewRow(originURL, shortURL string) any {
 	return m.NewURLTb(originURL, shortURL)
 }
 
-func (s *SqlURLRepository) CheckUnic(shortURL string) bool {
+func (s *SQLURLRepository) CheckUnic(shortURL string) bool {
 	return true
 }
 
-func (s *SqlURLRepository) GetDB() *sql.DB {
+func (s *SQLURLRepository) GetDB() *sql.DB {
 	return s.DB.GetDB()
 }
 
-func (s *SqlURLRepository) Create(record any) error {
+func (s *SQLURLRepository) Create(record any) error {
 	row, ok := record.(*m.URLTb)
 	if !ok {
-		return errors.New("Error in SqlURLRepository>Create")
+		return errors.New("error in SQLURLRepository>Create")
 	}
 
 	tmpDB := s.DB.GetDB()
@@ -57,7 +57,7 @@ func (s *SqlURLRepository) Create(record any) error {
 	return nil
 }
 
-func (s *SqlURLRepository) Read(shortURL string) (any, error) {
+func (s *SQLURLRepository) Read(shortURL string) (any, error) {
 	tmpDB := s.DB.GetDB()
 	tmpURL := &m.URLTb{}
 
@@ -83,10 +83,10 @@ func (s *SqlURLRepository) Read(shortURL string) (any, error) {
 	return tmpURL, nil
 }
 
-func (s *SqlURLRepository) Update(record *m.URLTb) {
+func (s *SQLURLRepository) Update(record *m.URLTb) {
 
 }
 
-func (s *SqlURLRepository) Delete(record *m.URLTb) {
+func (s *SQLURLRepository) Delete(record *m.URLTb) {
 
 }

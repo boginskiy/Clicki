@@ -5,7 +5,7 @@ type (
 		URL string `json:"url"`
 	}
 
-	ResultJson struct {
+	ResultJSON struct {
 		*URLJson `json:"-"`
 		Result   string `json:"result"`
 	}
@@ -15,8 +15,8 @@ func NewURLJson() *URLJson {
 	return &URLJson{}
 }
 
-func NewResultJson(url *URLJson, result string) *ResultJson {
-	return &ResultJson{
+func NewResultJSON(url *URLJson, result string) *ResultJSON {
+	return &ResultJSON{
 		URLJson: url,
 		Result:  result,
 	}

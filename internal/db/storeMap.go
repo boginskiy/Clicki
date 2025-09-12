@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"sync"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
@@ -34,6 +35,8 @@ func (sm *StoreMap) Read(shortURL string) (any, error) {
 
 	record, ok := sm.Store[shortURL]
 	if !ok {
+		fmt.Println(">>", shortURL)
+		fmt.Println(">>", sm.Store)
 		return nil, errors.New("data is not available")
 	}
 	return record, nil
@@ -42,7 +45,7 @@ func (sm *StoreMap) Read(shortURL string) (any, error) {
 func (sm *StoreMap) Create(record any) error {
 	row, ok := record.(*m.URLTb)
 	if !ok {
-		return errors.New("Error in StoreMap>Create")
+		return errors.New("error in StoreMap>Create")
 	}
 
 	sm.mu.Lock()

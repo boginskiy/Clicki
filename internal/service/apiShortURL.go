@@ -62,11 +62,11 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 	s.DB.Create(record)                          // Кладем в DB данные
 
 	// Serialization Body
-	extraLink := m.NewResultJson(baseLink, kwargs.GetBaseURL()+"/"+shortURL)
+	extraLink := m.NewResultJSON(baseLink, kwargs.GetBaseURL()+"/"+shortURL)
 	result, err := s.ExtraFuncer.Serialization(extraLink)
 
 	if err != nil {
-		s.Logger.RaiseError(err, "APIShortURL.Create>NewResultJson", nil)
+		s.Logger.RaiseError(err, "APIShortURL.Create>NewResultJSON", nil)
 		return EmptyByteSlice, err
 	}
 	return result, nil
