@@ -41,15 +41,15 @@ jobs:
         uses: actions/checkout@v2
 
       ###
-      - name: Install migrate tool
-        run: go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+      # - name: Install migrate tool
+      #   run: go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
       
-      - name: Install Postgres driver
-        run: go get github.com/lib/pq
+      # - name: Install Postgres driver
+      #   run: go get github.com/lib/pq
       
-      - name: Run database migration
-        run: |
-          migrate -path ./migrations -database "$DATABASE_CONN_STRING" up
+      # - name: Run database migration
+      #   run: |
+      #     migrate -path ./migrations -database "$DATABASE_CONN_STRING" up
       ###
 
       - name: Download autotests binaries
