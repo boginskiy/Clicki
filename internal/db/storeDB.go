@@ -42,6 +42,8 @@ func NewStoreDB(kwargs c.VarGetter, logger l.Logger) (*StoreDB, error) {
 		log.Fatalf("Error applying migrations: %v\\n", err)
 	}
 
+	log.Println(">>DB-2", db)
+
 	return &StoreDB{
 		Logger: logger,
 		DB:     db,

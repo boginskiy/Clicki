@@ -37,11 +37,11 @@ func RunRouter() *chi.Mux {
 	APIShortURL := s.NewAPIShortURL(repo, infoLog, checker, extraFuncer)
 	ShortURL := s.NewShortURL(repo, infoLog, checker, extraFuncer)
 
-	type URLFile struct {
-		UUID        int    `json:"uuid"`
-		ShortURL    string `json:"short_url"`
-		OriginalURL string `json:"original_url"`
-	}
+	// type URLFile struct {
+	// 	UUID        int    `json:"uuid"`
+	// 	ShortURL    string `json:"short_url"`
+	// 	OriginalURL string `json:"original_url"`
+	// }
 
 	// Заполняем базу данных тестовыми данными
 	url := &model.URLFile{ShortURL: "DcKa7J8d", OriginalURL: "https://translate.yandex.ru/"}

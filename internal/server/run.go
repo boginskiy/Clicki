@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
@@ -21,6 +22,8 @@ func Run(kwargs c.VarGetter, baseLog l.Logger, repo rp.URLRepository) {
 
 	// Middleware
 	midWare := m.NewMiddleware(infoLog)
+
+	log.Println(">>DB-2", repo.GetDB())
 
 	// Extra
 	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные функции

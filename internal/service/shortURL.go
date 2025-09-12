@@ -23,7 +23,7 @@ type ShortURL struct {
 
 func NewShortURL(
 	db r.URLRepository, logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
-
+	log.Println(">>DB-3", db)
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
