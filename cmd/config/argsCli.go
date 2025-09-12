@@ -20,7 +20,7 @@ func (c *ArgsCLI) ParseFlags() {
 
 	flag.StringVar(&c.BaseURL, "b", "http://localhost:8080", "Result adress for application")
 	flag.StringVar(&c.ServerAddress, "a", "localhost:8080", "Start adress for application")
-	flag.StringVar(&c.PathToStore, "f", "store", "Path to file of store URL")
+	flag.StringVar(&c.PathToStore, "f", "", "Path to file of store URL")
 	flag.StringVar(&c.DB, "d", "", "Data of connected DB")
 	flag.Parse()
 }
