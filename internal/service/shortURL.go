@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -88,6 +89,29 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 
 // CheckPing - check of connection db
 func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
+
+	// TODO! >>
+	rows, err := s.DB.GetDB().Query(
+		`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';`)
+	if err != nil {
+		log.Println("Err", err)
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var tableName string
+		err := rows.Scan(&tableName)
+		if err != nil {
+			log.Fatalf("Scan error: %v\n", err)
+		}
+		tables = append(tables, tableName)
+	}
+
+	log.Println("Tables", tables)
+
+	// Delete <<
+
 	if s.DB.GetDB() != nil {
 		err := s.DB.GetDB().Ping()
 		if err != nil {

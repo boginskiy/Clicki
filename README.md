@@ -42,3 +42,6 @@ git fetch template && git checkout template/main .github
 - **Clean Architecture**
 - **Hexagonal Architecture**
 - **Layered Architecture**
+
+// TODO!
+// - Сделать Docker-Compose для БД и приложения и запустить

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	_ "github.com/lib/pq"
@@ -54,6 +55,7 @@ func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
 
 func (h *HandlerURL) Check(res http.ResponseWriter, req *http.Request) {
 	body, err := h.Service.CheckPing(req)
+	log.Println("body", body)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return

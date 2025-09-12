@@ -55,6 +55,3 @@ func (d *StoreDB) CloseDB() {
 func (d *StoreDB) GetDB() *sql.DB {
 	return d.DB
 }
-
-// TODO!
-// У меня не срабатывают миграции перед запуском приложения
