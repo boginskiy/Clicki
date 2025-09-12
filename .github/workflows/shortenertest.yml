@@ -49,22 +49,6 @@ jobs:
           out-file-path: .tools
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # # Установка драйвера
-      # - name: Install required libraries
-      #   run: go get github.com/lib/pq
-      # Установка
-      - name: Install migrate tool
-        run: go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-      # # Регистрация драйвера в скрипте 
-      # - name: Compile register_driver.go
-      #   run: go build register_driver.go
-
-      # Миграции
-      - name: Run migrations
-        run: |
-          migrate -database "postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable" -path ./migrations up
-          # migrate -source file://./migrations -database ${DATABASE_CONN_STRING} up
-
       - name: Setup autotest binary
         run: |
           chmod -R +x $GITHUB_WORKSPACE/.tools
@@ -80,6 +64,22 @@ jobs:
         run: |
           cd cmd/shortener
           go build -buildvcs=false -o shortener
+
+      # Установка драйвера
+      - name: Install required libraries
+        run: go get github.com/lib/pq
+      # Установка
+      - name: Install migrate tool
+        run: go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+      # # Регистрация драйвера в скрипте 
+      # - name: Compile register_driver.go
+      #   run: go build register_driver.go
+
+      # Миграции
+      - name: Run migrations
+        run: |
+          migrate -database "postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable" -path ./migrations up
+        # migrate -source file://./migrations -database ${DATABASE_CONN_STRING} up
 
       - name: "Code increment #1"
         if: |
