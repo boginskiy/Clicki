@@ -16,26 +16,26 @@ import (
 
 type ShortURL struct {
 	ExtraFuncer p.ExtraFuncer
-	DB          r.URLRepository
+	Repo        r.URLRepository
 	Checker     v.Checker
 	Logger      l.Logger
 }
 
 func NewShortURL(
-	db r.URLRepository, logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
-	log.Println(">>DB-3", db)
+	repo r.URLRepository, logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+	log.Println(">>DB-3", repo.GetDB())
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Logger:      logger,
-		DB:          db,
+		Repo:        repo,
 	}
 }
 
 func (s *ShortURL) encryptionLongURL() (shortURL string) {
 	for {
-		shortURL = pkg.Scramble(LONG) // Вызов шифратора
-		if s.DB.CheckUnic(shortURL) { // Проверка на уникальность
+		shortURL = pkg.Scramble(LONG)   // Вызов шифратора
+		if s.Repo.CheckUnic(shortURL) { // Проверка на уникальность
 			break
 		}
 	}
@@ -58,16 +58,16 @@ func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, e
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	shortURL := s.encryptionLongURL()          // Генерируем ключ
-	record := s.DB.NewRow(originURL, shortURL) // Делаем запись
-	s.DB.Create(record)                        // Кладем в db данные
+	shortURL := s.encryptionLongURL()            // Генерируем ключ
+	record := s.Repo.NewRow(originURL, shortURL) // Делаем запись
+	s.Repo.Create(record)                        // Кладем в db данные
 
 	return []byte(shortURL), nil
 }
 
 func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	shortURL := strings.TrimLeft(req.URL.Path, "/") // Достаем параметр shortURL
-	record, err := s.DB.Read(shortURL)              // Достаем origin URL
+	record, err := s.Repo.Read(shortURL)            // Достаем origin URL
 
 	if err != nil {
 		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read", nil)
@@ -89,17 +89,24 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 
 // CheckPing - check of connection db
 func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
-
+	log.Println("DB-4", s.Repo.GetDB())
 	// TODO! >>
-	rows, err := s.DB.GetDB().Query(
-		`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';`)
+	rows, err := s.Repo.GetDB().Query(
+		`SELECT urls FROM information_schema.tables WHERE table_schema = 'public';`)
 	if err != nil {
-		log.Println(">>Err", err)
-		return EmptyByteSlice, err
+		log.Println(">>Err-4", err)
+
+		rows, err = s.Repo.GetDB().Query(`SELECT * FROM urls;`)
+		if err != nil {
+			log.Println(">>Err-5", err)
+			return EmptyByteSlice, err
+		}
+
 	}
 	defer rows.Close()
 
 	var tables []string
+	log.Println("Err-6")
 	for rows.Next() {
 		var tableName string
 		err := rows.Scan(&tableName)
@@ -113,8 +120,8 @@ func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
 
 	// Delete <<
 
-	if s.DB.GetDB() != nil {
-		err := s.DB.GetDB().Ping()
+	if s.Repo.GetDB() != nil {
+		err := s.Repo.GetDB().Ping()
 		if err != nil {
 			return EmptyByteSlice, err
 		}
