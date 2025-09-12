@@ -1,0 +1,21 @@
+# Установка
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+go get -u github.com/golang-migrate/migrate/v4 
+
+# Создание начальной схемы
+migrate create -ext sql -dir ./migrations -seq create_movies_table
+
+# Применение миграций
+migrate -database "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable" -path ./migrations up
+
+# Добавление еще данных
+migrate create -ext sql -dir ./migrations -seq add_country_column 
+
+# ...
+
+# Строка подключения к bd
+"postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable"
+
+# Заход под текущим пользователем
+sudo -u postgres psql
+

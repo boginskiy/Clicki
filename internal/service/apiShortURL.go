@@ -4,50 +4,45 @@ import (
 	"net/http"
 
 	"github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/db2"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/model"
 	p "github.com/boginskiy/Clicki/internal/preparation"
+	r "github.com/boginskiy/Clicki/internal/repository"
 	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
 )
 
 type APIShortURL struct {
 	ExtraFuncer p.ExtraFuncer
-	DB          db.Storage
-	DB2         db2.DBConnecter
+	DB          r.URLRepository
 	Checker     v.Checker
 	Logger      l.Logger
 }
 
-func NewAPIShortURL(db db.Storage, db2 db2.DBConnecter,
-	logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *APIShortURL {
+func NewAPIShortURL(
+	db r.URLRepository, logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *APIShortURL {
 
 	return &APIShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Logger:      logger,
 		DB:          db,
-		DB2:         db2,
 	}
 }
 
-func (s *APIShortURL) encryptionLongURL() (imitationPath string) {
+func (s *APIShortURL) encryptionLongURL() (shortURL string) {
 	for {
-		// Вызов шифратора
-		imitationPath = pkg.Scramble(LONG)
-		// Проверка на уникальность
-		if _, err := s.DB.GetValue(imitationPath); err != nil {
+		shortURL = pkg.Scramble(LONG) // Вызов шифратора
+		if s.DB.CheckUnic(shortURL) { // Проверка на уникальность
 			break
 		}
 	}
-	return imitationPath
+	return shortURL
 }
 
 func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, error) {
 	// Deserialization Body
-	baseLink := m.NewBaseLink()
+	baseLink := m.NewURLJson()
 	err := s.ExtraFuncer.Deserialization(req, baseLink)
 
 	if err != nil {
@@ -62,15 +57,16 @@ func (s *APIShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	imitationPath := s.encryptionLongURL()     // Генерируем ключ
-	s.DB.PutValue(imitationPath, baseLink.URL) // Кладем в DB данные
+	shortURL := s.encryptionLongURL()            // Генерируем ключ
+	record := m.NewURLTb(baseLink.URL, shortURL) // Создаем запись
+	s.DB.Create(record)                          // Кладем в DB данные
 
 	// Serialization Body
-	extraLink := m.NewExtraLink(baseLink, kwargs.GetBaseURL()+"/"+imitationPath)
+	extraLink := m.NewResultJson(baseLink, kwargs.GetBaseURL()+"/"+shortURL)
 	result, err := s.ExtraFuncer.Serialization(extraLink)
 
 	if err != nil {
-		s.Logger.RaiseError(err, "APIShortURL.Create>NewExtraLink", nil)
+		s.Logger.RaiseError(err, "APIShortURL.Create>NewResultJson", nil)
 		return EmptyByteSlice, err
 	}
 	return result, nil

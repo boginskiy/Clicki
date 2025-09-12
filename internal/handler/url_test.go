@@ -8,9 +8,9 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/db2"
 	"github.com/boginskiy/Clicki/internal/handler"
 	"github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
@@ -21,15 +21,12 @@ var kwargs = &config.Variables{
 	ServerAddress: "localhost:8080",
 	BaseURL:       "http://localhost:8081",
 }
-var dbase2 = db2.NewConnDB(kwargs, infoLog)
 
-var fileWorker, _ = db.NewFileWorking("test")
-var dbase = db.NewDBStore(fileWorker)
-
+var dbase, _ = db.NewStoreMap(kwargs, infoLog)
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 
-var shURL = service.NewShortURL(dbase, dbase2, infoLog, checker, extraFuncer)
+var shURL = service.NewShortURL(dbase, infoLog, checker, extraFuncer)
 
 // TestHandlerURL check only POST request
 func TestPostURL(t *testing.T) {
@@ -130,7 +127,7 @@ func TestGetURL(t *testing.T) {
 		name  string
 		want  want
 		req   req
-		store map[string]string
+		store map[string]*model.URLTb
 	}{
 		{
 			name: "Test GET positive",
@@ -142,7 +139,9 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/H3HIkks3",
 			},
-			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
+			store: map[string]*model.URLTb{
+				"H3HIkks3": {ShortURL: "H3HIkks3", OriginalURL: "https://practicum.yandex.ru/"},
+			},
 		},
 
 		{
@@ -155,7 +154,9 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/N9KHHoG1",
 			},
-			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
+			store: map[string]*model.URLTb{
+				"H3HIkks3": {ShortURL: "H3HIkks3", OriginalURL: "https://practicum.yandex.ru/"},
+			},
 		},
 	}
 

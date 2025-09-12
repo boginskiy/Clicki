@@ -1,17 +1,15 @@
-package db
+package repository
 
 import (
 	"database/sql"
 )
 
-type DBer interface {
-	GetDB() *sql.DB
-	CloseDB()
-}
-
-type Tbler interface {
+type URLRepository interface {
 	Create(any) error
 	Read(string) (any, error)
+	// Update(any)
+	// Delete(any)
 	NewRow(string, string) any
 	CheckUnic(string) bool
+	GetDB() *sql.DB
 }

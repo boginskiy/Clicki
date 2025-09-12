@@ -12,6 +12,6 @@ const (
 
 var (
 	ErrDataNotValid = errors.New("data not available or invalid")
-	ConnDBIsSucces  = []byte("The connection to DataBase is successfully")
+	StoreDBIsSucces = []byte("The connection to DataBase is successfully")
 	EmptyByteSlice  = []byte{}
 )

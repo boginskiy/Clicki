@@ -9,10 +9,10 @@ import (
 )
 
 type ArgsENV struct {
-	ServerAddress string `env:"SERVER_ADDRESS"`
-	PathToStore   string `env:"FILE_STORAGE_PATH"`
-	DB            string `env:"DATABASE_DSN"`
-	BaseURL       string `env:"BASE_URL"`
+	ServerAddress string `env:"SERVER_ADDRESS"`    //
+	PathToStore   string `env:"FILE_STORAGE_PATH"` //
+	DB            string `env:"DATABASE_DSN"`      //
+	BaseURL       string `env:"BASE_URL"`          //
 	LogFile       string `env:"LOG_FILE"`
 }
 

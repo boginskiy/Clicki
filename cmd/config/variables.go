@@ -37,7 +37,7 @@ func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
 	if len(arg) > 0 {
 		return arg
 	} else {
-		return cliFunc()
+		return v.argsTrim(cliFunc())
 	}
 }
 

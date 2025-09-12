@@ -11,9 +11,9 @@ import (
 
 	c "github.com/boginskiy/Clicki/cmd/config"
 	db "github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/db2"
 	"github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/middleware"
+	"github.com/boginskiy/Clicki/internal/model"
 	p "github.com/boginskiy/Clicki/internal/preparation"
 	r "github.com/boginskiy/Clicki/internal/router"
 	s "github.com/boginskiy/Clicki/internal/service"
@@ -26,21 +26,26 @@ import (
 func RunRouter() *chi.Mux {
 	infoLog := logger.NewLogg("Test.log", "INFO")
 	kwargs := c.NewVariables(infoLog) // agrs - атрибуты командной строки
-	db2 := &db2.ConnDB{}
+	kwargs.PathToStore = "test"
 
-	fwork, _ := db.NewFileWorking("test")
-	db := db.NewDBStore(fwork) // db - слой базы данных 'DBStore'
-
+	repo, _ := db.NewStoreFile(kwargs, infoLog)
 	midWare := m.NewMiddleware(infoLog)
 	extraFuncer := p.NewExtraFunc()
 	checker := v.NewChecker()
 
 	// Services
-	APIShortURL := s.NewAPIShortURL(db, db2, infoLog, checker, extraFuncer) // Service 'APIShortURL'
-	ShortURL := s.NewShortURL(db, db2, infoLog, checker, extraFuncer)
+	APIShortURL := s.NewAPIShortURL(repo, infoLog, checker, extraFuncer)
+	ShortURL := s.NewShortURL(repo, infoLog, checker, extraFuncer)
+
+	type URLFile struct {
+		UUID        int    `json:"uuid"`
+		ShortURL    string `json:"short_url"`
+		OriginalURL string `json:"original_url"`
+	}
 
 	// Заполняем базу данных тестовыми данными
-	db.Store["DcKa7J8d"] = "https://translate.yandex.ru/"
+	url := &model.URLFile{ShortURL: "DcKa7J8d", OriginalURL: "https://translate.yandex.ru/"}
+	repo.Store["DcKa7J8d"] = url
 
 	return r.Router(kwargs, midWare, APIShortURL, ShortURL)
 }

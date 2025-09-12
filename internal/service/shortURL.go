@@ -5,44 +5,40 @@ import (
 	"strings"
 
 	"github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/db2"
 	l "github.com/boginskiy/Clicki/internal/logger"
+	m "github.com/boginskiy/Clicki/internal/model"
 	p "github.com/boginskiy/Clicki/internal/preparation"
+	r "github.com/boginskiy/Clicki/internal/repository"
 	v "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
 )
 
 type ShortURL struct {
 	ExtraFuncer p.ExtraFuncer
-	DB          db.Storage
-	DB2         db2.DBConnecter
+	DB          r.URLRepository
 	Checker     v.Checker
 	Logger      l.Logger
 }
 
-func NewShortURL(db db.Storage, db2 db2.DBConnecter,
-	logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+func NewShortURL(
+	db r.URLRepository, logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
 
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Logger:      logger,
 		DB:          db,
-		DB2:         db2,
 	}
 }
 
-func (s *ShortURL) encryptionLongURL() (imitationPath string) {
+func (s *ShortURL) encryptionLongURL() (shortURL string) {
 	for {
-		// Вызов шифратора
-		imitationPath = pkg.Scramble(LONG)
-		// Проверка на уникальность
-		if _, err := s.DB.GetValue(imitationPath); err != nil {
+		shortURL = pkg.Scramble(LONG) // Вызов шифратора
+		if s.DB.CheckUnic(shortURL) { // Проверка на уникальность
 			break
 		}
 	}
-	return imitationPath
+	return shortURL
 }
 
 func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, error) {
@@ -61,35 +57,40 @@ func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, e
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	// Генерируем ключ
-	imitationPath := s.encryptionLongURL()
-	// Кладем в DB данные
-	s.DB.PutValue(imitationPath, originURL)
+	shortURL := s.encryptionLongURL()          // Генерируем ключ
+	record := s.DB.NewRow(originURL, shortURL) // Делаем запись
+	s.DB.Create(record)                        // Кладем в db данные
 
-	return []byte(imitationPath), nil
+	return []byte(shortURL), nil
 }
 
 func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
-	// Достаем параметр id                         \\
-	tmpPath := strings.TrimLeft(req.URL.Path, "/") // Вариант для прохождения inittests
-	// tmpPath := chi.URLParam(req, "id")         // Вариант из под коробки
-
-	// Достаем origin URL
-	tmpURL, err := s.DB.GetValue(tmpPath)
+	shortURL := strings.TrimLeft(req.URL.Path, "/") // Достаем параметр shortURL
+	record, err := s.DB.Read(shortURL)              // Достаем origin URL
 
 	if err != nil {
-		s.Logger.RaiseError(err, "ShortURL.Read>GetValue", nil)
+		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	return []byte(tmpURL), nil
+	switch r := record.(type) {
+	case *m.URLFile:
+		return []byte(r.OriginalURL), nil
+	case *m.URLTb:
+		return []byte(r.OriginalURL), nil
+	default:
+		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
+		return EmptyByteSlice, ErrDataNotValid
+	}
 }
 
-// CheckPing - check of connection DB
+// CheckPing - check of connection db
 func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
-	err := s.DB2.GetDB().Ping()
-	if err != nil {
-		return EmptyByteSlice, err
+	if s.DB.GetDB() != nil {
+		err := s.DB.GetDB().Ping()
+		if err != nil {
+			return EmptyByteSlice, err
+		}
 	}
-	return ConnDBIsSucces, nil
+	return StoreDBIsSucces, nil
 }
