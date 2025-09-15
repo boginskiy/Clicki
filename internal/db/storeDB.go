@@ -8,6 +8,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+func createUrls(db *sql.DB) error {
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS urls (
+			id SERIAL PRIMARY KEY,
+			original_url TEXT NOT NULL,
+			short_url VARCHAR(8) NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`)
+	return err
+}
+
 type StoreDB struct {
 	Logger l.Logger
 	DB     *sql.DB
@@ -19,12 +28,7 @@ func NewStoreDB(kwargs c.VarGetter, logger l.Logger) (*StoreDB, error) {
 		return nil, err
 	}
 
-	// "Самостоятельное" создание таблиц"
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS urls (
-			id SERIAL PRIMARY KEY,
-			original_url TEXT NOT NULL,
-			short_url VARCHAR(8) NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`)
+	err = createUrls(db)
 	if err != nil {
 		return nil, err
 	}
