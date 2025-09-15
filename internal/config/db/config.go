@@ -46,3 +46,23 @@ func OpenDatabase(c *Config) (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+// cfg := config.NewConfig()
+// db, err := config.OpenDatabase(cfg)
+
+// // db, err := sql.Open("postgres", kwargs.GetDB())
+// if err != nil {
+// 	log.Fatal(">>NewStoreDB", err)
+// }
+
+// // Применяем миграции сразу после открытия соединения с базой данных
+// if err := migration.ApplyMigrations(db); err != nil {
+// 	log.Fatalf("Error applying migrations: %v\\n", err)
+// }
+
+// err = db.Ping()
+// if err != nil {
+// 	log.Println(">>1> Database connection is closed:", err)
+// } else {
+// 	log.Println(">>1> Database connection is active.")
+// }

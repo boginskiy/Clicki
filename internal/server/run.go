@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
@@ -23,13 +22,6 @@ func Run(kwargs c.VarGetter, baseLog l.Logger, repo rp.URLRepository) {
 	// Middleware
 	midWare := m.NewMiddleware(infoLog)
 
-	err := repo.GetDB().Ping()
-	if err != nil {
-		log.Println(">>2> Database connection is closed:", err)
-	} else {
-		log.Println(">>2> Database connection is active.")
-	}
-
 	// Extra
 	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные функции
 	checker := v.NewChecker()       // checker - валидация данных
@@ -42,13 +34,10 @@ func Run(kwargs c.VarGetter, baseLog l.Logger, repo rp.URLRepository) {
 	baseLog.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
-	err = http.ListenAndServe(kwargs.GetSrvAddr(),
+	err := http.ListenAndServe(kwargs.GetSrvAddr(),
 		r.Router(kwargs, midWare, APIShortURL, ShortURL))
 
 	// writing log...
 	baseLog.RaiseFatal(err, l.StartedServFatal, l.Fields{"port": kwargs.GetSrvAddr()})
 
 }
-
-// TODO:
-// Проверка работы ,проверка работы флагов, записи в верные БД

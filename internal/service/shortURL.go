@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -23,7 +22,6 @@ type ShortURL struct {
 
 func NewShortURL(
 	repo r.URLRepository, logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
-	log.Println(">>DB-3", repo.GetDB())
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
@@ -89,44 +87,6 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 
 // CheckPing - check of connection db
 func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
-
-	err := s.Repo.GetDB().Ping()
-	if err != nil {
-		log.Println(">>4> Database connection is closed:", err)
-	} else {
-		log.Println(">>4> Database connection is active.")
-	}
-
-	// TODO! >>
-	rows, err := s.Repo.GetDB().Query(
-		`SELECT urls FROM information_schema.tables WHERE table_schema = 'public';`)
-	if err != nil {
-		log.Println(">>Err-4", err)
-
-		rows, err = s.Repo.GetDB().Query(`SELECT * FROM urls;`)
-		if err != nil {
-			log.Println(">>Err-5", err)
-			return EmptyByteSlice, err
-		}
-
-	}
-	defer rows.Close()
-
-	var tables []string
-	log.Println("Err-6")
-	for rows.Next() {
-		var tableName string
-		err := rows.Scan(&tableName)
-		if err != nil {
-			log.Fatalf("Scan error: %v\n", err)
-		}
-		tables = append(tables, tableName)
-	}
-
-	log.Println(">>Tables", tables)
-
-	// Delete <<
-
 	if s.Repo.GetDB() != nil {
 		err := s.Repo.GetDB().Ping()
 		if err != nil {
