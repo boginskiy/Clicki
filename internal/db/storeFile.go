@@ -82,7 +82,7 @@ func (sf *StoreFile) Read(ctx context.Context, correlationID string) (any, error
 func (sf *StoreFile) Create(ctx context.Context, preRecord any) error {
 	row, ok := preRecord.(*m.URLTb)
 	if !ok {
-		return errors.New("error in StoreFile>Create")
+		return errors.New("type is not available")
 	}
 
 	sf.mu.Lock()
