@@ -72,8 +72,8 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 	s.Repo.Create(context.TODO(), record)                                          // Кладем в DB данные
 
 	// Serialization Body
-	resJson := m.NewResultJSON(baseLink, shortURL)
-	result, err := s.ExtraFuncer.Serialization(resJson)
+	resJSON := m.NewResultJSON(baseLink, shortURL)
+	result, err := s.ExtraFuncer.Serialization(resJSON)
 
 	if err != nil {
 		s.Logger.RaiseError(err, "APIShortURL.Create>NewResultJSON", nil)

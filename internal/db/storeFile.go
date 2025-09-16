@@ -130,8 +130,12 @@ func (sf *StoreFile) CreateSet(ctx context.Context, records any) error {
 		if err != nil {
 			return err
 		}
+
 		tmpB = append(tmpB, byte('\n'))
 		_, err = sf.file.Write(tmpB)
+		if err != nil {
+			return err
+		}
 	}
 
 	sf.mu.RUnlock()

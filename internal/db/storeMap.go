@@ -63,17 +63,17 @@ func (sm *StoreMap) NewRow(ctx context.Context, originURL, shortURL, correlation
 	return m.NewURLTb(originURL, shortURL, correlationID)
 }
 
-func (sf *StoreMap) CreateSet(ctx context.Context, records any) error {
+func (sm *StoreMap) CreateSet(ctx context.Context, records any) error {
 	rows, ok := records.([]m.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return errors.New("data not valid")
 	}
 
-	sf.mu.RLock()
+	sm.mu.RLock()
 
 	for _, r := range rows {
-		sf.Store[r.CorrelationID] = r.OriginalURL
+		sm.Store[r.CorrelationID] = r.OriginalURL
 	}
-	sf.mu.RUnlock()
+	sm.mu.RUnlock()
 	return nil
 }

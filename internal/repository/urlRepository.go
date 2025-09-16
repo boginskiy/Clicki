@@ -33,7 +33,7 @@ func (s *SQLURLRepository) NewRow(ctx context.Context, originURL, shortURL, corr
 	return m.NewURLTb(originURL, shortURL, correlationID)
 }
 
-func (s *SQLURLRepository) CheckUnic(ctx context.Context, correlation_id string) bool {
+func (s *SQLURLRepository) CheckUnic(ctx context.Context, correlationID string) bool {
 	return true
 }
 
