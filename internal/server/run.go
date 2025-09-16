@@ -27,15 +27,14 @@ func Run(kwargs c.VarGetter, baseLog l.Logger, repo rp.URLRepository) {
 	checker := v.NewChecker()       // checker - валидация данных
 
 	// Services
-	APIShortURL := s.NewAPIShortURL(repo, baseLog, checker, extraFuncer)
-	ShortURL := s.NewShortURL(repo, baseLog, checker, extraFuncer)
+	APIShortURL := s.NewAPIShortURL(kwargs, baseLog, repo, checker, extraFuncer)
+	ShortURL := s.NewShortURL(kwargs, baseLog, repo, checker, extraFuncer)
 
 	// writing log...
 	baseLog.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
-	err := http.ListenAndServe(kwargs.GetSrvAddr(),
-		r.Router(kwargs, midWare, APIShortURL, ShortURL))
+	err := http.ListenAndServe(kwargs.GetSrvAddr(), r.Router(midWare, APIShortURL, ShortURL))
 
 	// writing log...
 	baseLog.RaiseFatal(err, l.StartedServFatal, l.Fields{"port": kwargs.GetSrvAddr()})

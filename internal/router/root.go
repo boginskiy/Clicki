@@ -4,17 +4,15 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	c "github.com/boginskiy/Clicki/cmd/config"
-
 	h "github.com/boginskiy/Clicki/internal/handler"
 	m "github.com/boginskiy/Clicki/internal/middleware"
 	s "github.com/boginskiy/Clicki/internal/service"
 	"github.com/go-chi/chi"
 )
 
-func Router(kwargs c.VarGetter, mv m.Middlewarer, apiURL, shortuRL s.CRUDer) *chi.Mux {
-	hAPIURL := h.HandlerURL{Service: apiURL, Kwargs: kwargs}
-	hURL := h.HandlerURL{Service: shortuRL, Kwargs: kwargs}
+func Router(mv m.Middlewarer, apiURL, shortuRL s.CRUDer) *chi.Mux {
+	hAPIURL := h.HandlerURL{Service: apiURL}
+	hURL := h.HandlerURL{Service: shortuRL}
 
 	r := chi.NewRouter()
 
@@ -28,6 +26,7 @@ func Router(kwargs c.VarGetter, mv m.Middlewarer, apiURL, shortuRL s.CRUDer) *ch
 		// APIShortURL
 		r.Route("/api/", func(r chi.Router) {
 			r.Post("/shorten", mv.Conveyor(http.HandlerFunc(hAPIURL.Post)))
+			r.Post("/shorten/batch", mv.Conveyor(http.HandlerFunc(hAPIURL.Set)))
 		})
 
 		// PProf

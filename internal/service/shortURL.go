@@ -1,10 +1,11 @@
 package service
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	"github.com/boginskiy/Clicki/cmd/config"
+	c "github.com/boginskiy/Clicki/cmd/config"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/model"
 	p "github.com/boginskiy/Clicki/internal/preparation"
@@ -18,31 +19,38 @@ type ShortURL struct {
 	Repo        r.URLRepository
 	Checker     v.Checker
 	Logger      l.Logger
+	Kwargs      c.VarGetter
 }
 
 func NewShortURL(
-	repo r.URLRepository, logger l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+	kwargs c.VarGetter, logger l.Logger, repo r.URLRepository,
+	checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Logger:      logger,
+		Kwargs:      kwargs,
 		Repo:        repo,
 	}
 }
 
-func (s *ShortURL) encryptionLongURL() (shortURL string) {
+func (s *ShortURL) encryptionLongURL() (correlationID string) {
 	for {
-		shortURL = pkg.Scramble(LONG)   // Вызов шифратора
-		if s.Repo.CheckUnic(shortURL) { // Проверка на уникальность
+		correlationID = pkg.Scramble(LONG)                   // Вызов шифратора
+		if s.Repo.CheckUnic(context.TODO(), correlationID) { // Проверка на уникальность
 			break
 		}
 	}
-	return shortURL
+	return correlationID
 }
 
-func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, error) {
-	// Вынимаем тело запроса
-	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req)
+func (s *ShortURL) GetHeader() string {
+	return "text/plain"
+}
+
+func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
+	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req) // Вынимаем тело запроса
 
 	if err != nil {
 		s.Logger.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
@@ -56,16 +64,17 @@ func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, e
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	shortURL := s.encryptionLongURL()            // Генерируем ключ
-	record := s.Repo.NewRow(originURL, shortURL) // Делаем запись
-	s.Repo.Create(record)                        // Кладем в db данные
+	correlationID := s.encryptionLongURL()                                      // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID                     // Новый сокращенный URL
+	record := s.Repo.NewRow(context.TODO(), originURL, shortURL, correlationID) // Делаем запись для DB
+	s.Repo.Create(context.TODO(), record)                                       // Кладем в DB данные
 
 	return []byte(shortURL), nil
 }
 
 func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
-	shortURL := strings.TrimLeft(req.URL.Path, "/") // Достаем параметр shortURL
-	record, err := s.Repo.Read(shortURL)            // Достаем origin URL
+	correlationID := strings.TrimLeft(req.URL.Path, "/")      // Достаем параметр correlationID
+	record, err := s.Repo.Read(context.TODO(), correlationID) // Достаем origin URL
 
 	if err != nil {
 		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read", nil)
@@ -93,5 +102,9 @@ func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
 			return EmptyByteSlice, err
 		}
 	}
+	return StoreDBIsSucces, nil
+}
+
+func (s *ShortURL) SetBatch(req *http.Request) ([]byte, error) {
 	return StoreDBIsSucces, nil
 }

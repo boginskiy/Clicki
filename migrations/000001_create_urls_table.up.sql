@@ -9,7 +9,3 @@ CREATE TABLE urls (
 
 -- Базовый индекс для поиска по code
 CREATE INDEX idx_urls_short_url ON urls(short_url);
-
-
--- TODO
--- Сделать поле 'short_url' UNIQUE

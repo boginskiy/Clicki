@@ -1,5 +1,8 @@
 package model
 
+import "time"
+
+// Struct for one of URL
 type (
 	URLJson struct {
 		URL string `json:"url"`
@@ -19,5 +22,29 @@ func NewResultJSON(url *URLJson, result string) *ResultJSON {
 	return &ResultJSON{
 		URLJson: url,
 		Result:  result,
+	}
+}
+
+// Struct for set of URL
+type (
+	ReqURLSet struct {
+		CorrelationID string `json:"correlation_id"`
+		OriginalURL   string `json:"original_url"`
+	}
+
+	ResURLSet struct {
+		CorrelationID string    `json:"correlation_id"` // CorrelationID is - Уникальный строковый идентификатор
+		OriginalURL   string    `json:"-"`              // OriginalURL is - URL для сокращения
+		ShortURL      string    `json:"short_url"`      // ShortURL is - Сокращённая ссылка
+		CreatedAt     time.Time `json:"-"`              // CreatedAt is - Время создания записи
+	}
+)
+
+func NewResURLSet(correlationID, origin, short string) ResURLSet {
+	return ResURLSet{
+		CorrelationID: correlationID,
+		OriginalURL:   origin,
+		ShortURL:      short,
+		CreatedAt:     time.Now(),
 	}
 }

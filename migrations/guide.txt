@@ -19,5 +19,7 @@ migrate create -ext sql -dir ./migrations -seq add_country_column
 # Заход под текущим пользователем
 sudo -u postgres psql
 
-#
-postgres:5432/videos?sslmode=disable
+# Заходим в БД
+postgres=# \c <dataBase>
+
+# Удаляем данные БД

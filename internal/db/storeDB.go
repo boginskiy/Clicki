@@ -11,8 +11,9 @@ import (
 func createUrls(db *sql.DB) error {
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS urls (
 			id SERIAL PRIMARY KEY,
+			correlation_id TEXT,
 			original_url TEXT NOT NULL,
-			short_url VARCHAR(8) NOT NULL,
+			short_url TEXT NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`)
 	return err
 }

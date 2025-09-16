@@ -34,20 +34,14 @@ func RunRouter() *chi.Mux {
 	checker := v.NewChecker()
 
 	// Services
-	APIShortURL := s.NewAPIShortURL(repo, infoLog, checker, extraFuncer)
-	ShortURL := s.NewShortURL(repo, infoLog, checker, extraFuncer)
-
-	// type URLFile struct {
-	// 	UUID        int    `json:"uuid"`
-	// 	ShortURL    string `json:"short_url"`
-	// 	OriginalURL string `json:"original_url"`
-	// }
+	APIShortURL := s.NewAPIShortURL(kwargs, infoLog, repo, checker, extraFuncer)
+	ShortURL := s.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
 
 	// Заполняем базу данных тестовыми данными
 	url := &model.URLFile{ShortURL: "DcKa7J8d", OriginalURL: "https://translate.yandex.ru/"}
 	repo.Store["DcKa7J8d"] = url
 
-	return r.Router(kwargs, midWare, APIShortURL, ShortURL)
+	return r.Router(midWare, APIShortURL, ShortURL)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {

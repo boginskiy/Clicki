@@ -22,7 +22,7 @@ var repo, _ = db.NewStoreMap(kwargs, infoLog)
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 
-var ShURL = service.NewShortURL(repo, infoLog, checker, extraFuncer)
+var ShURL = service.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
 
 func TestEncryptionLongURL(t *testing.T) {
 	name := "Check EncryptionLongURL from ProURL"

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"sync"
@@ -28,18 +29,18 @@ func (sm *StoreMap) GetDB() *sql.DB {
 func (sm *StoreMap) CloseDB() {
 }
 
-func (sm *StoreMap) Read(shortURL string) (any, error) {
+func (sm *StoreMap) Read(ctx context.Context, CorrelationID string) (any, error) {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
-	record, ok := sm.Store[shortURL]
+	record, ok := sm.Store[CorrelationID]
 	if !ok {
 		return nil, errors.New("data is not available")
 	}
 	return record, nil
 }
 
-func (sm *StoreMap) Create(record any) error {
+func (sm *StoreMap) Create(ctx context.Context, record any) error {
 	row, ok := record.(*m.URLTb)
 	if !ok {
 		return errors.New("error in StoreMap>Create")
@@ -49,15 +50,30 @@ func (sm *StoreMap) Create(record any) error {
 	defer sm.mu.Unlock()
 
 	// Добавление записи в map
-	sm.Store[row.ShortURL] = row.OriginalURL
+	sm.Store[row.CorrelationID] = row.OriginalURL
 	return nil
 }
 
-func (sm *StoreMap) CheckUnic(shortURL string) bool {
-	_, ok := sm.Store[shortURL]
+func (sm *StoreMap) CheckUnic(ctx context.Context, correlationID string) bool {
+	_, ok := sm.Store[correlationID]
 	return !ok
 }
 
-func (sm *StoreMap) NewRow(originURL, shortURL string) any {
-	return m.NewURLTb(originURL, shortURL)
+func (sm *StoreMap) NewRow(ctx context.Context, originURL, shortURL, correlationID string) any {
+	return m.NewURLTb(originURL, shortURL, correlationID)
+}
+
+func (sf *StoreMap) CreateSet(ctx context.Context, records any) error {
+	rows, ok := records.([]m.ResURLSet)
+	if !ok || len(rows) == 0 {
+		return errors.New("data not valid")
+	}
+
+	sf.mu.RLock()
+
+	for _, r := range rows {
+		sf.Store[r.CorrelationID] = r.OriginalURL
+	}
+	sf.mu.RUnlock()
+	return nil
 }

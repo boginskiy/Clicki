@@ -5,13 +5,11 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/service"
 )
 
 type HandlerURL struct {
-	Service service.CRUDer   // CRUDer is the interface of business logic
-	Kwargs  config.VarGetter // Kwargs is the args of command line interface
+	Service service.CRUDer // CRUDer is the interface of business logic
 }
 
 func (h *HandlerURL) Get(res http.ResponseWriter, req *http.Request) {
@@ -28,7 +26,7 @@ func (h *HandlerURL) Get(res http.ResponseWriter, req *http.Request) {
 
 func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
 	// Start of 'Service'
-	body, err := h.Service.Create(req, h.Kwargs)
+	body, err := h.Service.Create(req)
 
 	// Check err
 	if err != nil {
@@ -36,20 +34,10 @@ func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Примитивная проверка, что перед нами Json, в зависимости от этого меняем тип 'Content-Type'
-	tmpBody := []byte(h.Kwargs.GetBaseURL() + "/" + string(body))
-	tmpHeader := "text/plain"
-
-	if len(body) > 0 {
-		switch body[0] {
-		case '{', '[', '"':
-			tmpHeader = "application/json"
-			tmpBody = body
-		}
-	}
+	tmpHeader := h.Service.GetHeader()
 	res.Header().Set("Content-Type", tmpHeader)
 	res.WriteHeader(http.StatusCreated)
-	res.Write(tmpBody)
+	res.Write(body)
 }
 
 func (h *HandlerURL) Check(res http.ResponseWriter, req *http.Request) {
@@ -60,6 +48,18 @@ func (h *HandlerURL) Check(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	res.Header().Set("Content-Type", "text/plain")
+	res.WriteHeader(http.StatusOK)
+	res.Write(body)
+}
+
+func (h *HandlerURL) Set(res http.ResponseWriter, req *http.Request) {
+	body, err := h.Service.SetBatch(req)
+
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write(body)
 }

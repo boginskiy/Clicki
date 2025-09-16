@@ -25,7 +25,7 @@ var dbase, _ = db.NewStoreMap(kwargs, infoLog)
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 
-var shURL = service.NewShortURL(dbase, infoLog, checker, extraFuncer)
+var shURL = service.NewShortURL(kwargs, infoLog, dbase, checker, extraFuncer)
 
 // TestHandlerURL check only POST request
 func TestPostURL(t *testing.T) {
@@ -82,7 +82,7 @@ func TestPostURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.HandlerURL{Service: shURL, Kwargs: kwargs}
+			h := handler.HandlerURL{Service: shURL}
 			h.Post(response, request)
 
 			// Check >>
@@ -166,7 +166,7 @@ func TestGetURL(t *testing.T) {
 			// Db
 			dbase.Store = tt.store
 			// Handler
-			h := handler.HandlerURL{Service: shURL, Kwargs: kwargs}
+			h := handler.HandlerURL{Service: shURL}
 
 			h.Get(response, request)
 
