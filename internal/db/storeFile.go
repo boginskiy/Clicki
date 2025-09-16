@@ -50,7 +50,7 @@ func (sf *StoreFile) dataRecovery() map[string]*m.URLTb {
 		// Сохранение данных с map
 		result[record.CorrelationID] = record
 		// Счетчик для UUID
-		sf.cntLine = max(sf.cntLine, record.Id)
+		sf.cntLine = max(sf.cntLine, record.ID)
 	}
 	return result
 }
@@ -87,7 +87,7 @@ func (sf *StoreFile) Create(ctx context.Context, preRecord any) error {
 
 	sf.mu.Lock()
 	sf.cntLine += 1
-	row.Id = sf.cntLine
+	row.ID = sf.cntLine
 	sf.Store[row.CorrelationID] = row
 	sf.mu.Unlock()
 

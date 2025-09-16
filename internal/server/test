@@ -37,3 +37,6 @@
 {"uuid":29,"correlation_id":"pelR07QN","short_url":"http://localhost:8080/pelR07QN","original_url":"https://docs.google.com/"}
 {"uuid":30,"correlation_id":"HyqbHRnb","short_url":"http://localhost:8080/HyqbHRnb","original_url":"https://practicum.yandex.ru"}
 {"uuid":31,"correlation_id":"WEsmRwrD","short_url":"http://localhost:8080/WEsmRwrD","original_url":"https://practicum.yandex.ru"}
+{"uuid":32,"original_url":"https://docs.google.com/","short_url":"http://localhost:8080/sf3hvvfj","correlation_id":"sf3hvvfj","created_at":"2025-09-16T21:06:27.31921442+03:00"}
+{"uuid":33,"original_url":"https://practicum.yandex.ru","short_url":"http://localhost:8080/57c9POHx","correlation_id":"57c9POHx","created_at":"2025-09-16T21:06:27.321881378+03:00"}
+{"uuid":34,"original_url":"https://practicum.yandex.ru","short_url":"http://localhost:8080/z3HgLLuA","correlation_id":"z3HgLLuA","created_at":"2025-09-16T21:06:27.322290981+03:00"}

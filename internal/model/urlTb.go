@@ -6,7 +6,7 @@ import (
 )
 
 type URLTb struct {
-	Id            int       `json:"uuid"`
+	ID            int       `json:"uuid"`
 	OriginalURL   string    `json:"original_url"`
 	ShortURL      string    `json:"short_url"`
 	CorrelationID string    `json:"correlation_id"`
@@ -15,7 +15,7 @@ type URLTb struct {
 
 func NewURLTb(id int, correID, origin, short string) *URLTb {
 	return &URLTb{
-		Id:            id,
+		ID:            id,
 		OriginalURL:   origin,
 		ShortURL:      short,
 		CorrelationID: correID,
@@ -26,5 +26,5 @@ func NewURLTb(id int, correID, origin, short string) *URLTb {
 func (u *URLTb) String() string {
 	return fmt.Sprintf(
 		"id:%v, OriginalURL:%v, ShortURL:%v, CorrelationID:%v, CreatedAt:%v\n",
-		u.Id, u.OriginalURL, u.ShortURL, u.CorrelationID, u.CreatedAt)
+		u.ID, u.OriginalURL, u.ShortURL, u.CorrelationID, u.CreatedAt)
 }
