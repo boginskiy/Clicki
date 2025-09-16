@@ -66,10 +66,11 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                                         // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID                        // Создаем новый сокращенный URL
-	record := s.Repo.NewRow(context.TODO(), baseLink.URL, shortURL, correlationID) // Создаем запись
-	s.Repo.Create(context.TODO(), record)                                          // Кладем в DB данные
+	correlationID := s.encryptionLongURL()                  // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Создаем новый сокращенный URL
+
+	preRecord := m.NewURLTb(0, correlationID, baseLink.URL, shortURL) // Создаем черновую запись
+	s.Repo.Create(context.TODO(), preRecord)                          // Кладем в DB данные
 
 	// Serialization Body
 	resJSON := m.NewResultJSON(baseLink, shortURL)

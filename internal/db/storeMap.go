@@ -40,8 +40,8 @@ func (sm *StoreMap) Read(ctx context.Context, CorrelationID string) (any, error)
 	return record, nil
 }
 
-func (sm *StoreMap) Create(ctx context.Context, record any) error {
-	row, ok := record.(*m.URLTb)
+func (sm *StoreMap) Create(ctx context.Context, preRecord any) error {
+	row, ok := preRecord.(*m.URLTb)
 	if !ok {
 		return errors.New("error in StoreMap>Create")
 	}
@@ -57,10 +57,6 @@ func (sm *StoreMap) Create(ctx context.Context, record any) error {
 func (sm *StoreMap) CheckUnic(ctx context.Context, correlationID string) bool {
 	_, ok := sm.Store[correlationID]
 	return !ok
-}
-
-func (sm *StoreMap) NewRow(ctx context.Context, originURL, shortURL, correlationID string) any {
-	return m.NewURLTb(originURL, shortURL, correlationID)
 }
 
 func (sm *StoreMap) CreateSet(ctx context.Context, records any) error {

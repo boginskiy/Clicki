@@ -29,10 +29,6 @@ func (s *SQLURLRepository) convertStrToTime(tm string, pattern string) (time.Tim
 	return time.Parse(pattern, tm)
 }
 
-func (s *SQLURLRepository) NewRow(ctx context.Context, originURL, shortURL, correlationID string) any {
-	return m.NewURLTb(originURL, shortURL, correlationID)
-}
-
 func (s *SQLURLRepository) CheckUnic(ctx context.Context, correlationID string) bool {
 	return true
 }
@@ -41,8 +37,8 @@ func (s *SQLURLRepository) GetDB() *sql.DB {
 	return s.DB.GetDB()
 }
 
-func (s *SQLURLRepository) Create(ctx context.Context, record any) error {
-	row, ok := record.(*m.URLTb)
+func (s *SQLURLRepository) Create(ctx context.Context, preRecord any) error {
+	row, ok := preRecord.(*m.URLTb)
 	if !ok {
 		return errors.New("error in SQLURLRepository>Create")
 	}

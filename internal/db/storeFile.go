@@ -17,7 +17,7 @@ import (
 const SIZE = 20
 
 type StoreFile struct {
-	Store   map[string]*m.URLFile
+	Store   map[string]*m.URLTb
 	scanner *bufio.Scanner
 	mu      sync.RWMutex
 	file    *os.File
@@ -35,11 +35,11 @@ func NewStoreFile(kwargs c.VarGetter, _ l.Logger) (*StoreFile, error) {
 	return sf, nil
 }
 
-func (sf *StoreFile) dataRecovery() map[string]*m.URLFile {
-	result := make(map[string]*m.URLFile, SIZE)
+func (sf *StoreFile) dataRecovery() map[string]*m.URLTb {
+	result := make(map[string]*m.URLTb, SIZE)
 	// Проход по строкам
 	for sf.scanner.Scan() {
-		record := &m.URLFile{}
+		record := &m.URLTb{}
 		line := sf.scanner.Text()
 
 		// Десериализация
@@ -50,7 +50,7 @@ func (sf *StoreFile) dataRecovery() map[string]*m.URLFile {
 		// Сохранение данных с map
 		result[record.CorrelationID] = record
 		// Счетчик для UUID
-		sf.cntLine = max(sf.cntLine, record.UUID)
+		sf.cntLine = max(sf.cntLine, record.Id)
 	}
 	return result
 }
@@ -68,10 +68,6 @@ func (sf *StoreFile) CheckUnic(ctx context.Context, correlationID string) bool {
 	return !ok
 }
 
-func (sf *StoreFile) NewRow(ctx context.Context, originURL, shortURL, correlationID string) any {
-	return m.NewURLFile(originURL, shortURL, correlationID)
-}
-
 func (sf *StoreFile) Read(ctx context.Context, correlationID string) (any, error) {
 	sf.mu.RLock()
 	defer sf.mu.RUnlock()
@@ -83,15 +79,15 @@ func (sf *StoreFile) Read(ctx context.Context, correlationID string) (any, error
 	return record, nil
 }
 
-func (sf *StoreFile) Create(ctx context.Context, record any) error {
-	row, ok := record.(*m.URLFile)
+func (sf *StoreFile) Create(ctx context.Context, preRecord any) error {
+	row, ok := preRecord.(*m.URLTb)
 	if !ok {
 		return errors.New("error in StoreFile>Create")
 	}
 
 	sf.mu.Lock()
 	sf.cntLine += 1
-	row.UUID = sf.cntLine
+	row.Id = sf.cntLine
 	sf.Store[row.CorrelationID] = row
 	sf.mu.Unlock()
 
@@ -115,12 +111,7 @@ func (sf *StoreFile) CreateSet(ctx context.Context, records any) error {
 	for _, r := range rows {
 		sf.cntLine += 1
 
-		row := &m.URLFile{
-			CorrelationID: r.CorrelationID,
-			OriginalURL:   r.OriginalURL,
-			ShortURL:      r.ShortURL,
-			UUID:          sf.cntLine,
-		}
+		row := m.NewURLTb(sf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL)
 
 		// Добавляем данные в Map
 		sf.Store[row.CorrelationID] = row

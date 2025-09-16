@@ -12,6 +12,5 @@ type DBer interface {
 type Tbler interface {
 	Create(any) error
 	Read(string) (any, error)
-	// NewRow(string, string) any
 	CheckUnic(string) bool
 }

@@ -12,8 +12,8 @@ import (
 	c "github.com/boginskiy/Clicki/cmd/config"
 	db "github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logger"
-	m "github.com/boginskiy/Clicki/internal/middleware"
-	"github.com/boginskiy/Clicki/internal/model"
+	mv "github.com/boginskiy/Clicki/internal/middleware"
+	m "github.com/boginskiy/Clicki/internal/model"
 	p "github.com/boginskiy/Clicki/internal/preparation"
 	r "github.com/boginskiy/Clicki/internal/router"
 	s "github.com/boginskiy/Clicki/internal/service"
@@ -29,7 +29,7 @@ func RunRouter() *chi.Mux {
 	kwargs.PathToStore = "test"
 
 	repo, _ := db.NewStoreFile(kwargs, infoLog)
-	midWare := m.NewMiddleware(infoLog)
+	midWare := mv.NewMiddleware(infoLog)
 	extraFuncer := p.NewExtraFunc()
 	checker := v.NewChecker()
 
@@ -38,7 +38,7 @@ func RunRouter() *chi.Mux {
 	ShortURL := s.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
 
 	// Заполняем базу данных тестовыми данными
-	url := &model.URLFile{ShortURL: "DcKa7J8d", OriginalURL: "https://translate.yandex.ru/"}
+	url := &m.URLTb{ShortURL: "DcKa7J8d", OriginalURL: "https://translate.yandex.ru/"}
 	repo.Store["DcKa7J8d"] = url
 
 	return r.Router(midWare, APIShortURL, ShortURL)

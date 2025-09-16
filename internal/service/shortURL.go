@@ -64,10 +64,11 @@ func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                                      // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID                     // Новый сокращенный URL
-	record := s.Repo.NewRow(context.TODO(), originURL, shortURL, correlationID) // Делаем запись для DB
-	s.Repo.Create(context.TODO(), record)                                       // Кладем в DB данные
+	correlationID := s.encryptionLongURL()                  // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
+
+	preRecord := m.NewURLTb(0, correlationID, originURL, shortURL) // Создаем черновую запись
+	s.Repo.Create(context.TODO(), preRecord)                       // Кладем в DB данные
 
 	return []byte(shortURL), nil
 }
@@ -82,8 +83,6 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	}
 
 	switch r := record.(type) {
-	case *m.URLFile:
-		return []byte(r.OriginalURL), nil
 	case *m.URLTb:
 		return []byte(r.OriginalURL), nil
 	case string:
