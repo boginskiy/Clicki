@@ -64,6 +64,10 @@ func (v *Variables) GetLogFile() (LogFile string) {
 	return v.ArgsENV.LogFile
 }
 
+func (v *Variables) GetMaxRetries() (MaxRetries int) {
+	return v.ArgsENV.MaxRetries
+}
+
 func (v *Variables) GetDB() (DB string) {
 	return v.DB
 }

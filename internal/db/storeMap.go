@@ -32,6 +32,11 @@ func (sm *StoreMap) GetDB() *sql.DB {
 func (sm *StoreMap) CloseDB() {
 }
 
+func (sm *StoreMap) CheckUnic(ctx context.Context, correlID string) bool {
+	_, ok := sm.Store[correlID]
+	return !ok
+}
+
 func (sm *StoreMap) Read(ctx context.Context, correlID string) (any, error) {
 	sm.muR.RLock()
 	defer sm.muR.RUnlock()
@@ -65,11 +70,6 @@ func (sm *StoreMap) Create(ctx context.Context, preRecord any) (any, error) {
 	sm.uniqueFields[row.OriginalURL] = row.CorrelationID
 
 	return row, nil
-}
-
-func (sm *StoreMap) CheckUnic(ctx context.Context, correlID string) bool {
-	_, ok := sm.Store[correlID]
-	return !ok
 }
 
 func (sm *StoreMap) CreateSet(ctx context.Context, records any) error {

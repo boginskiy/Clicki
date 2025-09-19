@@ -42,7 +42,7 @@ func main() {
 	// Заворачиваем в слой Repository DataBase
 	Repo, ok := Database.(rp.URLRepository)
 	if !ok {
-		Repo = rp.NewSQLURLRepository(Database)
+		Repo = rp.NewSQLURLRepository(Variables, Database)
 	}
 
 	server.Run(Variables, BaseLogger, Repo)

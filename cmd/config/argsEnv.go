@@ -14,6 +14,7 @@ type ArgsENV struct {
 	DB            string `env:"DATABASE_DSN"`      //
 	BaseURL       string `env:"BASE_URL"`          //
 	LogFile       string `env:"LOG_FILE"`
+	MaxRetries    int    `env:"MAX_RETRIES"`
 }
 
 func NewArgsENV() *ArgsENV {
@@ -32,6 +33,11 @@ func (e *ArgsENV) ParseFlags() {
 	valueLogFile := strings.TrimSpace(os.Getenv("LOG_FILE"))
 	if len(valueLogFile) == 0 {
 		e.LogFile = "LogInfo.log"
+	}
+
+	valueMaxRetries := strings.TrimSpace(os.Getenv("MAX_RETRIES"))
+	if len(valueMaxRetries) == 0 {
+		e.MaxRetries = 3
 	}
 }
 

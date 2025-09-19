@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	e "github.com/boginskiy/Clicki/internal/errors"
 	m "github.com/boginskiy/Clicki/internal/model"
@@ -12,29 +13,23 @@ import (
 )
 
 type SQLURLRepository struct {
-	DB db.DBer
+	Kwargs config.VarGetter
+	DB     db.DBer
 }
 
-func NewSQLURLRepository(db db.DBer) *SQLURLRepository {
+func NewSQLURLRepository(kwargs config.VarGetter, db db.DBer) *SQLURLRepository {
 	return &SQLURLRepository{
-		DB: db,
+		Kwargs: kwargs,
+		DB:     db,
 	}
-}
-
-func (s *SQLURLRepository) convertTimeToStr(tm time.Time, pattern string) string {
-	return tm.Format(pattern)
-}
-
-func (s *SQLURLRepository) convertStrToTime(tm string, pattern string) (time.Time, error) {
-	return time.Parse(pattern, tm)
-}
-
-func (s *SQLURLRepository) CheckUnic(ctx context.Context, correlationID string) bool {
-	return true
 }
 
 func (s *SQLURLRepository) GetDB() *sql.DB {
 	return s.DB.GetDB()
+}
+
+func (s *SQLURLRepository) CheckUnic(ctx context.Context, correlationID string) bool {
+	return true
 }
 
 func (s *SQLURLRepository) Create(ctx context.Context, preRecord any) (any, error) {
@@ -45,16 +40,12 @@ func (s *SQLURLRepository) Create(ctx context.Context, preRecord any) (any, erro
 
 	errClassifier := NewPGErrorClass()
 	tmpDB := s.DB.GetDB()
-	maxRetries := 3
 
 	// Strategy №2. SQl-Query-error.
-	for attempt := 0; attempt < maxRetries; attempt++ {
+	for attempt := 0; attempt <= s.Kwargs.GetMaxRetries(); attempt++ {
 
-		row, err := tmpDB.ExecContext(context.TODO(),
-			`INSERT INTO urls (correlation_id, original_url, short_url, created_at)
-		 	 VALUES ($1, $2, $3, $4);`,
-			record.CorrelationID, record.OriginalURL, record.ShortURL,
-			s.convertTimeToStr(record.CreatedAt, time.RFC3339))
+		row, err := InsertRowToUrls(tmpDB, context.TODO(),
+			record.CorrelationID, record.OriginalURL, record.ShortURL, record.CreatedAt)
 
 		// Ошибок нет, данные записаны
 		if err == nil {
@@ -70,9 +61,8 @@ func (s *SQLURLRepository) Create(ctx context.Context, preRecord any) (any, erro
 		if errCode == pgerrcode.UniqueViolation {
 
 			// Делаем повторный запрос в БД
-			row := tmpDB.QueryRowContext(context.TODO(),
-				`SELECT id, original_url, short_url, correlation_id, created_at
-				 FROM urls WHERE original_url = $1;`, record.OriginalURL)
+			row := SelectRowByOriginalURL(tmpDB, context.TODO(),
+				record.OriginalURL)
 
 			// Ошибок нет, возвращаем запись
 			if err2 := row.Scan(
@@ -99,37 +89,25 @@ func (s *SQLURLRepository) Create(ctx context.Context, preRecord any) (any, erro
 	return nil, e.NewErrPlace("insert into is bad", nil)
 }
 
-func (s *SQLURLRepository) Read(ctx context.Context, correlationID string) (any, error) {
+func (s *SQLURLRepository) Read(ctx context.Context, correlID string) (any, error) {
 	tmpDB := s.DB.GetDB()
 	tmpURL := &m.URLTb{}
-
-	row := tmpDB.QueryRowContext(context.TODO(),
-		`SELECT original_url, short_url, created_at 
-		 FROM urls 
-		 WHERE correlation_id = $1`,
-		correlationID)
-
 	var timeStr string
+
+	row := SelectRowByCorrelID(tmpDB, context.TODO(), correlID)
 
 	err := row.Scan(&tmpURL.OriginalURL, &tmpURL.CorrelationID, &timeStr)
 	if err != nil {
 		return nil, err
 	}
 
-	timeT, err := s.convertStrToTime(timeStr, time.RFC3339)
+	timeT, err := convertStrToTime(timeStr, time.RFC3339)
 	if err != nil {
 		return nil, err
 	}
 
 	tmpURL.CreatedAt = timeT
 	return tmpURL, nil
-}
-
-func (s *SQLURLRepository) Update(ctx context.Context, record *m.URLTb) {
-
-}
-func (s *SQLURLRepository) Delete(ctx context.Context, record *m.URLTb) {
-
 }
 
 func (s *SQLURLRepository) CreateSet(ctx context.Context, records any) error {
@@ -147,10 +125,8 @@ func (s *SQLURLRepository) CreateSet(ctx context.Context, records any) error {
 
 	for _, v := range rows {
 		// все изменения записываются в транзакцию
-		_, err := tx.ExecContext(ctx,
-			`INSERT INTO urls (correlation_id, original_url, short_url, created_at)
-		 	 VALUES($1,$2,$3,$4);`,
-			v.CorrelationID, v.OriginalURL, v.ShortURL, s.convertTimeToStr(v.CreatedAt, time.RFC3339))
+		_, err := InsertRowToUrlsTX(tx, context.TODO(),
+			v.CorrelationID, v.OriginalURL, v.ShortURL, v.CreatedAt)
 
 		if err != nil {
 			// если ошибка, то откатываем изменения
@@ -162,9 +138,3 @@ func (s *SQLURLRepository) CreateSet(ctx context.Context, records any) error {
 	tx.Commit()
 	return nil
 }
-
-// TODO!
-// Тестируем функционал всех видов БД
-// Протянуть логгер, протянуть параметры ENV CLI | Количество ретрай
-// Рефакторинг !!!!
-// Set Batch
