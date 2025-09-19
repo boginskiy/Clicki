@@ -97,7 +97,7 @@ func (sf *StoreFile) Create(ctx context.Context, preRecord any) (any, error) {
 	// Логика, если данные уже есть в Store
 	sf.muR.RLock()
 	if correlID, ok := sf.uniqueFields[row.OriginalURL]; ok {
-		return sf.Store[correlID], e.UniqueDataErr
+		return sf.Store[correlID], e.ErrUniqueData
 	}
 	sf.muR.RUnlock()
 

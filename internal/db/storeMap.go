@@ -54,7 +54,7 @@ func (sm *StoreMap) Create(ctx context.Context, preRecord any) (any, error) {
 	defer sm.muR.RUnlock()
 
 	if correlID, ok := sm.uniqueFields[row.OriginalURL]; ok {
-		return sm.Store[correlID], e.UniqueDataErr
+		return sm.Store[correlID], e.ErrUniqueData
 	}
 
 	// Добавление записи в map

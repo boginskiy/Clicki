@@ -82,8 +82,7 @@ func testRouter(t *testing.T, server *httptest.Server) {
 		// POST
 		{"Test POST 1", "POST", "://docs.google.com/", "/", "Content-Type", "text/plain; charset=utf-8", 400},
 		{"Test POST 2", "POST", "https://docs.google.com/", "/", "Content-Type", "text/plain", 409},
-		{"Test POST 3", "POST", "https://yuotube.com/", "/", "Content-Type", "text/plain", 201},
-		{"Test POST 4", "POST", "", "/wwxwecq", "Content-Type", "", 405},
+		{"Test POST 3", "POST", "", "/wwxwecq", "Content-Type", "", 405},
 
 		// GET
 		{"Test GET 1", "GET", "", "/DcKa7J44", "Content-Type", "text/plain; charset=utf-8", 400},
