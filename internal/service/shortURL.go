@@ -59,18 +59,28 @@ func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
-		s.Logger.RaiseInfo("ShortURL.Create>CheckUpURL",
-			l.Fields{"error": ErrDataNotValid.Error()})
+		s.Logger.RaiseError(ErrDataNotValid, "ShortURL.Create>CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                  // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
+	correlationID := s.encryptionLongURL()                         // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID        // Новый сокращенный URL
+	preRecord := m.NewURLTb(0, correlationID, originURL, shortURL) // Создаем запись
+	record, err := s.Repo.Create(context.TODO(), preRecord)        // Кладем в DB данные
 
-	preRecord := m.NewURLTb(0, correlationID, originURL, shortURL) // Создаем черновую запись
-	s.Repo.Create(context.TODO(), preRecord)                       // Кладем в DB данные
+	if err != nil && record == nil {
+		s.Logger.RaiseError(err, "ShortURL.Create>Repo.Create", nil)
+		return EmptyByteSlice, err
+	}
 
-	return []byte(shortURL), nil
+	//
+	switch r := record.(type) {
+	case *m.URLTb:
+		return []byte(r.ShortURL), err
+	default:
+		s.Logger.RaiseError(err, "ShortURL.Create>switch", nil)
+		return EmptyByteSlice, err
+	}
 }
 
 func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
@@ -85,8 +95,6 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	switch r := record.(type) {
 	case *m.URLTb:
 		return []byte(r.OriginalURL), nil
-	case string:
-		return []byte(r), nil
 	default:
 		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
 		return EmptyByteSlice, ErrDataNotValid

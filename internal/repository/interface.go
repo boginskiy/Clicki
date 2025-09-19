@@ -9,7 +9,7 @@ type URLRepository interface {
 	Read(context.Context, string) (any, error)
 	CheckUnic(context.Context, string) bool
 	CreateSet(context.Context, any) error
-	Create(context.Context, any) error
+	Create(context.Context, any) (any, error)
 	GetDB() *sql.DB
 }
 

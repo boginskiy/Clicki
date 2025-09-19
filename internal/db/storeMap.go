@@ -3,22 +3,25 @@ package db
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"sync"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
+	e "github.com/boginskiy/Clicki/internal/errors"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/model"
 )
 
 type StoreMap struct {
-	Store map[string]string
-	mu    sync.RWMutex
+	Store        map[string]*m.URLTb
+	uniqueFields map[string]string
+	mu           sync.Mutex
+	muR          sync.RWMutex
 }
 
 func NewStoreMap(_ c.VarGetter, _ l.Logger) (*StoreMap, error) {
 	return &StoreMap{
-		Store: make(map[string]string, SIZE),
+		Store:        make(map[string]*m.URLTb, SIZE),
+		uniqueFields: make(map[string]string, SIZE),
 	}, nil
 }
 
@@ -29,47 +32,69 @@ func (sm *StoreMap) GetDB() *sql.DB {
 func (sm *StoreMap) CloseDB() {
 }
 
-func (sm *StoreMap) Read(ctx context.Context, CorrelationID string) (any, error) {
-	sm.mu.RLock()
-	defer sm.mu.RUnlock()
+func (sm *StoreMap) Read(ctx context.Context, correlID string) (any, error) {
+	sm.muR.RLock()
+	defer sm.muR.RUnlock()
 
-	record, ok := sm.Store[CorrelationID]
+	record, ok := sm.Store[correlID]
 	if !ok {
-		return nil, errors.New("data is not available")
+		return nil, e.NewErrPlace("data is not available", nil)
 	}
 	return record, nil
 }
 
-func (sm *StoreMap) Create(ctx context.Context, preRecord any) error {
+func (sm *StoreMap) Create(ctx context.Context, preRecord any) (any, error) {
 	row, ok := preRecord.(*m.URLTb)
 	if !ok {
-		return errors.New("error in StoreMap>Create")
+		return nil, e.NewErrPlace("data not valid", nil)
 	}
 
+	// Логика, если данные уже есть в Store
+	sm.muR.RLock()
+	defer sm.muR.RUnlock()
+
+	if correlID, ok := sm.uniqueFields[row.OriginalURL]; ok {
+		return sm.Store[correlID], e.UniqueDataErr
+	}
+
+	// Добавление записи в map
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	// Добавление записи в map
-	sm.Store[row.CorrelationID] = row.OriginalURL
-	return nil
+	sm.Store[row.CorrelationID] = row
+	sm.uniqueFields[row.OriginalURL] = row.CorrelationID
+
+	return row, nil
 }
 
-func (sm *StoreMap) CheckUnic(ctx context.Context, correlationID string) bool {
-	_, ok := sm.Store[correlationID]
+func (sm *StoreMap) CheckUnic(ctx context.Context, correlID string) bool {
+	_, ok := sm.Store[correlID]
 	return !ok
 }
 
 func (sm *StoreMap) CreateSet(ctx context.Context, records any) error {
 	rows, ok := records.([]m.ResURLSet)
 	if !ok || len(rows) == 0 {
-		return errors.New("data not valid")
+		return e.NewErrPlace("data not valid", nil)
 	}
 
-	sm.mu.RLock()
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
 
 	for _, r := range rows {
-		sm.Store[r.CorrelationID] = r.OriginalURL
+
+		// TODO! Перекладка с ResURLSet в URLTb не супер оптимально
+		// однако пока так ...
+
+		sm.Store[r.CorrelationID] = &m.URLTb{
+			ID:            0,
+			OriginalURL:   r.OriginalURL,
+			ShortURL:      r.ShortURL,
+			CorrelationID: r.CorrelationID,
+			CreatedAt:     r.CreatedAt,
+		}
+
+		sm.uniqueFields[r.OriginalURL] = r.CorrelationID
 	}
-	sm.mu.RUnlock()
 	return nil
 }

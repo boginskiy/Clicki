@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	c "github.com/boginskiy/Clicki/cmd/config"
+	e "github.com/boginskiy/Clicki/internal/errors"
 	l "github.com/boginskiy/Clicki/internal/logger"
 	m "github.com/boginskiy/Clicki/internal/model"
 )
@@ -17,11 +18,13 @@ import (
 const SIZE = 20
 
 type StoreFile struct {
-	Store   map[string]*m.URLTb
-	scanner *bufio.Scanner
-	mu      sync.RWMutex
-	file    *os.File
-	cntLine int
+	Store        map[string]*m.URLTb
+	uniqueFields map[string]string
+	scanner      *bufio.Scanner
+	mu           sync.Mutex
+	muR          sync.RWMutex
+	file         *os.File
+	cntLine      int
 }
 
 func NewStoreFile(kwargs c.VarGetter, _ l.Logger) (*StoreFile, error) {
@@ -29,14 +32,18 @@ func NewStoreFile(kwargs c.VarGetter, _ l.Logger) (*StoreFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	sf := &StoreFile{file: f, scanner: bufio.NewScanner(f)}
-	sf.Store = sf.dataRecovery()
-
+	sf := &StoreFile{
+		file:    f,
+		scanner: bufio.NewScanner(f),
+	}
+	sf.Store, sf.uniqueFields = sf.dataRecovery()
 	return sf, nil
 }
 
-func (sf *StoreFile) dataRecovery() map[string]*m.URLTb {
-	result := make(map[string]*m.URLTb, SIZE)
+func (sf *StoreFile) dataRecovery() (map[string]*m.URLTb, map[string]string) {
+	resultMap := make(map[string]*m.URLTb, SIZE)
+	resultSet := make(map[string]string, SIZE)
+
 	// Проход по строкам
 	for sf.scanner.Scan() {
 		record := &m.URLTb{}
@@ -48,11 +55,13 @@ func (sf *StoreFile) dataRecovery() map[string]*m.URLTb {
 			continue
 		}
 		// Сохранение данных с map
-		result[record.CorrelationID] = record
+		resultMap[record.CorrelationID] = record
+		// Сохранение данных с set
+		resultSet[record.OriginalURL] = record.CorrelationID
 		// Счетчик для UUID
 		sf.cntLine = max(sf.cntLine, record.ID)
 	}
-	return result
+	return resultMap, resultSet
 }
 
 func (sf *StoreFile) GetDB() *sql.DB {
@@ -63,41 +72,50 @@ func (sf *StoreFile) CloseDB() {
 	sf.file.Close()
 }
 
-func (sf *StoreFile) CheckUnic(ctx context.Context, correlationID string) bool {
-	_, ok := sf.Store[correlationID]
+func (sf *StoreFile) CheckUnic(ctx context.Context, correlID string) bool {
+	_, ok := sf.Store[correlID]
 	return !ok
 }
 
-func (sf *StoreFile) Read(ctx context.Context, correlationID string) (any, error) {
-	sf.mu.RLock()
-	defer sf.mu.RUnlock()
+func (sf *StoreFile) Read(ctx context.Context, correlID string) (any, error) {
+	sf.muR.RLock()
+	defer sf.muR.RUnlock()
 
-	record, ok := sf.Store[correlationID]
+	record, ok := sf.Store[correlID]
 	if !ok {
-		return nil, errors.New("data is not available")
+		return nil, e.NewErrPlace("data is not available", nil)
 	}
 	return record, nil
 }
 
-func (sf *StoreFile) Create(ctx context.Context, preRecord any) error {
+func (sf *StoreFile) Create(ctx context.Context, preRecord any) (any, error) {
 	row, ok := preRecord.(*m.URLTb)
 	if !ok {
-		return errors.New("type is not available")
+		return nil, e.NewErrPlace("type is not available", nil)
 	}
 
+	// Логика, если данные уже есть в Store
+	sf.muR.RLock()
+	if correlID, ok := sf.uniqueFields[row.OriginalURL]; ok {
+		return sf.Store[correlID], e.UniqueDataErr
+	}
+	sf.muR.RUnlock()
+
+	// Логика, если данные отсутствуют в Store
 	sf.mu.Lock()
 	sf.cntLine += 1
 	row.ID = sf.cntLine
 	sf.Store[row.CorrelationID] = row
+	sf.uniqueFields[row.OriginalURL] = row.CorrelationID
 	sf.mu.Unlock()
 
 	tmpB, err := json.Marshal(row)
 	if err != nil {
-		return err
+		return nil, e.NewErrPlace("type is not available", err)
 	}
 	tmpB = append(tmpB, byte('\n'))
 	_, err = sf.file.Write(tmpB)
-	return err
+	return row, err
 }
 
 func (sf *StoreFile) CreateSet(ctx context.Context, records any) error {
@@ -106,7 +124,7 @@ func (sf *StoreFile) CreateSet(ctx context.Context, records any) error {
 		return errors.New("data not valid")
 	}
 
-	sf.mu.RLock()
+	sf.mu.Lock()
 
 	for _, r := range rows {
 		sf.cntLine += 1
@@ -129,6 +147,6 @@ func (sf *StoreFile) CreateSet(ctx context.Context, records any) error {
 		}
 	}
 
-	sf.mu.RUnlock()
+	sf.mu.Unlock()
 	return nil
 }

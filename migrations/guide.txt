@@ -8,6 +8,12 @@ migrate create -ext sql -dir ./migrations -seq create_movies_table
 # Применение миграций
 migrate -database "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable" -path ./migrations up
 
+# Примененеи конкретной миграции
+migrate -database "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable" -path ./migrations goto 4
+
+# Фиксация миграции после грязного чтения
+migrate -database "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable" -path ./migrations force 3
+
 # Добавление еще данных
 migrate create -ext sql -dir ./migrations -seq add_country_column 
 

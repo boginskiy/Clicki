@@ -51,8 +51,8 @@ func (s *APIShortURL) GetHeader() string {
 
 func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 	// Deserialization Body
-	baseLink := m.NewURLJson()
-	err := s.ExtraFuncer.Deserialization(req, baseLink)
+	bodyJSON := m.NewURLJson()
+	err := s.ExtraFuncer.Deserialization(req, bodyJSON)
 
 	if err != nil {
 		s.Logger.RaiseFatal(err, DeserializFatal, nil)
@@ -60,27 +60,42 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
-	if !s.Checker.CheckUpURL(baseLink.URL) || baseLink.URL == "" {
+	if !s.Checker.CheckUpURL(bodyJSON.URL) || bodyJSON.URL == "" {
 		s.Logger.RaiseInfo("APIShortURL.Create>CheckUpURL",
 			l.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                  // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Создаем новый сокращенный URL
+	correlationID := s.encryptionLongURL()                            // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID           // Создаем новый сокращенный URL
+	preRecord := m.NewURLTb(0, correlationID, bodyJSON.URL, shortURL) // Создаем черновую запись
+	record, err := s.Repo.Create(context.TODO(), preRecord)           // Кладем в DB данные
 
-	preRecord := m.NewURLTb(0, correlationID, baseLink.URL, shortURL) // Создаем черновую запись
-	s.Repo.Create(context.TODO(), preRecord)                          // Кладем в DB данные
-
-	// Serialization Body
-	resJSON := m.NewResultJSON(baseLink, shortURL)
-	result, err := s.ExtraFuncer.Serialization(resJSON)
-
-	if err != nil {
-		s.Logger.RaiseError(err, "APIShortURL.Create>NewResultJSON", nil)
+	if err != nil && record == nil {
+		s.Logger.RaiseError(err, "APIShortURL.Create>Repo.Create", nil)
 		return EmptyByteSlice, err
 	}
-	return result, nil
+
+	//
+	var resJSON *m.ResultJSON
+	switch r := record.(type) {
+	case *m.URLTb:
+		resJSON = m.NewResultJSON(bodyJSON, r.ShortURL)
+	case string:
+		resJSON = m.NewResultJSON(bodyJSON, r)
+	default:
+		s.Logger.RaiseError(err, "APIShortURL.Create>switch", nil)
+		return EmptyByteSlice, err
+	}
+
+	// Serialization Body
+	result, err2 := s.ExtraFuncer.Serialization(resJSON)
+
+	if err2 != nil {
+		s.Logger.RaiseError(err2, "APIShortURL.Create>NewResultJSON", nil)
+		return EmptyByteSlice, err2
+	}
+	return result, err
 }
 
 func (s *APIShortURL) Read(req *http.Request) ([]byte, error) {

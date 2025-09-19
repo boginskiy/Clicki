@@ -27,16 +27,21 @@ func (h *HandlerURL) Get(res http.ResponseWriter, req *http.Request) {
 func (h *HandlerURL) Post(res http.ResponseWriter, req *http.Request) {
 	// Start of 'Service'
 	body, err := h.Service.Create(req)
+	status := http.StatusCreated
 
-	// Check err
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
+	// Обработка критичных ошибок
+	if err != nil && len(body) == 0 {
+		http.Error(res, "message: not created", http.StatusBadRequest)
 		return
 	}
 
-	tmpHeader := h.Service.GetHeader()
-	res.Header().Set("Content-Type", tmpHeader)
-	res.WriteHeader(http.StatusCreated)
+	// Обработка не критичных ошибок
+	if err != nil && len(body) > 0 {
+		status = http.StatusConflict
+	}
+
+	res.Header().Set("Content-Type", h.Service.GetHeader())
+	res.WriteHeader(status)
 	res.Write(body)
 }
 

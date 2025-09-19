@@ -10,6 +10,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/handler"
 	"github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
@@ -126,7 +127,7 @@ func TestGetURL(t *testing.T) {
 		name  string
 		want  want
 		req   req
-		store map[string]string
+		store map[string]*model.URLTb
 	}{
 		{
 			name: "Test GET positive",
@@ -138,7 +139,14 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/H3HIkks3",
 			},
-			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
+			store: map[string]*model.URLTb{
+				"H3HIkks3": &model.URLTb{
+					ID:            0,
+					OriginalURL:   "https://practicum.yandex.ru/",
+					ShortURL:      "short_url",
+					CorrelationID: "H3HIkks3",
+				},
+			},
 		},
 
 		{
@@ -151,7 +159,14 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/N9KHHoG1",
 			},
-			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
+			store: map[string]*model.URLTb{
+				"H3HIkks3": &model.URLTb{
+					ID:            0,
+					OriginalURL:   "https://practicum.yandex.ru/",
+					ShortURL:      "short_url",
+					CorrelationID: "H3HIkks3",
+				},
+			},
 		},
 	}
 
