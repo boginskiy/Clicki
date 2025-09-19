@@ -91,23 +91,20 @@ func (s *SQLURLRepository) Create(ctx context.Context, preRecord any) (any, erro
 
 func (s *SQLURLRepository) Read(ctx context.Context, correlID string) (any, error) {
 	tmpDB := s.DB.GetDB()
-	tmpURL := &m.URLTb{}
-	var timeStr string
+	record := &m.URLTb{}
 
 	row := SelectRowByCorrelID(tmpDB, context.TODO(), correlID)
 
-	err := row.Scan(&tmpURL.OriginalURL, &tmpURL.CorrelationID, &timeStr)
-	if err != nil {
+	if err := row.Scan(
+		&record.ID,
+		&record.OriginalURL,
+		&record.ShortURL,
+		&record.CorrelationID,
+		&record.CreatedAt); err != nil {
 		return nil, err
 	}
 
-	timeT, err := convertStrToTime(timeStr, time.RFC3339)
-	if err != nil {
-		return nil, err
-	}
-
-	tmpURL.CreatedAt = timeT
-	return tmpURL, nil
+	return record, nil
 }
 
 func (s *SQLURLRepository) CreateSet(ctx context.Context, records any) error {
