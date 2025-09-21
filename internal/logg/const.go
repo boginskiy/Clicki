@@ -1,4 +1,4 @@
-package logger
+package logg
 
 const (
 	DataReqResInfo   = "[INFO]:The data request and response"

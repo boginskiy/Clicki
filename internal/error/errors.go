@@ -1,4 +1,4 @@
-package repository
+package error
 
 import (
 	"errors"
@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrUniqueData = errors.New("attempt to overwrite unique data") // Ошибка при попытке перезаписать поле с уникальными данными
+	ErrUniqueData   = errors.New("attempt to overwrite unique data") // Ошибка при попытке перезаписать поле с уникальными данными
+	ErrPingDataBase = errors.New("bad database ping")                // Ошибка подключения к БД
 )
 
 // ErrPlace

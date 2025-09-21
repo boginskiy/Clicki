@@ -5,19 +5,21 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-var infoLog = logger.NewLogg("Test.log", "INFO")
+var infoLog = logg.NewLogg("Test.log", "INFO")
 var kwargs = &config.Variables{
 	ServerAddress: "localhost:8080",
 	BaseURL:       "http://localhost:8081",
 }
 
-var repo, _ = db.NewStoreMap(kwargs, infoLog)
+var dber, _ = db.NewStoreMap(kwargs, infoLog)
+var repo, _ = repository.NewRepositoryMapURL(kwargs, dber)
 
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()

@@ -5,11 +5,11 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/boginskiy/Clicki/internal/service"
+	srv "github.com/boginskiy/Clicki/internal/service"
 )
 
 type HandlerURL struct {
-	Service service.CRUDer // CRUDer is the interface of business logic
+	Service srv.CRUDer // CRUDer is the interface of business logic
 }
 
 func (h *HandlerURL) Get(res http.ResponseWriter, req *http.Request) {

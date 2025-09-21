@@ -3,40 +3,40 @@ package server
 import (
 	"net/http"
 
-	c "github.com/boginskiy/Clicki/cmd/config"
+	conf "github.com/boginskiy/Clicki/cmd/config"
 
-	l "github.com/boginskiy/Clicki/internal/logger"
-	m "github.com/boginskiy/Clicki/internal/middleware"
-	p "github.com/boginskiy/Clicki/internal/preparation"
-	rp "github.com/boginskiy/Clicki/internal/repository"
-	r "github.com/boginskiy/Clicki/internal/router"
-	s "github.com/boginskiy/Clicki/internal/service"
-	v "github.com/boginskiy/Clicki/internal/validation"
+	"github.com/boginskiy/Clicki/internal/logg"
+	midw "github.com/boginskiy/Clicki/internal/middleware"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
+	repo "github.com/boginskiy/Clicki/internal/repository"
+	route "github.com/boginskiy/Clicki/internal/router"
+	srv "github.com/boginskiy/Clicki/internal/service"
+	valid "github.com/boginskiy/Clicki/internal/validation"
 )
 
-func Run(kwargs c.VarGetter, baseLog l.Logger, repo rp.URLRepository) {
+func Run(kwargs conf.VarGetter, baseLog logg.Logger, repo repo.Repository) {
 	// Info Logger
-	infoLog := l.NewLogg(kwargs.GetLogFile(), "INFO")
+	infoLog := logg.NewLogg(kwargs.GetLogFile(), "INFO")
 	defer infoLog.CloseDesc()
 
 	// Middleware
-	midWare := m.NewMiddleware(infoLog)
+	midWare := midw.NewMiddleware(infoLog)
 
 	// Extra
-	extraFuncer := p.NewExtraFunc() // extraFuncer - дополнительные функции
-	checker := v.NewChecker()       // checker - валидация данных
+	extraFuncer := prep.NewExtraFunc() // extraFuncer - дополнительные функции
+	checker := valid.NewChecker()      // checker - валидация данных
 
 	// Services
-	APIShortURL := s.NewAPIShortURL(kwargs, baseLog, repo, checker, extraFuncer)
-	ShortURL := s.NewShortURL(kwargs, baseLog, repo, checker, extraFuncer)
+	APIShortURL := srv.NewAPIShortURL(kwargs, baseLog, repo, checker, extraFuncer)
+	ShortURL := srv.NewShortURL(kwargs, baseLog, repo, checker, extraFuncer)
 
 	// writing log...
-	baseLog.RaiseInfo(l.StartedServInfo, l.Fields{"port": kwargs.GetSrvAddr()})
+	baseLog.RaiseInfo(logg.StartedServInfo, logg.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
-	err := http.ListenAndServe(kwargs.GetSrvAddr(), r.Router(midWare, APIShortURL, ShortURL))
+	err := http.ListenAndServe(kwargs.GetSrvAddr(), route.Router(midWare, APIShortURL, ShortURL))
 
 	// writing log...
-	baseLog.RaiseFatal(err, l.StartedServFatal, l.Fields{"port": kwargs.GetSrvAddr()})
+	baseLog.RaiseFatal(err, logg.StartedServFatal, logg.Fields{"port": kwargs.GetSrvAddr()})
 
 }

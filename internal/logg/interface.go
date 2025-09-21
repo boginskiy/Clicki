@@ -1,4 +1,4 @@
-package logger
+package logg
 
 type Logger interface {
 	RaiseInfo(string, Fields)

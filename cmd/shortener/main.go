@@ -5,45 +5,59 @@ import (
 
 	"github.com/boginskiy/Clicki/internal/db"
 
-	l "github.com/boginskiy/Clicki/internal/logger"
-	rp "github.com/boginskiy/Clicki/internal/repository"
+	"github.com/boginskiy/Clicki/internal/logg"
+	repo "github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/server"
 )
 
-func SetDB(kwargs config.VarGetter, logger l.Logger) db.DBer {
+// ChoiceOfCreatingDB - Функции для создания слоя DB
+func ChoiceOfCreatingDB(kwargs config.VarGetter) func(config.VarGetter, logg.Logger) (db.DBer, error) {
 	if kwargs.GetDB() != "" {
-		// Используем для хранения данных DataBase
-		db, err := db.NewStoreDB(kwargs, logger)
-		logger.RaiseFatal(err, "SetDB>NewStoreDB", nil)
-		return db
-
+		return db.NewStoreDB
 	} else if kwargs.GetPathToStore() != "" {
-		// Используем для хранения данных файл
-		db, err := db.NewStoreFile(kwargs, logger)
-		logger.RaiseFatal(err, "SetDB>NewStoreFile", nil)
-		return db
-
+		return db.NewStoreFile
 	} else {
-		// Используем для хранения данных Map
-		db, err := db.NewStoreMap(kwargs, logger)
-		logger.RaiseFatal(err, "SetDB>NewStoreMap", nil)
-		return db
+		return db.NewStoreMap
+	}
+}
+
+// ChoiceOfRepositoryDB - Функции для создания слоя Repo
+func ChoiceOfRepositoryDB(database db.DBer) func(config.VarGetter, db.DBer) (repo.Repository, error) {
+	switch database.(type) {
+	case *db.StoreDB:
+		return repo.NewRepositoryDbURL
+	case *db.StoreFile:
+		return repo.NewRepositoryFileURL
+	case *db.StoreMap:
+		return repo.NewRepositoryMapURL
+	default:
+		return nil
 	}
 }
 
 func main() {
-	BaseLogger := l.NewLogg("LogBase.log", "FATAL")
+	// Logger
+	BaseLogger := logg.NewLogg("LogBase.log", "FATAL")
+
+	// Kwargs
 	Variables := config.NewVariables(BaseLogger)
-	Database := SetDB(Variables, BaseLogger)
 
-	defer BaseLogger.CloseDesc()
-	defer Database.CloseDB()
-
-	// Заворачиваем в слой Repository DataBase
-	Repo, ok := Database.(rp.URLRepository)
-	if !ok {
-		Repo = rp.NewSQLURLRepository(Variables, Database)
+	// Database
+	newDataBase := ChoiceOfCreatingDB(Variables)
+	database, err := newDataBase(Variables, BaseLogger)
+	if err != nil {
+		BaseLogger.RaiseFatal(err, "main>NewDataBase", nil)
 	}
 
-	server.Run(Variables, BaseLogger, Repo)
+	// Repository
+	NewRepository := ChoiceOfRepositoryDB(database)
+	Repository, err := NewRepository(Variables, database)
+	if err != nil {
+		BaseLogger.RaiseFatal(err, "main>NewRepository", nil)
+	}
+
+	defer BaseLogger.CloseDesc()
+	defer database.CloseDB()
+
+	server.Run(Variables, BaseLogger, Repository)
 }

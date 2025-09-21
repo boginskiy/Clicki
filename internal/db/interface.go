@@ -1,16 +1,7 @@
 package db
 
-import (
-	"database/sql"
-)
-
 type DBer interface {
-	GetDB() *sql.DB
+	CheckOpen() (bool, error)
+	GetDB() any
 	CloseDB()
-}
-
-type Tbler interface {
-	Create(any) error
-	Read(string) (any, error)
-	CheckUnic(string) bool
 }

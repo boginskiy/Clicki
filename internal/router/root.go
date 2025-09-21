@@ -5,12 +5,12 @@ import (
 	"net/http/pprof"
 
 	h "github.com/boginskiy/Clicki/internal/handler"
-	m "github.com/boginskiy/Clicki/internal/middleware"
-	s "github.com/boginskiy/Clicki/internal/service"
+	midw "github.com/boginskiy/Clicki/internal/middleware"
+	srv "github.com/boginskiy/Clicki/internal/service"
 	"github.com/go-chi/chi"
 )
 
-func Router(mv m.Middlewarer, apiURL, shortuRL s.CRUDer) *chi.Mux {
+func Router(mv midw.Middlewarer, apiURL, shortuRL srv.CRUDer) *chi.Mux {
 	hAPIURL := h.HandlerURL{Service: apiURL}
 	hURL := h.HandlerURL{Service: shortuRL}
 

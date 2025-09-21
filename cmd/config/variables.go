@@ -3,11 +3,11 @@ package config
 import (
 	"strings"
 
-	l "github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/logg"
 )
 
 type Variables struct {
-	Logger        l.Logger
+	Logger        logg.Logger
 	ServerAddress string
 	PathToStore   string
 	BaseURL       string
@@ -16,7 +16,7 @@ type Variables struct {
 	ArgsENV       *ArgsENV
 }
 
-func NewVariables(logger l.Logger) *Variables {
+func NewVariables(logger logg.Logger) *Variables {
 	tmpVar := &Variables{
 		Logger:  logger,
 		ArgsCLI: NewArgsCLI(),

@@ -5,26 +5,26 @@ import (
 	"encoding/json"
 	"net/http"
 
-	c "github.com/boginskiy/Clicki/cmd/config"
-	l "github.com/boginskiy/Clicki/internal/logger"
-	m "github.com/boginskiy/Clicki/internal/model"
-	p "github.com/boginskiy/Clicki/internal/preparation"
-	r "github.com/boginskiy/Clicki/internal/repository"
-	v "github.com/boginskiy/Clicki/internal/validation"
+	conf "github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/internal/logg"
+	mod "github.com/boginskiy/Clicki/internal/model"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
+	repo "github.com/boginskiy/Clicki/internal/repository"
+	valid "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
 )
 
 type APIShortURL struct {
-	Repo        r.URLRepository
-	ExtraFuncer p.ExtraFuncer
-	Kwargs      c.VarGetter
-	Checker     v.Checker
-	Logger      l.Logger
+	Repo        repo.Repository
+	ExtraFuncer prep.ExtraFuncer
+	Kwargs      conf.VarGetter
+	Checker     valid.Checker
+	Logger      logg.Logger
 }
 
 func NewAPIShortURL(
-	kwargs c.VarGetter, logger l.Logger, repo r.URLRepository,
-	checker v.Checker, extraFuncer p.ExtraFuncer) *APIShortURL {
+	kwargs conf.VarGetter, logger logg.Logger, repo repo.Repository,
+	checker valid.Checker, extraFuncer prep.ExtraFuncer) *APIShortURL {
 
 	return &APIShortURL{
 		ExtraFuncer: extraFuncer,
@@ -35,14 +35,14 @@ func NewAPIShortURL(
 	}
 }
 
-func (s *APIShortURL) encryptionLongURL() (shortURL string) {
+func (s *APIShortURL) encryptionLongURL() (correlID string) {
 	for {
-		shortURL = pkg.Scramble(LONG)                   // Вызов шифратора
-		if s.Repo.CheckUnic(context.TODO(), shortURL) { // Проверка на уникальность
+		correlID = pkg.Scramble(LONG)                   // Вызов шифратора
+		if s.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
 			break
 		}
 	}
-	return shortURL
+	return correlID
 }
 
 func (s *APIShortURL) GetHeader() string {
@@ -51,7 +51,7 @@ func (s *APIShortURL) GetHeader() string {
 
 func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 	// Deserialization Body
-	bodyJSON := m.NewURLJson()
+	bodyJSON := mod.NewURLJson()
 	err := s.ExtraFuncer.Deserialization(req, bodyJSON)
 
 	if err != nil {
@@ -62,14 +62,14 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(bodyJSON.URL) || bodyJSON.URL == "" {
 		s.Logger.RaiseInfo("APIShortURL.Create>CheckUpURL",
-			l.Fields{"error": ErrDataNotValid.Error()})
+			logg.Fields{"error": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                            // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID           // Создаем новый сокращенный URL
-	preRecord := m.NewURLTb(0, correlationID, bodyJSON.URL, shortURL) // Создаем черновую запись
-	record, err := s.Repo.Create(context.TODO(), preRecord)           // Кладем в DB данные
+	correlationID := s.encryptionLongURL()                              // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID             // Создаем новый сокращенный URL
+	preRecord := mod.NewURLTb(0, correlationID, bodyJSON.URL, shortURL) // Создаем черновую запись
+	record, err := s.Repo.Create(context.TODO(), preRecord)             // Кладем в DB данные
 
 	if err != nil && record == nil {
 		s.Logger.RaiseError(err, "APIShortURL.Create>Repo.Create", nil)
@@ -77,12 +77,12 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 	}
 
 	//
-	var resJSON *m.ResultJSON
+	var resJSON *mod.ResultJSON
 	switch r := record.(type) {
-	case *m.URLTb:
-		resJSON = m.NewResultJSON(bodyJSON, r.ShortURL)
+	case *mod.URLTb:
+		resJSON = mod.NewResultJSON(bodyJSON, r.ShortURL)
 	case string:
-		resJSON = m.NewResultJSON(bodyJSON, r)
+		resJSON = mod.NewResultJSON(bodyJSON, r)
 	default:
 		s.Logger.RaiseError(err, "APIShortURL.Create>switch", nil)
 		return EmptyByteSlice, err
@@ -114,15 +114,15 @@ func (s *APIShortURL) SetBatch(req *http.Request) ([]byte, error) {
 	token, _ := decoder.Token()
 	if token != json.Delim('[') {
 		s.Logger.RaiseFatal(ErrDataNotValid, "ShortURL>SetBatch>Token",
-			l.Fields{"fatal": ErrDataNotValid.Error()})
+			logg.Fields{"fatal": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
 	// Разбор тела запроса
-	respURLSet := make([]m.ResURLSet, 0, 10)
+	respURLSet := make([]mod.ResURLSet, 0, 10)
 
 	for decoder.More() {
-		var rURL m.ReqURLSet
+		var rURL mod.ReqURLSet
 		err := decoder.Decode(&rURL)
 
 		if err != nil {
@@ -135,7 +135,7 @@ func (s *APIShortURL) SetBatch(req *http.Request) ([]byte, error) {
 		shortURL := s.Kwargs.GetBaseURL() + "/" + rURL.CorrelationID
 
 		// Сбор множества URL
-		respURLSet = append(respURLSet, m.NewResURLSet(rURL.CorrelationID, rURL.OriginalURL, shortURL))
+		respURLSet = append(respURLSet, mod.NewResURLSet(rURL.CorrelationID, rURL.OriginalURL, shortURL))
 	}
 
 	// Сохранение в БД

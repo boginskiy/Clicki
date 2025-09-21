@@ -2,15 +2,15 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 )
 
-type URLRepository interface {
+type Repository interface {
 	Read(context.Context, string) (any, error)
+	Create(context.Context, any) (any, error)
+
 	CheckUnic(context.Context, string) bool
 	CreateSet(context.Context, any) error
-	Create(context.Context, any) (any, error)
-	GetDB() *sql.DB
+	Ping(context.Context) (bool, error)
 }
 
 // Update(any)

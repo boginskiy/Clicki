@@ -5,26 +5,26 @@ import (
 	"net/http"
 	"strings"
 
-	c "github.com/boginskiy/Clicki/cmd/config"
-	l "github.com/boginskiy/Clicki/internal/logger"
-	m "github.com/boginskiy/Clicki/internal/model"
-	p "github.com/boginskiy/Clicki/internal/preparation"
-	r "github.com/boginskiy/Clicki/internal/repository"
-	v "github.com/boginskiy/Clicki/internal/validation"
+	conf "github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/internal/logg"
+	mod "github.com/boginskiy/Clicki/internal/model"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
+	repo "github.com/boginskiy/Clicki/internal/repository"
+	valid "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
 )
 
 type ShortURL struct {
-	ExtraFuncer p.ExtraFuncer
-	Repo        r.URLRepository
-	Checker     v.Checker
-	Logger      l.Logger
-	Kwargs      c.VarGetter
+	ExtraFuncer prep.ExtraFuncer
+	Repo        repo.Repository
+	Checker     valid.Checker
+	Logger      logg.Logger
+	Kwargs      conf.VarGetter
 }
 
 func NewShortURL(
-	kwargs c.VarGetter, logger l.Logger, repo r.URLRepository,
-	checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+	kwargs conf.VarGetter, logger logg.Logger, repo repo.Repository,
+	checker valid.Checker, extraFuncer prep.ExtraFuncer) *ShortURL {
 
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
@@ -35,14 +35,14 @@ func NewShortURL(
 	}
 }
 
-func (s *ShortURL) encryptionLongURL() (correlationID string) {
+func (s *ShortURL) encryptionLongURL() (correlID string) {
 	for {
-		correlationID = pkg.Scramble(LONG)                   // Вызов шифратора
-		if s.Repo.CheckUnic(context.TODO(), correlationID) { // Проверка на уникальность
+		correlID = pkg.Scramble(LONG)                   // Вызов шифратора
+		if s.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
 			break
 		}
 	}
-	return correlationID
+	return correlID
 }
 
 func (s *ShortURL) GetHeader() string {
@@ -63,10 +63,10 @@ func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                         // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID        // Новый сокращенный URL
-	preRecord := m.NewURLTb(0, correlationID, originURL, shortURL) // Создаем запись
-	record, err := s.Repo.Create(context.TODO(), preRecord)        // Кладем в DB данные
+	correlationID := s.encryptionLongURL()                           // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID          // Новый сокращенный URL
+	preRecord := mod.NewURLTb(0, correlationID, originURL, shortURL) // Создаем запись
+	record, err := s.Repo.Create(context.TODO(), preRecord)          // Кладем в DB данные
 
 	if err != nil && record == nil {
 		s.Logger.RaiseError(err, "ShortURL.Create>Repo.Create", nil)
@@ -75,7 +75,7 @@ func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
 
 	//
 	switch r := record.(type) {
-	case *m.URLTb:
+	case *mod.URLTb:
 		return []byte(r.ShortURL), err
 	default:
 		s.Logger.RaiseError(err, "ShortURL.Create>switch", nil)
@@ -93,7 +93,7 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	}
 
 	switch r := record.(type) {
-	case *m.URLTb:
+	case *mod.URLTb:
 		return []byte(r.OriginalURL), nil
 	default:
 		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
@@ -101,13 +101,11 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	}
 }
 
-// CheckPing - check of connection db
 func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
-	if s.Repo.GetDB() != nil {
-		err := s.Repo.GetDB().Ping()
-		if err != nil {
-			return EmptyByteSlice, err
-		}
+	_, err := s.Repo.Ping(context.TODO())
+	if err != nil {
+		s.Logger.RaiseFatal(err, "ShortURL.CreaCheckPingte>Ping", nil)
+		return EmptyByteSlice, err
 	}
 	return StoreDBIsSucces, nil
 }
