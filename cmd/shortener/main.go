@@ -25,7 +25,7 @@ func ChoiceOfCreatingDB(kwargs config.VarGetter) func(config.VarGetter, logg.Log
 func ChoiceOfRepositoryDB(database db.DBer) func(config.VarGetter, db.DBer) (repo.Repository, error) {
 	switch database.(type) {
 	case *db.StoreDB:
-		return repo.NewRepositoryDbURL
+		return repo.NewRepositoryDBURL
 	case *db.StoreFile:
 		return repo.NewRepositoryFileURL
 	case *db.StoreMap:

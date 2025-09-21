@@ -36,7 +36,7 @@ func (sf *StoreFile) CloseDB() {
 }
 
 func (sf *StoreFile) CheckOpen() (bool, error) {
-	if sf.isOpen == false {
+	if !sf.isOpen {
 		return false, cerr.ErrPingDataBase
 	}
 	return sf.isOpen, nil

@@ -12,35 +12,35 @@ import (
 	"github.com/jackc/pgerrcode"
 )
 
-type RepositoryDbURL struct {
+type RepositoryDBURL struct {
 	Kwargs conf.VarGetter
 	DB     db.DBer // *sql.DB
 	db     *sql.DB
 }
 
-func NewRepositoryDbURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error) {
+func NewRepositoryDBURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error) {
 	database, ok := dber.GetDB().(*sql.DB)
 	if !ok {
 		return nil, cerr.NewErrPlace("database not valid", nil)
 	}
-	return &RepositoryDbURL{
+	return &RepositoryDBURL{
 		Kwargs: kwargs,
 		DB:     dber,
 		db:     database,
 	}, nil
 }
 
-func (rd *RepositoryDbURL) CheckUnic(ctx context.Context, correlationID string) bool {
+func (rd *RepositoryDBURL) CheckUnic(ctx context.Context, correlationID string) bool {
 	// TODO! Нужно натсроить DataBase
 	// correlationID должно быть уникальное поле
 	return true
 }
 
-func (rd *RepositoryDbURL) Ping(ctx context.Context) (bool, error) {
+func (rd *RepositoryDBURL) Ping(ctx context.Context) (bool, error) {
 	return rd.DB.CheckOpen()
 }
 
-func (rd *RepositoryDbURL) Create(ctx context.Context, preRecord any) (any, error) {
+func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, error) {
 	record, ok := preRecord.(*mod.URLTb)
 	if !ok {
 		return nil, cerr.NewErrPlace("data not valid", nil)
@@ -101,7 +101,7 @@ func (rd *RepositoryDbURL) Create(ctx context.Context, preRecord any) (any, erro
 	return nil, cerr.NewErrPlace("insert into is bad", nil)
 }
 
-func (rd *RepositoryDbURL) Read(ctx context.Context, correlID string) (any, error) {
+func (rd *RepositoryDBURL) Read(ctx context.Context, correlID string) (any, error) {
 	DB, ok := rd.DB.GetDB().(*sql.DB)
 	if !ok {
 		return nil, cerr.NewErrPlace("database not valid", nil)
@@ -123,7 +123,7 @@ func (rd *RepositoryDbURL) Read(ctx context.Context, correlID string) (any, erro
 	return record, nil
 }
 
-func (rd *RepositoryDbURL) CreateSet(ctx context.Context, records any) error {
+func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 	rows, ok := records.([]mod.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return cerr.NewErrPlace("data not valid", nil)

@@ -79,37 +79,37 @@ func (rf *RepositoryFileURL) Ping(ctx context.Context) (bool, error) {
 	return rf.DB.CheckOpen()
 }
 
-func (sf *RepositoryFileURL) Read(ctx context.Context, correlID string) (any, error) {
-	sf.muR.RLock()
-	defer sf.muR.RUnlock()
+func (rf *RepositoryFileURL) Read(ctx context.Context, correlID string) (any, error) {
+	rf.muR.RLock()
+	defer rf.muR.RUnlock()
 
-	record, ok := sf.Store[correlID]
+	record, ok := rf.Store[correlID]
 	if !ok {
 		return nil, cerr.NewErrPlace("data is not available", nil)
 	}
 	return record, nil
 }
 
-func (sf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, error) {
+func (rf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, error) {
 	row, ok := preRecord.(*mod.URLTb)
 	if !ok {
 		return nil, cerr.NewErrPlace("type is not available", nil)
 	}
 
 	// Логика, если данные уже есть в Store
-	sf.muR.RLock()
-	if correlID, ok := sf.UniqueFields[row.OriginalURL]; ok {
-		return sf.Store[correlID], cerr.ErrUniqueData
+	rf.muR.RLock()
+	if correlID, ok := rf.UniqueFields[row.OriginalURL]; ok {
+		return rf.Store[correlID], cerr.ErrUniqueData
 	}
-	sf.muR.RUnlock()
+	rf.muR.RUnlock()
 
 	// Логика, если данные отсутствуют в Store
-	sf.mu.Lock()
-	sf.cntLine += 1
-	row.ID = sf.cntLine
-	sf.Store[row.CorrelationID] = row
-	sf.UniqueFields[row.OriginalURL] = row.CorrelationID
-	sf.mu.Unlock()
+	rf.mu.Lock()
+	rf.cntLine += 1
+	row.ID = rf.cntLine
+	rf.Store[row.CorrelationID] = row
+	rf.UniqueFields[row.OriginalURL] = row.CorrelationID
+	rf.mu.Unlock()
 
 	jsonData, err := json.Marshal(row)
 	if err != nil {
@@ -118,25 +118,25 @@ func (sf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, er
 	jsonData = append(jsonData, byte('\n'))
 
 	// TODO! Может это вывести в интерфейс БД ? Может еще чего так же вывести и разгрузить репозиторий
-	_, err = sf.File.Write(jsonData)
+	_, err = rf.File.Write(jsonData)
 	return row, err
 }
 
-func (sf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
+func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 	rows, ok := records.([]mod.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return errors.New("data not valid")
 	}
 
-	sf.mu.Lock()
+	rf.mu.Lock()
 
 	for _, r := range rows {
-		sf.cntLine += 1
+		rf.cntLine += 1
 
-		row := mod.NewURLTb(sf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL)
+		row := mod.NewURLTb(rf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL)
 
 		// Добавляем данные в Map
-		sf.Store[row.CorrelationID] = row
+		rf.Store[row.CorrelationID] = row
 
 		// Запись данных в файл
 		jsonData, err := json.Marshal(row)
@@ -145,12 +145,12 @@ func (sf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 		}
 
 		jsonData = append(jsonData, byte('\n'))
-		_, err = sf.File.Write(jsonData)
+		_, err = rf.File.Write(jsonData)
 		if err != nil {
 			return err
 		}
 	}
 
-	sf.mu.Unlock()
+	rf.mu.Unlock()
 	return nil
 }
