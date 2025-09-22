@@ -42,3 +42,7 @@ git fetch template && git checkout template/v2 .github
 - **Clean Architecture**
 - **Hexagonal Architecture**
 - **Layered Architecture**
+
+// TODO!
+// - Сделать Docker-Compose для БД и приложения и запустить
+// Как организовать _db при подключении библиотеки...

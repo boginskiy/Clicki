@@ -3,11 +3,11 @@ package config
 import (
 	"strings"
 
-	l "github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/logg"
 )
 
 type Variables struct {
-	Logger        l.Logger
+	Logger        logg.Logger
 	ServerAddress string
 	PathToStore   string
 	BaseURL       string
@@ -16,7 +16,7 @@ type Variables struct {
 	ArgsENV       *ArgsENV
 }
 
-func NewVariables(logger l.Logger) *Variables {
+func NewVariables(logger logg.Logger) *Variables {
 	tmpVar := &Variables{
 		Logger:  logger,
 		ArgsCLI: NewArgsCLI(),
@@ -31,13 +31,13 @@ func (v *Variables) argsTrim(arg string) string {
 }
 
 func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
-	arg := envFunc()      // Get arg
-	arg = v.argsTrim(arg) // Clean arg
+	arg := v.argsTrim(envFunc())  // Clean arg
+	arg2 := v.argsTrim(cliFunc()) // Clean arg
 
 	if len(arg) > 0 {
 		return arg
 	} else {
-		return cliFunc()
+		return arg2
 	}
 }
 
@@ -62,6 +62,10 @@ func (v *Variables) GetPathToStore() (PathToStore string) {
 
 func (v *Variables) GetLogFile() (LogFile string) {
 	return v.ArgsENV.LogFile
+}
+
+func (v *Variables) GetMaxRetries() (MaxRetries int) {
+	return v.ArgsENV.MaxRetries
 }
 
 func (v *Variables) GetDB() (DB string) {

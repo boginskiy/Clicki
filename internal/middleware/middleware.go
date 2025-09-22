@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"github.com/boginskiy/Clicki/internal/gzip"
-	l "github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/logg"
 )
 
 type MvFunc func(http.HandlerFunc) http.HandlerFunc
 
 type Middleware struct {
-	Logger l.Logger
+	Logger logg.Logger
 }
 
-func NewMiddleware(logger l.Logger) *Middleware {
+func NewMiddleware(logger logg.Logger) *Middleware {
 	return &Middleware{Logger: logger}
 }
 
@@ -39,7 +39,7 @@ func (m *Middleware) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
 		duration := time.Since(start)
 
 		m.Logger.RaiseInfo(
-			l.DataReqResInfo,
+			logg.DataReqResInfo,
 			map[string]any{
 				"uri":      uri,
 				"method":   method,

@@ -1,0 +1,38 @@
+func (uf *UrlsFile) ReadLastRecord(record any) (any, error) {
+	buff := make([]byte, 1)     // Временная переменная куда итеративно сохряняем байты
+	info, err := uf.file.Stat() // Узнаем размер файла
+	if err != nil {
+		return nil, err
+	}
+	size := info.Size()
+
+	if size == 0 { // Проверка, что файл не пуст
+		return nil, fmt.Errorf("file %s is emty", uf.file.Name())
+	}
+	// Перемещаем указатель файла с конца по байтово
+	// до первого попавшегося разделителя '\n'
+	for i := int64(-1); i >= (-size); i-- {
+		buff[0] = 0
+
+		uf.file.Seek(i, io.SeekEnd)  // Байтовое смещение с конца файла
+		_, err := uf.file.Read(buff) // Чтение байта
+		if err != nil {
+			return nil, err
+		}
+
+		if buff[0] == '\n' {
+			tmpRecord := make([]byte, -i)     // Создаем буффер для последней записи
+			_, err := uf.file.Read(tmpRecord) // Считываем запись
+			if err != nil {
+				return nil, err
+			}
+
+			err = json.Unmarshal(tmpRecord, &record)
+			if err != nil {
+				return nil, err
+			}
+			return record, nil
+		}
+	}
+	return nil, errors.New("bad work of UrlsFile.ReadLastRecord")
+}

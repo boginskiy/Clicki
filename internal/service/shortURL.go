@@ -1,95 +1,115 @@
 package service
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	"github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/db2"
-	l "github.com/boginskiy/Clicki/internal/logger"
-	p "github.com/boginskiy/Clicki/internal/preparation"
-	v "github.com/boginskiy/Clicki/internal/validation"
+	conf "github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/internal/logg"
+	mod "github.com/boginskiy/Clicki/internal/model"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
+	repo "github.com/boginskiy/Clicki/internal/repository"
+	valid "github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
 )
 
 type ShortURL struct {
-	ExtraFuncer p.ExtraFuncer
-	DB          db.Storage
-	DB2         db2.DBConnecter
-	Checker     v.Checker
-	Log         l.Logger
+	ExtraFuncer prep.ExtraFuncer
+	Repo        repo.Repository
+	Checker     valid.Checker
+	Logger      logg.Logger
+	Kwargs      conf.VarGetter
 }
 
-func NewShortURL(db db.Storage, db2 db2.DBConnecter,
-	log l.Logger, checker v.Checker, extraFuncer p.ExtraFuncer) *ShortURL {
+func NewShortURL(
+	kwargs conf.VarGetter, logger logg.Logger, repo repo.Repository,
+	checker valid.Checker, extraFuncer prep.ExtraFuncer) *ShortURL {
 
 	return &ShortURL{
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
-		Log:         log,
-		DB:          db,
-		DB2:         db2,
+		Logger:      logger,
+		Kwargs:      kwargs,
+		Repo:        repo,
 	}
 }
 
-func (s *ShortURL) encryptionLongURL() (imitationPath string) {
+func (s *ShortURL) encryptionLongURL() (correlID string) {
 	for {
-		// Вызов шифратора
-		imitationPath = pkg.Scramble(LONG)
-		// Проверка на уникальность
-		if _, err := s.DB.GetValue(imitationPath); err != nil {
+		correlID = pkg.Scramble(LONG)                   // Вызов шифратора
+		if s.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
 			break
 		}
 	}
-	return imitationPath
+	return correlID
 }
 
-func (s *ShortURL) Create(req *http.Request, kwargs config.VarGetter) ([]byte, error) {
-	// Вынимаем тело запроса
-	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req)
+func (s *ShortURL) GetHeader() string {
+	return "text/plain"
+}
+
+func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
+	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req) // Вынимаем тело запроса
 
 	if err != nil {
-		s.Log.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
+		s.Logger.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
-		s.Log.RaiseInfo("ShortURL.Create>CheckUpURL",
-			l.Fields{"error": ErrDataNotValid.Error()})
+		s.Logger.RaiseError(ErrDataNotValid, "ShortURL.Create>CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	// Генерируем ключ
-	imitationPath := s.encryptionLongURL()
-	// Кладем в DB данные
-	s.DB.PutValue(imitationPath, originURL)
+	correlationID := s.encryptionLongURL()                           // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID          // Новый сокращенный URL
+	preRecord := mod.NewURLTb(0, correlationID, originURL, shortURL) // Создаем запись
+	record, err := s.Repo.Create(context.TODO(), preRecord)          // Кладем в DB данные
 
-	return []byte(imitationPath), nil
+	if err != nil && record == nil {
+		s.Logger.RaiseError(err, "ShortURL.Create>Repo.Create", nil)
+		return EmptyByteSlice, err
+	}
+
+	//
+	switch r := record.(type) {
+	case *mod.URLTb:
+		return []byte(r.ShortURL), err
+	default:
+		s.Logger.RaiseError(err, "ShortURL.Create>switch", nil)
+		return EmptyByteSlice, err
+	}
 }
 
 func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
-	// Достаем параметр id                         \\
-	tmpPath := strings.TrimLeft(req.URL.Path, "/") // Вариант для прохождения inittests
-	// tmpPath := chi.URLParam(req, "id")         // Вариант из под коробки
-
-	// Достаем origin URL
-	tmpURL, err := s.DB.GetValue(tmpPath)
+	correlationID := strings.TrimLeft(req.URL.Path, "/")      // Достаем параметр correlationID
+	record, err := s.Repo.Read(context.TODO(), correlationID) // Достаем origin URL
 
 	if err != nil {
-		s.Log.RaiseError(err, "ShortURL.Read>GetValue", nil)
+		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	return []byte(tmpURL), nil
+	switch r := record.(type) {
+	case *mod.URLTb:
+		return []byte(r.OriginalURL), nil
+	default:
+		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
+		return EmptyByteSlice, ErrDataNotValid
+	}
 }
 
-// CheckPing - check of connection DB
 func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
-	err := s.DB2.GetDB().Ping()
+	_, err := s.Repo.Ping(context.TODO())
 	if err != nil {
+		s.Logger.RaiseFatal(err, "ShortURL.CreaCheckPingte>Ping", nil)
 		return EmptyByteSlice, err
 	}
-	return ConnDBIsSucces, nil
+	return StoreDBIsSucces, nil
+}
+
+func (s *ShortURL) SetBatch(req *http.Request) ([]byte, error) {
+	return StoreDBIsSucces, nil
 }

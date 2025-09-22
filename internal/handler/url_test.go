@@ -8,28 +8,34 @@ import (
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/db2"
 	"github.com/boginskiy/Clicki/internal/handler"
-	"github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/logg"
+	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-var infoLog = logger.NewLogg("Test.log", "INFO")
+var infoLog = logg.NewLogg("Test.log", "INFO")
 var kwargs = &config.Variables{
 	ServerAddress: "localhost:8080",
 	BaseURL:       "http://localhost:8081",
 }
-var dbase2 = db2.NewConnDB(kwargs, infoLog)
 
-var fileWorker, _ = db.NewFileWorking("test")
-var dbase = db.NewDBStore(fileWorker)
+var dbase = &db.StoreMap{Store: map[string]*model.URLTb{
+	"H3HIkks3": {
+		ID:            0,
+		OriginalURL:   "https://practicum.yandex.ru/",
+		ShortURL:      "short_url",
+		CorrelationID: "H3HIkks3",
+	}}}
 
+var repo, _ = repository.NewRepositoryMapURL(kwargs, dbase)
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 
-var shURL = service.NewShortURL(dbase, dbase2, infoLog, checker, extraFuncer)
+var shURL = service.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
 
 // TestHandlerURL check only POST request
 func TestPostURL(t *testing.T) {
@@ -86,7 +92,7 @@ func TestPostURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.HandlerURL{Service: shURL, Kwargs: kwargs}
+			h := handler.HandlerURL{Service: shURL}
 			h.Post(response, request)
 
 			// Check >>
@@ -130,7 +136,7 @@ func TestGetURL(t *testing.T) {
 		name  string
 		want  want
 		req   req
-		store map[string]string
+		store map[string]*model.URLTb
 	}{
 		{
 			name: "Test GET positive",
@@ -142,7 +148,14 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/H3HIkks3",
 			},
-			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
+			// store: map[string]*model.URLTb{
+			// 	"H3HIkks3": {
+			// 		ID:            0,
+			// 		OriginalURL:   "https://practicum.yandex.ru/",
+			// 		ShortURL:      "short_url",
+			// 		CorrelationID: "H3HIkks3",
+			// 	},
+			// },
 		},
 
 		{
@@ -155,7 +168,14 @@ func TestGetURL(t *testing.T) {
 			req: req{
 				url: "/N9KHHoG1",
 			},
-			store: map[string]string{"H3HIkks3": "https://practicum.yandex.ru/"},
+			// store: map[string]*model.URLTb{
+			// 	"H3HIkks3": {
+			// 		ID:            0,
+			// 		OriginalURL:   "https://practicum.yandex.ru/",
+			// 		ShortURL:      "short_url",
+			// 		CorrelationID: "H3HIkks3",
+			// },
+			// },
 		},
 	}
 
@@ -167,10 +187,9 @@ func TestGetURL(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, tt.req.url, nil)
 			// Recorder
 			response := httptest.NewRecorder()
-			// Db
-			dbase.Store = tt.store
+
 			// Handler
-			h := handler.HandlerURL{Service: shURL, Kwargs: kwargs}
+			h := handler.HandlerURL{Service: shURL}
 
 			h.Get(response, request)
 

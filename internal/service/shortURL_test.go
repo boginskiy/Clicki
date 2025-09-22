@@ -3,39 +3,43 @@ package service_test
 import (
 	"testing"
 
+	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	"github.com/boginskiy/Clicki/internal/db2"
-	"github.com/boginskiy/Clicki/internal/logger"
+	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-var infoLog = logger.NewLogg("Test.log", "INFO")
-var dbase2 = &db2.ConnDB{}
+var infoLog = logg.NewLogg("Test.log", "INFO")
+var kwargs = &config.Variables{
+	ServerAddress: "localhost:8080",
+	BaseURL:       "http://localhost:8081",
+}
 
-var fileWorker, _ = db.NewFileWorking("test")
-var dbase = db.NewDBStore(fileWorker)
+var dber, _ = db.NewStoreMap(kwargs, infoLog)
+var repo, _ = repository.NewRepositoryMapURL(kwargs, dber)
 
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 
-var ShURL = service.NewShortURL(dbase, dbase2, infoLog, checker, extraFuncer)
+var ShURL = service.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
 
 func TestEncryptionLongURL(t *testing.T) {
 	name := "Check EncryptionLongURL from ProURL"
-	imitationPath := "dcJd743D"
+	shortURL := "dcJd743D"
 
 	// Проверка длины
 	expected := service.LONG
-	if expected != len(imitationPath) {
-		t.Errorf("Test 1 >> %s > expected %v actual > %v", name, expected, len(imitationPath))
+	if expected != len(shortURL) {
+		t.Errorf("Test 1 >> %s > expected %v actual > %v", name, expected, len(shortURL))
 	}
 
 	// Проверка по регулярному выражению
 	expected2 := true
-	actual2 := ShURL.Checker.CheckUpPath(imitationPath)
-	if ShURL.Checker.CheckUpPath("/"+imitationPath) != true {
+	actual2 := ShURL.Checker.CheckUpPath(shortURL)
+	if ShURL.Checker.CheckUpPath("/"+shortURL) != true {
 		t.Errorf("Test 2 >> %s > expected %v actual > %v", name, expected2, actual2)
 	}
 }
