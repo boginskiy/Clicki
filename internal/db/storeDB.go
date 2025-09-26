@@ -2,8 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"log"
-	"os"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	cerr "github.com/boginskiy/Clicki/internal/error"
@@ -38,7 +36,7 @@ func CREATEurls(db *sql.DB) error {
 						short_url TEXT NOT NULL,
 						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						user_id INT, 
-						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`)
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL)`)
 	return err
 }
 
@@ -58,22 +56,23 @@ func NewStoreDB(kwargs conf.VarGetter, logger logg.Logger) (DBer, error) {
 		return nil, err
 	}
 
-	// Создание таблицы users
+	// // Создание таблицы users
 	err = CREATEusers(db)
 	if err != nil {
 		return nil, err
 	}
+
 	// Создание таблицы urls
 	err = CREATEurls(db)
 	if err != nil {
 		return nil, err
 	}
 
-	// Убираем зависимости
-	err = DELETEdepend(db)
-	if err != nil {
-		return nil, err
-	}
+	// // Убираем зависимости
+	// err = DELETEdepend(db)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return &StoreDB{
 		Logger: logger,
@@ -84,11 +83,13 @@ func NewStoreDB(kwargs conf.VarGetter, logger logg.Logger) (DBer, error) {
 func (sd *StoreDB) CloseDB() {
 	// TODO! Костыль для прохождения тестов
 	// Перед завершением удалим таблицу users
-	err := DELETEusers(sd.DB)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
+
+	// err := DELETEusers(sd.DB)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// 	os.Exit(1)
+	// }
+
 	sd.DB.Close()
 }
 
