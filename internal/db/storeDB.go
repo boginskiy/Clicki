@@ -15,11 +15,11 @@ func CREATEusers(db *sql.DB) error {
 						name TEXT NOT NULL,
 						email TEXT UNIQUE,
 						password TEXT,
-						created_at TIMESTAMP NOT NULL,
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						updated_at TIMESTAMP,
 						last_login_at TIMESTAMP,
 						is_active BOOLEAN DEFAULT TRUE,
-						roles TEXT[];`)
+						roles TEXT[]`)
 	return err
 }
 
@@ -29,9 +29,9 @@ func CREATEurls(db *sql.DB) error {
 						correlation_id TEXT,
 						original_url TEXT NOT NULL UNIQUE,
 						short_url TEXT NOT NULL,
-						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP),
+						created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						user_id INT, 
-						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;`)
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`)
 	return err
 }
 
