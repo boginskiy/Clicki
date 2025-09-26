@@ -11,6 +11,7 @@ import (
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	cerr "github.com/boginskiy/Clicki/internal/error"
+	"github.com/boginskiy/Clicki/internal/model"
 	mod "github.com/boginskiy/Clicki/internal/model"
 )
 
@@ -133,7 +134,8 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 	for _, r := range rows {
 		rf.cntLine += 1
 
-		row := mod.NewURLTb(rf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL)
+		// TODO! ... r.ShortURL, 0)   BAD!
+		row := mod.NewURLTb(rf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL, 0)
 
 		// Добавляем данные в Map
 		rf.Store[row.CorrelationID] = row
@@ -153,4 +155,20 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 
 	rf.mu.Unlock()
 	return nil
+}
+
+// New
+func (rd *RepositoryFileURL) CreateUser(ctx context.Context, records any) (int, error) {
+	return -1, nil
+}
+
+// New
+func (rf *RepositoryFileURL) ReadUser(ctx context.Context, userID int) any {
+	user := &model.UserTb{}
+	return user
+}
+
+// New
+func (rf *RepositoryFileURL) ReadSet(context.Context, int) (any, error) {
+	return []model.ResUserURLSet{}, nil
 }

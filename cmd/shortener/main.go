@@ -6,7 +6,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/db"
 
 	"github.com/boginskiy/Clicki/internal/logg"
-	repo "github.com/boginskiy/Clicki/internal/repository"
+	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/server"
 )
 
@@ -22,14 +22,14 @@ func ChoiceOfCreatingDB(kwargs config.VarGetter) func(config.VarGetter, logg.Log
 }
 
 // ChoiceOfRepositoryDB - Функции для создания слоя Repo
-func ChoiceOfRepositoryDB(database db.DBer) func(config.VarGetter, db.DBer) (repo.Repository, error) {
+func ChoiceOfRepositoryDB(database db.DBer) func(config.VarGetter, db.DBer) (repository.Repository, error) {
 	switch database.(type) {
 	case *db.StoreDB:
-		return repo.NewRepositoryDBURL
+		return repository.NewRepositoryDBURL
 	case *db.StoreFile:
-		return repo.NewRepositoryFileURL
+		return repository.NewRepositoryFileURL
 	case *db.StoreMap:
-		return repo.NewRepositoryMapURL
+		return repository.NewRepositoryMapURL
 	default:
 		return nil
 	}

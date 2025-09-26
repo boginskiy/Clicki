@@ -19,14 +19,15 @@ func Router(mv midw.Middlewarer, apiURL, shortuRL srv.CRUDer) *chi.Mux {
 	r.Route("/", func(r chi.Router) {
 
 		// shortURL
-		r.Post("/", mv.Conveyor(http.HandlerFunc(hURL.Post)))
-		r.Get("/{id}", mv.Conveyor(http.HandlerFunc(hURL.Get)))
-		r.Get("/ping", mv.WithInfoLogger(http.HandlerFunc(hURL.Check)))
+		r.Post("/", mv.Conveyor(http.HandlerFunc(hURL.CreateURL)))
+		r.Get("/{id}", mv.Conveyor(http.HandlerFunc(hURL.ReadURL)))
+		r.Get("/ping", mv.WithInfoLogger(http.HandlerFunc(hURL.CheckDB)))
 
 		// APIShortURL
 		r.Route("/api/", func(r chi.Router) {
-			r.Post("/shorten", mv.Conveyor(http.HandlerFunc(hAPIURL.Post)))
-			r.Post("/shorten/batch", mv.Conveyor(http.HandlerFunc(hAPIURL.Set)))
+			r.Post("/shorten", mv.Conveyor(http.HandlerFunc(hAPIURL.CreateURL)))
+			r.Post("/shorten/batch", mv.Conveyor(http.HandlerFunc(hAPIURL.CreateSetURL)))
+			r.Get("/user/urls", mv.Conveyor(http.HandlerFunc(hAPIURL.ReadSetUserURL)))
 		})
 
 		// PProf

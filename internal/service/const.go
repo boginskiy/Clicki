@@ -11,7 +11,8 @@ const (
 )
 
 var (
-	ErrDataNotValid = errors.New("data not available or invalid")
-	StoreDBIsSucces = []byte("The connection to DataBase is successfully")
-	EmptyByteSlice  = []byte{}
+	ErrDataNotValid   = errors.New("data not available or invalid")
+	ErrUserIDNotValid = errors.New("userID not available or invalid")
+	StoreDBIsSucces   = []byte("The connection to DataBase is successfully")
+	EmptyByteSlice    = []byte{}
 )

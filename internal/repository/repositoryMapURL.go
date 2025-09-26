@@ -7,6 +7,7 @@ import (
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	cerr "github.com/boginskiy/Clicki/internal/error"
+	"github.com/boginskiy/Clicki/internal/model"
 	mod "github.com/boginskiy/Clicki/internal/model"
 )
 
@@ -103,4 +104,20 @@ func (rm *RepositoryMapURL) CreateSet(ctx context.Context, records any) error {
 		rm.uniqueFields[r.OriginalURL] = r.CorrelationID
 	}
 	return nil
+}
+
+// New
+func (rm *RepositoryMapURL) CreateUser(ctx context.Context, records any) (int, error) {
+	return -1, nil
+}
+
+// New
+func (rm *RepositoryMapURL) ReadUser(ctx context.Context, userID int) any {
+	user := &model.UserTb{}
+	return user
+}
+
+// New
+func (rm *RepositoryMapURL) ReadSet(context.Context, int) (any, error) {
+	return []model.ResUserURLSet{}, nil
 }
