@@ -83,7 +83,6 @@ func (h *HandlerURL) ReadSetUserURL(res http.ResponseWriter, req *http.Request) 
 	if len(body) == 0 {
 		res.Header().Set("Content-Type", "application/json")
 		res.WriteHeader(http.StatusNoContent)
-		res.Write(MessNoContent)
 		return
 	}
 

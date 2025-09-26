@@ -41,7 +41,7 @@ func (r *Regist) CreateCookie(token, name string) *http.Cookie {
 		Path:     "/",
 		HttpOnly: true,                    // Доступ только серверу, увеличивает безопасность
 		SameSite: http.SameSiteStrictMode, // Запрещает отправлять куки с другого домена
-		MaxAge:   120,                     // Жива 60 секунд
+		MaxAge:   300,                     // Жива 300 секунд
 		Secure:   false,                   // Поставьте true, если работаете через HTTPS
 	}
 }

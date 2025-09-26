@@ -25,6 +25,6 @@ var (
 var EmptyByteSlice = []byte{}
 
 // TODO! Вынести в переменные окружения
-const TOKEN_EXP = time.Second * 10
+const TOKEN_EXP = time.Second * 300
 const SECRET_KEY = "1234"
 const NAME_COKI = "auth_token"
