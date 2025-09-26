@@ -42,6 +42,11 @@ func CREATEurls(db *sql.DB) error {
 	return err
 }
 
+func DELETEdepend(db *sql.DB) error {
+	_, err := db.Exec(`ALTER TABLE urls DISABLE TRIGGER ALL`)
+	return err
+}
+
 type StoreDB struct {
 	Logger logg.Logger
 	DB     *sql.DB
@@ -60,6 +65,12 @@ func NewStoreDB(kwargs conf.VarGetter, logger logg.Logger) (DBer, error) {
 	}
 	// Создание таблицы urls
 	err = CREATEurls(db)
+	if err != nil {
+		return nil, err
+	}
+
+	// Убираем зависимости
+	err = DELETEdepend(db)
 	if err != nil {
 		return nil, err
 	}
