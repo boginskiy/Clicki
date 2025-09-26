@@ -191,5 +191,10 @@ func (rd *RepositoryDBURL) ReadSet(ctx context.Context, userID int) (any, error)
 		}
 		records = append(records, record)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, cerr.NewErrPlace("data not valid", err)
+	}
+
 	return records, nil
 }

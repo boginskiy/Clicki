@@ -9,13 +9,29 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func createUrls(db *sql.DB) error {
+func CREATEusers(db *sql.DB) error {
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users (
+						id SERIAL PRIMARY KEY,
+						name TEXT NOT NULL,
+						email TEXT UNIQUE,
+						password TEXT,
+						created_at TIMESTAMP NOT NULL,
+						updated_at TIMESTAMP,
+						last_login_at TIMESTAMP,
+						is_active BOOLEAN DEFAULT TRUE,
+						roles TEXT[];`)
+	return err
+}
+
+func CREATEurls(db *sql.DB) error {
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS urls (
 						id SERIAL PRIMARY KEY,
 						correlation_id TEXT,
 						original_url TEXT NOT NULL UNIQUE,
 						short_url TEXT NOT NULL,
-						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`)
+						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP),
+						user_id INT, 
+						FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;`)
 	return err
 }
 
@@ -30,7 +46,13 @@ func NewStoreDB(kwargs conf.VarGetter, logger logg.Logger) (DBer, error) {
 		return nil, err
 	}
 
-	err = createUrls(db)
+	// Создание таблицы users
+	err = CREATEusers(db)
+	if err != nil {
+		return nil, err
+	}
+	// Создание таблицы urls
+	err = CREATEurls(db)
 	if err != nil {
 		return nil, err
 	}
