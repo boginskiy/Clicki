@@ -14,6 +14,6 @@ type CRUDer interface {
 }
 
 type CoreServicer interface {
-	takeUserIdFromCtx(*http.Request) int
+	takeUserIDFromCtx(*http.Request) int
 	encrypOriginURL() string
 }

@@ -11,7 +11,6 @@ import (
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
 	cerr "github.com/boginskiy/Clicki/internal/error"
-	"github.com/boginskiy/Clicki/internal/model"
 	mod "github.com/boginskiy/Clicki/internal/model"
 )
 
@@ -158,17 +157,17 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 }
 
 // New
-func (rd *RepositoryFileURL) CreateUser(ctx context.Context, records any) (int, error) {
+func (rf *RepositoryFileURL) CreateUser(ctx context.Context, records any) (int, error) {
 	return -1, nil
 }
 
 // New
 func (rf *RepositoryFileURL) ReadUser(ctx context.Context, userID int) any {
-	user := &model.UserTb{}
+	user := &mod.UserTb{}
 	return user
 }
 
 // New
 func (rf *RepositoryFileURL) ReadSet(context.Context, int) (any, error) {
-	return []model.ResUserURLSet{}, nil
+	return []mod.ResUserURLSet{}, nil
 }

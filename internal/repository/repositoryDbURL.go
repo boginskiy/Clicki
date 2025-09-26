@@ -178,7 +178,7 @@ func (rd *RepositoryDBURL) ReadSet(ctx context.Context, userID int) (any, error)
 
 	rows, err := SelectUserURLs(rd.db, ctx, userID)
 	if err != nil {
-		return nil, cerr.NewErrPlace("data not valid", nil)
+		return nil, cerr.NewErrPlace("data not valid", err)
 	}
 	defer rows.Close()
 

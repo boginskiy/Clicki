@@ -28,13 +28,13 @@ func (j *JWTService) CreateJWT(userID int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			// Время жизни токена
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKEN_EXP)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
 		},
 		UserID: userID,
 	})
 
 	// Строка токена
-	tokenStr, err := token.SignedString([]byte(SECRET_KEY))
+	tokenStr, err := token.SignedString([]byte(SecretKey))
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +50,7 @@ func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-		return []byte(SECRET_KEY), nil
+		return []byte(SecretKey), nil
 	})
 
 	// При невалидном или просроченном токене. Возвращаем ошибку и userID
@@ -61,7 +61,7 @@ func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
 		if errors.As(err, &validErr) {
 			// Битовый И. Проверка флага просроченного токена
 			if validErr.Errors&jwt.ValidationErrorExpired != 0 {
-				return claims.UserID, TokenIsExpired
+				return claims.UserID, ErrTokenIsExpired
 			}
 		}
 		// Другие ошибки ...
@@ -70,7 +70,7 @@ func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
 
 	// Анализ невалидного токена
 	if !token.Valid {
-		return claims.UserID, TokenNotValid
+		return claims.UserID, ErrTokenNotValid
 	}
 
 	return claims.UserID, nil

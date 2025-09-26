@@ -28,7 +28,7 @@ func NewMiddleware(logger logg.Logger, register regstr.Register, repoUser reposi
 }
 
 func (m *Middleware) Conveyor(next http.HandlerFunc) http.HandlerFunc {
-	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} {
+	for _, middleware := range []MvFunc{m.WithInfoLogger, m.WithGzip} { // m.WithAuth,
 		next = middleware(next)
 	}
 	return next

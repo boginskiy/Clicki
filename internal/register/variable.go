@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	TokenNotValid  = errors.New(`{"error":"token is not valid"}`)
-	DataNotValid   = errors.New(`{"error":"data not valid"}`)
-	TokenIsExpired = errors.New(`{"error":"token is expired"}`)
+	ErrTokenNotValid  = errors.New(`{"error":"token is not valid"}`)
+	ErrDataNotValid   = errors.New(`{"error":"data not valid"}`)
+	ErrTokenIsExpired = errors.New(`{"error":"token is expired"}`)
 )
 
 var (
@@ -25,6 +25,6 @@ var (
 var EmptyByteSlice = []byte{}
 
 // TODO! Вынести в переменные окружения
-const TOKEN_EXP = time.Second * 300
-const SECRET_KEY = "1234"
-const NAME_COKI = "auth_token"
+const TokenExp = time.Second * 300
+const SecretKey = "1234"
+const NameCoki = "auth_token"

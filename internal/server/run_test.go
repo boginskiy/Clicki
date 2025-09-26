@@ -162,7 +162,7 @@ func testRegistration(t *testing.T, server *httptest.Server) {
 	require.NoError(t, err)
 
 	// _, err = io.ReadAll(res1.Body)
-	// defer res1.Body.Close()
+	defer res1.Body.Close()
 
 	assert.Equal(t, 200, res1.StatusCode)
 	assert.Equal(t, "application/json", res1.Header.Get("Content-Type"))
@@ -185,7 +185,7 @@ func testRegistration(t *testing.T, server *httptest.Server) {
 	require.NoError(t, err)
 
 	// _, err = io.ReadAll(res2.Body)
-	// defer res1.Body.Close()
+	defer res2.Body.Close()
 
 	assert.Equal(t, 401, res2.StatusCode)
 	assert.Equal(t, "application/json", res2.Header.Get("Content-Type"))
@@ -278,11 +278,11 @@ func TestMain(t *testing.T) {
 	defer server.Close()
 
 	// Test Registration
-	testRegistration(t, server)
+	// testRegistration(t, server)
 
-	// // Test Router
-	// testRouter(t, server)
+	// Test Router
+	testRouter(t, server)
 
-	// // Test Compress
-	// testCompress(t, server)
+	// Test Compress
+	testCompress(t, server)
 }

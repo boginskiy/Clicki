@@ -57,7 +57,7 @@ func (r *Regist) checkUser(userID int) (bool, error) {
 	record := r.RepoUser.ReadUser(context.TODO(), userID)
 	user, ok := record.(*model.UserTb)
 	if !ok {
-		return false, DataNotValid
+		return false, ErrDataNotValid
 	}
 	if 0 < user.ID {
 		return true, nil
@@ -67,7 +67,7 @@ func (r *Regist) checkUser(userID int) (bool, error) {
 
 func (r *Regist) Registration(req *http.Request, userID *int) ([]byte, *http.Cookie, error) {
 	// Регистрация пользователя посредством Куки
-	_, err := req.Cookie(NAME_COKI)
+	_, err := req.Cookie(NameCoki)
 
 	// У пользователя отсутствует 'Cookie'
 	if err != nil {
@@ -85,21 +85,21 @@ func (r *Regist) Registration(req *http.Request, userID *int) ([]byte, *http.Coo
 			return MessRegistIsBad, nil, err
 		}
 		// Отправляем куки пользователю
-		return MessRegistCompleted, r.CreateCookie(token, NAME_COKI), nil
+		return MessRegistCompleted, r.CreateCookie(token, NameCoki), nil
 	}
 	return nil, nil, nil
 }
 
 func (r *Regist) Authentication(req *http.Request, userID *int) ([]byte, *http.Cookie, error) {
 	// Аутентификация пользователя через Куки
-	cookie, _ := req.Cookie(NAME_COKI)
+	cookie, _ := req.Cookie(NameCoki)
 
 	// У пользователя присутствует 'Cookie'
 	var err error
 	*userID, err = r.GetIDAndValidJWT(cookie.Value)
 
 	// Определеяем условие для обновления токена
-	updateToken := errors.Is(err, TokenIsExpired) || errors.Is(err, TokenNotValid)
+	updateToken := errors.Is(err, ErrTokenIsExpired) || errors.Is(err, ErrTokenNotValid)
 
 	if err != nil && !updateToken {
 		r.Logger.RaiseError(err, "Regist>Authentication.GetIDAndValidJWT", nil)
@@ -121,7 +121,7 @@ func (r *Regist) Authentication(req *http.Request, userID *int) ([]byte, *http.C
 			return MessProcessingIsBad, nil, err
 		}
 		// Отправляем новую куку пользователю
-		return MessAuthCompleted2, r.CreateCookie(token, NAME_COKI), nil
+		return MessAuthCompleted2, r.CreateCookie(token, NameCoki), nil
 	}
 
 	// Проверяем, что пользователя нет в БД
