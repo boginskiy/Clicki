@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -27,6 +28,7 @@ func NewCoreService(kwargs conf.VarGetter, logger logg.Logger, repo repository.R
 
 func (c *CoreService) takeUserIdFromCtx(req *http.Request) int {
 	UserID, ok := req.Context().Value(midw.CtxUserID).(int)
+	log.Println("takeUserIdFromCtx", UserID)
 	if !ok || UserID <= 0 {
 		c.Logger.RaiseError(ErrUserIDNotValid, "CoreService.takeUserIdFromCtx>CtxUserID", nil)
 		UserID = -1

@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -104,12 +105,15 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 			if err != nil {
 				m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
 			}
+			log.Println("WithAuth>отсутствует 'Cookie'", UserID)
 			cookie := m.Auther.CreateCookie(token, NAME_COKI)
 			http.SetCookie(w, cookie)
 
 		} else {
 			// У пользователя есть 'Cookie'. Аутентификация
 			UserID, err = m.Auther.GetIDAndValidJWT(cookie.Value)
+
+			log.Println("WithAuth>Присутствует 'Cookie'", UserID)
 
 			// Условие непрохождения аутентификации
 			if UserID <= 0 {
