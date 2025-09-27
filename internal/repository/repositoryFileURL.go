@@ -26,7 +26,8 @@ type RepositoryFileURL struct {
 	muR          sync.RWMutex
 	mu           sync.Mutex
 	File         *os.File
-	cntLine      int
+	LastRec      int
+	LastUser     int
 }
 
 func NewRepositoryFileURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error) {
@@ -65,7 +66,8 @@ func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]s
 		}
 		resultMap[record.CorrelationID] = record             // Сохранение данных с map
 		resultSet[record.OriginalURL] = record.CorrelationID // Сохранение данных с set
-		rf.cntLine = max(rf.cntLine, record.ID)              // Счетчик для UUID
+		rf.LastRec = max(rf.LastRec, record.ID)              // Счетчик для ID
+		rf.LastUser = max(rf.LastUser, record.UserID)        // Счетчик для User
 	}
 	return resultMap, resultSet
 }
@@ -105,8 +107,8 @@ func (rf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, er
 
 	// Логика, если данные отсутствуют в Store
 	rf.mu.Lock()
-	rf.cntLine += 1
-	row.ID = rf.cntLine
+	rf.LastRec += 1
+	row.ID = rf.LastRec
 	rf.Store[row.CorrelationID] = row
 	rf.UniqueFields[row.OriginalURL] = row.CorrelationID
 	rf.mu.Unlock()
@@ -131,9 +133,9 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 	rf.mu.Lock()
 
 	for _, r := range rows {
-		rf.cntLine += 1
+		rf.LastRec += 1
 
-		row := mod.NewURLTb(rf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL, r.UserID)
+		row := mod.NewURLTb(rf.LastRec, r.CorrelationID, r.OriginalURL, r.ShortURL, r.UserID)
 
 		// Добавляем данные в Map
 		rf.Store[row.CorrelationID] = row
@@ -156,16 +158,20 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 }
 
 // New
-func (rf *RepositoryFileURL) TakeLastUser(ctx context.Context) (int, error) {
-	return -1, nil
-}
-
-// New
-func (rf *RepositoryFileURL) CheckUser(ctx context.Context, userID int) (bool, error) {
-	return false, nil
+func (rf *RepositoryFileURL) TakeLastUser(ctx context.Context) int {
+	return rf.LastUser
 }
 
 // New
 func (rf *RepositoryFileURL) ReadSet(ctx context.Context, userID int) (any, error) {
-	return nil, nil
+	records := []mod.ResUserURLSet{}
+
+	for _, v := range rf.Store {
+		if v.UserID == userID {
+			records = append(records, mod.ResUserURLSet{
+				OriginalURL: v.OriginalURL,
+				ShortURL:    v.ShortURL})
+		}
+	}
+	return records, nil
 }

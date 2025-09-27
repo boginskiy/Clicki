@@ -10,9 +10,10 @@ import (
 )
 
 type Auth struct {
-	Kwargs conf.VarGetter
-	Logger logg.Logger
-	Repo   repo.Repository
+	Kwargs   conf.VarGetter
+	Logger   logg.Logger
+	Repo     repo.Repository
+	LastUser int
 	JWTService
 }
 
@@ -21,7 +22,12 @@ func NewAuth(kwargs conf.VarGetter, logger logg.Logger, repo repo.Repository) *A
 		Kwargs: kwargs,
 		Logger: logger,
 		Repo:   repo,
+
+		// Подгружаем данные из Репозитория об ID последнего записанного пользователя
+		// По ходу работы программы, новые пользователи будут получать следующие по порядку ID
+		LastUser: repo.TakeLastUser(context.TODO()),
 	}
+
 }
 
 func (a *Auth) CreateCookie(token, name string) *http.Cookie {
@@ -37,14 +43,6 @@ func (a *Auth) CreateCookie(token, name string) *http.Cookie {
 }
 
 func (a *Auth) NextUser() int {
-	lastUser, err := a.Repo.TakeLastUser(context.TODO())
-	if err != nil {
-		a.Logger.RaiseError(err, "Auth>NextUser>TakeLastUser", nil)
-		return lastUser // default value == 1
-	}
-	return (lastUser + 1)
-}
-
-func (a *Auth) CheckUser(userID int) (bool, error) {
-	return a.Repo.CheckUser(context.TODO(), userID)
+	a.LastUser += 1
+	return a.LastUser
 }

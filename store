@@ -7,3 +7,9 @@
 {"uuid":7,"original_url":"https://www.google.com/chrome/","short_url":"http://localhost:8080/jBNS1W2I","correlation_id":"jBNS1W2I","created_at":"2025-09-19T20:05:30.773338676+03:00"}
 {"uuid":8,"original_url":"https://www.youtube.com/","short_url":"http://localhost:8080/MkFMtZRq","correlation_id":"MkFMtZRq","created_at":"2025-09-19T20:05:30.773377495+03:00"}
 {"uuid":9,"original_url":"https://docs.google.com/","short_url":"http://localhost:8080/ibs0VJeG","correlation_id":"ibs0VJeG","created_at":"2025-09-21T14:54:04.562283185+03:00"}
+{"uuid":10,"original_url":"https://docs.google.com1/","short_url":"http://localhost:8080/Ius7cwhV","correlation_id":"Ius7cwhV","created_at":"2025-09-27T20:34:58.688692392+03:00","user_id":5}
+{"uuid":11,"original_url":"https://docs.google.com2/","short_url":"http://localhost:8080/rgNim7NS","correlation_id":"rgNim7NS","created_at":"2025-09-27T20:35:58.469585173+03:00","user_id":1}
+{"uuid":12,"original_url":"https://docs.google.com3/","short_url":"http://localhost:8080/BQcQo9ah","correlation_id":"BQcQo9ah","created_at":"2025-09-27T20:37:12.574964651+03:00","user_id":6}
+{"uuid":13,"original_url":"https://practicum.yandex.ru4","short_url":"http://localhost:8080/L8SGKvxf","correlation_id":"L8SGKvxf","created_at":"2025-09-27T20:37:52.187781196+03:00","user_id":6}
+{"uuid":14,"original_url":"https://ww.oogle.com/chrome/","short_url":"http://localhost:8080/jB1W2I","correlation_id":"jB1W2I","created_at":"2025-09-27T20:37:56.814228699+03:00","user_id":6}
+{"uuid":15,"original_url":"https://www.yuube.com/","short_url":"http://localhost:8080/MkFZRq","correlation_id":"MkFZRq","created_at":"2025-09-27T20:37:56.814283485+03:00","user_id":6}

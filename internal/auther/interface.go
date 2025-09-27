@@ -7,5 +7,4 @@ type Auther interface {
 	CreateJWT(int) (string, error)
 	CreateCookie(string, string) *http.Cookie
 	GetIDAndValidJWT(string) (int, error)
-	CheckUser(int) (bool, error)
 }

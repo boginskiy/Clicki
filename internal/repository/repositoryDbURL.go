@@ -51,7 +51,7 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 	// Strategy №2. SQl-Query-error.
 	for attempt := 0; attempt <= rd.Kwargs.GetMaxRetries(); attempt++ {
 
-		row, errDB := InsertRowToUrls(rd.db, context.TODO(),
+		row, errDB := InsertRowToUrls(rd.db, ctx,
 			record.CorrelationID,
 			record.OriginalURL,
 			record.ShortURL,
@@ -72,7 +72,7 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 		if code == pgerrcode.UniqueViolation {
 
 			// Делаем повторный запрос в БД
-			row := SelectRowByOriginalURL(rd.db, context.TODO(),
+			row := SelectRowByOriginalURL(rd.db, ctx,
 				record.OriginalURL)
 
 			// Ошибок нет, возвращаем запись
@@ -105,7 +105,7 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 
 func (rd *RepositoryDBURL) Read(ctx context.Context, correlID string) (any, error) {
 	record := &mod.URLTb{}
-	row := SelectRowByCorrelID(rd.db, context.TODO(), correlID)
+	row := SelectRowByCorrelID(rd.db, ctx, correlID)
 
 	if err := row.Scan(
 		&record.ID,
@@ -132,7 +132,7 @@ func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 
 	for _, v := range rows {
 		// все изменения записываются в транзакцию
-		_, err := InsertRowToUrlsTX(tx, context.TODO(),
+		_, err := InsertRowToUrlsTX(tx, ctx,
 			v.CorrelationID, v.OriginalURL, v.ShortURL, v.CreatedAt, v.UserID)
 
 		if err != nil {
@@ -147,26 +147,15 @@ func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 }
 
 // New
-func (rd *RepositoryDBURL) TakeLastUser(ctx context.Context) (int, error) {
-	row := SelectMaxCntByUser(rd.db, context.TODO())
+func (rd *RepositoryDBURL) TakeLastUser(ctx context.Context) int {
+	row := SelectMaxCntByUser(rd.db, ctx)
 	var MaxCntByUser int
 
 	err := row.Scan(&MaxCntByUser)
 	if err != nil {
-		return 1, cerr.NewErrPlace("scan row is bad", err)
+		return 0
 	}
-	return MaxCntByUser, nil
-}
-
-// New
-func (rd *RepositoryDBURL) CheckUser(ctx context.Context, userID int) (bool, error) {
-	var exists bool
-	row := IsThereUser(rd.db, ctx, userID)
-	err := row.Scan(&exists)
-	if err != nil {
-		return false, cerr.NewErrPlace("scan row is bad", err)
-	}
-	return exists, nil
+	return MaxCntByUser
 }
 
 // New
@@ -189,10 +178,8 @@ func (rd *RepositoryDBURL) ReadSet(ctx context.Context, userID int) (any, error)
 		}
 		records = append(records, record)
 	}
-
 	if rows.Err() != nil {
 		return nil, cerr.NewErrPlace("scan not good", rows.Err())
 	}
-
 	return records, nil
 }

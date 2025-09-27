@@ -107,16 +107,20 @@ func (rm *RepositoryMapURL) CreateSet(ctx context.Context, records any) error {
 }
 
 // New
-func (rm *RepositoryMapURL) TakeLastUser(ctx context.Context) (int, error) {
-	return -1, nil
-}
-
-// New
-func (rm *RepositoryMapURL) CheckUser(ctx context.Context, userID int) (bool, error) {
-	return false, nil
+func (rm *RepositoryMapURL) TakeLastUser(ctx context.Context) int {
+	return 0
 }
 
 // New
 func (rm *RepositoryMapURL) ReadSet(ctx context.Context, userID int) (any, error) {
-	return nil, nil
+	records := []mod.ResUserURLSet{}
+
+	for _, v := range rm.store {
+		if v.UserID == userID {
+			records = append(records, mod.ResUserURLSet{
+				OriginalURL: v.OriginalURL,
+				ShortURL:    v.ShortURL})
+		}
+	}
+	return records, nil
 }

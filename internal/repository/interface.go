@@ -13,7 +13,6 @@ type Repository interface {
 	Ping(context.Context) (bool, error)
 
 	// New
-	TakeLastUser(context.Context) (int, error)
-	CheckUser(context.Context, int) (bool, error)
+	TakeLastUser(context.Context) int
 	ReadSet(context.Context, int) (any, error)
 }

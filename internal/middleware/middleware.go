@@ -100,7 +100,10 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 
 		// У пользователя отсутствует 'Cookie'. Авторизация
 		if err != nil {
+			log.Println("1 >>", UserID)
 			UserID = m.Auther.NextUser()
+			log.Println("2 >>", UserID)
+
 			token, err := m.Auther.CreateJWT(UserID)
 			if err != nil {
 				m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
