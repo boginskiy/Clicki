@@ -95,8 +95,8 @@ func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		cookie, err := r.Cookie(NAME_COKI) // Достаем 'Cookie'
-		var UserID int                     // Идентификатор пользователя
+		cookie, err := r.Cookie(NAMECOKI) // Достаем 'Cookie'
+		var UserID int                    // Идентификатор пользователя
 
 		// У пользователя отсутствует 'Cookie'. Авторизация
 		if err != nil {
@@ -106,7 +106,7 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 				m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
 			}
 			log.Println("WithAuth>отсутствует 'Cookie'", UserID)
-			cookie := m.Auther.CreateCookie(token, NAME_COKI)
+			cookie := m.Auther.CreateCookie(token, NAMECOKI)
 			http.SetCookie(w, cookie)
 
 		} else {
@@ -132,7 +132,7 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 						// TODO! хреновое место
 					}
 					// Выдаем свежий токен
-					cookie := m.Auther.CreateCookie(token, NAME_COKI)
+					cookie := m.Auther.CreateCookie(token, NAMECOKI)
 					http.SetCookie(w, cookie)
 
 				} else {

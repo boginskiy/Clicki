@@ -65,7 +65,7 @@ func (s *APIShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	userID := s.Core.takeUserIdFromCtx(req)                 // Тащим идентификатор пользователя
+	userID := s.Core.takeUserIDFromCtx(req)                 // Тащим идентификатор пользователя
 	correlationID := s.Core.encrypOriginURL()               // Уникальный идентификатор
 	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Создаем новый сокращенный URL
 
@@ -112,7 +112,7 @@ func (s *APIShortURL) CreateSetURL(req *http.Request) ([]byte, error) {
 	}
 
 	// Достаем идентификатор пользователя
-	userID := s.Core.takeUserIdFromCtx(req)
+	userID := s.Core.takeUserIDFromCtx(req)
 
 	// Разбор тела запроса
 	respURLSet := make([]mod.ResURLSet, 0, 10)
@@ -147,7 +147,7 @@ func (s *APIShortURL) CreateSetURL(req *http.Request) ([]byte, error) {
 
 func (s *APIShortURL) ReadSetUserURL(req *http.Request) ([]byte, error) {
 	// Достаем идентификатор пользователя
-	userID := s.Core.takeUserIdFromCtx(req)
+	userID := s.Core.takeUserIDFromCtx(req)
 
 	dataSet, err := s.Repo.ReadSet(context.TODO(), userID)
 	if err != nil {

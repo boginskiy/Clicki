@@ -12,5 +12,5 @@ var (
 )
 
 // TODO! Вынести в переменные окружения
-const TOKEN_EXP = time.Second * 10
-const SECRET_KEY = "1234"
+const TOKENEXP = time.Second * 10
+const SECRETKEY = "1234"

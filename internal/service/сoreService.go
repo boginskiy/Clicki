@@ -26,20 +26,19 @@ func NewCoreService(kwargs conf.VarGetter, logger logg.Logger, repo repository.R
 	}
 }
 
-func (c *CoreService) takeUserIdFromCtx(req *http.Request) int {
+func (c *CoreService) takeUserIDFromCtx(req *http.Request) int {
 	UserID, ok := req.Context().Value(midw.CtxUserID).(int)
-	log.Println("takeUserIdFromCtx", UserID)
+	log.Println("takeUserIDFromCtx", UserID)
 	if !ok || UserID <= 0 {
-		c.Logger.RaiseError(ErrUserIDNotValid, "CoreService.takeUserIdFromCtx>CtxUserID", nil)
-		UserID = -1
+		c.Logger.RaiseError(ErrUserIDNotValid, "CoreService.takeUserIDFromCtx>CtxUserID", nil)
 	}
 	return UserID
 }
 
-func (s *CoreService) encrypOriginURL() (correlID string) {
+func (c *CoreService) encrypOriginURL() (correlID string) {
 	for {
 		correlID = pkg.Scramble(LONG)                   // Вызов шифратора
-		if s.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
+		if c.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
 			break
 		}
 	}

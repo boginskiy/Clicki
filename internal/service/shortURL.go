@@ -62,7 +62,7 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	userID := s.Core.takeUserIdFromCtx(req) // Тащим идентификатор пользователя
+	userID := s.Core.takeUserIDFromCtx(req) // Тащим идентификатор пользователя
 
 	correlationID := s.Core.encrypOriginURL()               // Уникальный идентификатор
 	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL

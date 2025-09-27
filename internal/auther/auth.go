@@ -40,7 +40,7 @@ func (a *Auth) NextUser() int {
 	lastUser, err := a.Repo.TakeLastUser(context.TODO())
 	if err != nil {
 		a.Logger.RaiseError(err, "Auth>NextUser>TakeLastUser", nil)
-		return 1
+		return lastUser // default value == 1
 	}
 	return (lastUser + 1)
 }

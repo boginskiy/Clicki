@@ -153,7 +153,7 @@ func (rd *RepositoryDBURL) TakeLastUser(ctx context.Context) (int, error) {
 
 	err := row.Scan(&MaxCntByUser)
 	if err != nil {
-		return -1, cerr.NewErrPlace("scan row is bad", err)
+		return 1, cerr.NewErrPlace("scan row is bad", err)
 	}
 	return MaxCntByUser, nil
 }
@@ -189,5 +189,10 @@ func (rd *RepositoryDBURL) ReadSet(ctx context.Context, userID int) (any, error)
 		}
 		records = append(records, record)
 	}
+
+	if rows.Err() != nil {
+		return nil, cerr.NewErrPlace("scan not good", rows.Err())
+	}
+
 	return records, nil
 }

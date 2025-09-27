@@ -28,13 +28,13 @@ func (j *JWTService) CreateJWT(userID int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			// Время жизни токена
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKEN_EXP)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKENEXP)),
 		},
 		UserID: userID,
 	})
 
 	// Строка токена
-	tokenStr, err := token.SignedString([]byte(SECRET_KEY))
+	tokenStr, err := token.SignedString([]byte(SECRETKEY))
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +50,7 @@ func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-		return []byte(SECRET_KEY), nil
+		return []byte(SECRETKEY), nil
 	})
 
 	if err != nil {
