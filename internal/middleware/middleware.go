@@ -97,10 +97,9 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 		cookie, err := r.Cookie(NAME_COKI) // Достаем 'Cookie'
 		var UserID int                     // Идентификатор пользователя
 
-		// У пользователя отсутствует 'Cookie'. Делаем регистрацию
+		// У пользователя отсутствует 'Cookie'. Авторизация
 		if err != nil {
 			UserID = m.Auther.NextUser()
-
 			token, err := m.Auther.CreateJWT(UserID)
 			if err != nil {
 				m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
@@ -109,41 +108,34 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 			http.SetCookie(w, cookie)
 
 		} else {
-			// У пользователя есть 'Cookie'. Делаем аутентификацию
+			// У пользователя есть 'Cookie'. Аутентификация
 			UserID, err = m.Auther.GetIDAndValidJWT(cookie.Value)
 
-			// Определеяем условие для обновления токена
-			updateToken := (errors.Is(err, auth.ErrTokenIsExpired) ||
-				errors.Is(err, auth.ErrTokenNotValid))
-
-			if err != nil && !updateToken {
-				m.Logger.RaiseError(err, "Middleware>WithAuth.GetIDAndValidJWT", nil)
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			// Проверка регистрации пользователя
-			isThereUser, err := m.Auther.CheckUser(UserID)
-
-			if err != nil {
-				m.Logger.RaiseError(err, "Middleware>WithAuth.CheckUser", nil)
-			}
-
-			// Пользователь зарегистрирован, но токен не валидный или просрочен
-			if isThereUser && updateToken {
-				token, err := m.Auther.CreateJWT(UserID)
-				if err != nil {
-					m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
-				}
-				// Выдаем свежий токен
-				cookie := m.Auther.CreateCookie(token, NAME_COKI)
-				http.SetCookie(w, cookie)
-			}
-
-			// Пользователь не зарегистрирован
-			if !isThereUser {
+			// Условие непрохождения аутентификации
+			if UserID <= 0 {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
+			}
+
+			// Анализ ошибок
+			if err != nil {
+
+				// Условие для обновления токена
+				if errors.Is(err, auth.ErrTokenIsExpired) || errors.Is(err, auth.ErrTokenNotValid) {
+					token, err := m.Auther.CreateJWT(UserID)
+					if err != nil {
+						m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
+						// TODO! хреновое место
+					}
+					// Выдаем свежий токен
+					cookie := m.Auther.CreateCookie(token, NAME_COKI)
+					http.SetCookie(w, cookie)
+
+				} else {
+					m.Logger.RaiseError(err, "Middleware>WithAuth.GetIDAndValidJWT>SpecialErr", nil)
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
 			}
 		}
 		// Пакуем UserID в context

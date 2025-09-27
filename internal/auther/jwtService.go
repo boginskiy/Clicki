@@ -53,10 +53,8 @@ func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
 		return []byte(SECRET_KEY), nil
 	})
 
-	// При невалидном или просроченном токене. Возвращаем ошибку и userID
-
-	// Анализ просроченного токена
 	if err != nil {
+		// Анализ просроченного токена
 		var validErr *jwt.ValidationError
 		if errors.As(err, &validErr) {
 			// Битовый И. Проверка флага просроченного токена
@@ -64,14 +62,15 @@ func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
 				return claims.UserID, ErrTokenIsExpired
 			}
 		}
-		// Другие ошибки ...
-		return -1, err
+		// Другие ошибки
+		return 0, err
 	}
 
 	// Анализ невалидного токена
 	if !token.Valid {
 		return claims.UserID, ErrTokenNotValid
 	}
-
 	return claims.UserID, nil
 }
+
+// Интересно, а если токен просрочился, парсер запарсит в claims.UserID ?
