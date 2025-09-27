@@ -5,6 +5,7 @@ import (
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 
+	auth "github.com/boginskiy/Clicki/internal/auther"
 	"github.com/boginskiy/Clicki/internal/logg"
 	midw "github.com/boginskiy/Clicki/internal/middleware"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
@@ -15,12 +16,16 @@ import (
 )
 
 func Run(kwargs conf.VarGetter, baseLog logg.Logger, repo repo.Repository) {
-	// Info Logger
-	infoLog := logg.NewLogg(kwargs.GetLogFile(), "INFO")
-	defer infoLog.CloseDesc()
+	// Special Loggers for middleware, registration
+	midWareLogger := logg.NewLogg(kwargs.GetLogFile(), "INFO")
+	authLogger := logg.NewLogg("LogRegister.log", "ERROR")
 
-	// Middleware
-	midWare := midw.NewMiddleware(infoLog)
+	defer midWareLogger.CloseDesc()
+	defer authLogger.CloseDesc()
+
+	// Middleware & Registr
+	auther := auth.NewAuth(kwargs, authLogger, repo)
+	midWare := midw.NewMiddleware(midWareLogger, auther)
 
 	// Extra
 	extraFuncer := prep.NewExtraFunc() // extraFuncer - дополнительные функции

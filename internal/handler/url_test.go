@@ -93,7 +93,7 @@ func TestPostURL(t *testing.T) {
 			response := httptest.NewRecorder()
 			// Handler
 			h := handler.HandlerURL{Service: shURL}
-			h.Post(response, request)
+			h.CreateURL(response, request)
 
 			// Check >>
 
@@ -191,7 +191,7 @@ func TestGetURL(t *testing.T) {
 			// Handler
 			h := handler.HandlerURL{Service: shURL}
 
-			h.Get(response, request)
+			h.ReadURL(response, request)
 
 			// Check >>
 

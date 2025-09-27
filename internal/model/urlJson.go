@@ -37,14 +37,28 @@ type (
 		OriginalURL   string    `json:"-"`              // OriginalURL is - URL для сокращения
 		ShortURL      string    `json:"short_url"`      // ShortURL is - Сокращённая ссылка
 		CreatedAt     time.Time `json:"-"`              // CreatedAt is - Время создания записи
+		UserID        int       `json:"-"`              // UserID is - Идентификатор пользователя
+	}
+
+	ResUserURLSet struct {
+		OriginalURL string `json:"original_url"`
+		ShortURL    string `json:"short_url"`
 	}
 )
 
-func NewResURLSet(correlationID, origin, short string) ResURLSet {
+func NewResURLSet(correlationID, origin, short string, userID int) ResURLSet {
 	return ResURLSet{
 		CorrelationID: correlationID,
 		OriginalURL:   origin,
 		ShortURL:      short,
 		CreatedAt:     time.Now(),
+		UserID:        userID,
+	}
+}
+
+func NewResUserURLSet(origin, short string) ResUserURLSet {
+	return ResUserURLSet{
+		OriginalURL: origin,
+		ShortURL:    short,
 	}
 }

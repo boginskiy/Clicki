@@ -98,9 +98,25 @@ func (rm *RepositoryMapURL) CreateSet(ctx context.Context, records any) error {
 			ShortURL:      r.ShortURL,
 			CorrelationID: r.CorrelationID,
 			CreatedAt:     r.CreatedAt,
+			UserID:        r.UserID,
 		}
 
 		rm.uniqueFields[r.OriginalURL] = r.CorrelationID
 	}
 	return nil
+}
+
+// New
+func (rm *RepositoryMapURL) TakeLastUser(ctx context.Context) (int, error) {
+	return -1, nil
+}
+
+// New
+func (rm *RepositoryMapURL) CheckUser(ctx context.Context, userID int) (bool, error) {
+	return false, nil
+}
+
+// New
+func (rm *RepositoryMapURL) ReadSet(ctx context.Context, userID int) (any, error) {
+	return nil, nil
 }

@@ -1,10 +1,13 @@
 package middleware
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
 
+	auth "github.com/boginskiy/Clicki/internal/auther"
 	"github.com/boginskiy/Clicki/internal/gzip"
 	"github.com/boginskiy/Clicki/internal/logg"
 )
@@ -12,15 +15,16 @@ import (
 type MvFunc func(http.HandlerFunc) http.HandlerFunc
 
 type Middleware struct {
+	Auther auth.Auther
 	Logger logg.Logger
 }
 
-func NewMiddleware(logger logg.Logger) *Middleware {
-	return &Middleware{Logger: logger}
+func NewMiddleware(logger logg.Logger, auther auth.Auther) *Middleware {
+	return &Middleware{Logger: logger, Auther: auther}
 }
 
 func (m *Middleware) Conveyor(next http.HandlerFunc) http.HandlerFunc {
-	for _, middleware := range []MvFunc{m.WithInfoLogger, m.WithGzip} {
+	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} {
 		next = middleware(next)
 	}
 	return next
@@ -33,7 +37,7 @@ func (m *Middleware) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
 		method := r.Method
 
 		// Extension standart ResponseWriter
-		extW := NewExtRespWrtr(w)
+		extW := NewExResWriter(w)
 		next(extW, r)
 
 		duration := time.Since(start)
@@ -84,5 +88,66 @@ func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 		}
 		// Передача управления
 		next(tmpW, r)
+	}
+}
+
+func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		cookie, err := r.Cookie(NAME_COKI) // Достаем 'Cookie'
+		var UserID int                     // Идентификатор пользователя
+
+		// У пользователя отсутствует 'Cookie'. Делаем регистрацию
+		if err != nil {
+			UserID = m.Auther.NextUser()
+
+			token, err := m.Auther.CreateJWT(UserID)
+			if err != nil {
+				m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
+			}
+			cookie := m.Auther.CreateCookie(token, NAME_COKI)
+			http.SetCookie(w, cookie)
+
+		} else {
+			// У пользователя есть 'Cookie'. Делаем аутентификацию
+			UserID, err = m.Auther.GetIDAndValidJWT(cookie.Value)
+
+			// Определеяем условие для обновления токена
+			updateToken := (errors.Is(err, auth.ErrTokenIsExpired) ||
+				errors.Is(err, auth.ErrTokenNotValid))
+
+			if err != nil && !updateToken {
+				m.Logger.RaiseError(err, "Middleware>WithAuth.GetIDAndValidJWT", nil)
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			// Проверка регистрации пользователя
+			isThereUser, err := m.Auther.CheckUser(UserID)
+
+			if err != nil {
+				m.Logger.RaiseError(err, "Middleware>WithAuth.CheckUser", nil)
+			}
+
+			// Пользователь зарегистрирован, но токен не валидный или просрочен
+			if isThereUser && updateToken {
+				token, err := m.Auther.CreateJWT(UserID)
+				if err != nil {
+					m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
+				}
+				// Выдаем свежий токен
+				cookie := m.Auther.CreateCookie(token, NAME_COKI)
+				http.SetCookie(w, cookie)
+			}
+
+			// Пользователь не зарегистрирован
+			if !isThereUser {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+		}
+		// Пакуем UserID в context
+		ctx := context.WithValue(r.Context(), CtxUserID, UserID)
+		next(w, r.WithContext(ctx))
 	}
 }

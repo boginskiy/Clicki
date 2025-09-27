@@ -11,7 +11,6 @@ import (
 	prep "github.com/boginskiy/Clicki/internal/preparation"
 	repo "github.com/boginskiy/Clicki/internal/repository"
 	valid "github.com/boginskiy/Clicki/internal/validation"
-	"github.com/boginskiy/Clicki/pkg"
 )
 
 type ShortURL struct {
@@ -20,6 +19,7 @@ type ShortURL struct {
 	Checker     valid.Checker
 	Logger      logg.Logger
 	Kwargs      conf.VarGetter
+	Core        CoreServicer
 }
 
 func NewShortURL(
@@ -27,6 +27,7 @@ func NewShortURL(
 	checker valid.Checker, extraFuncer prep.ExtraFuncer) *ShortURL {
 
 	return &ShortURL{
+		Core:        NewCoreService(kwargs, logger, repo),
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Logger:      logger,
@@ -35,45 +36,46 @@ func NewShortURL(
 	}
 }
 
-func (s *ShortURL) encryptionLongURL() (correlID string) {
-	for {
-		correlID = pkg.Scramble(LONG)                   // Вызов шифратора
-		if s.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
-			break
-		}
-	}
-	return correlID
+func (s *ShortURL) CreateSetURL(req *http.Request) ([]byte, error) {
+	return StoreDBIsSucces, nil
+}
+
+func (s *ShortURL) ReadSetUserURL(req *http.Request) ([]byte, error) {
+	return StoreDBIsSucces, nil
 }
 
 func (s *ShortURL) GetHeader() string {
 	return "text/plain"
 }
 
-func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
+func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req) // Вынимаем тело запроса
 
 	if err != nil {
-		s.Logger.RaiseFatal(err, "ShortURL.Create>TakeAllBodyFromReq", nil)
+		s.Logger.RaiseFatal(err, "ShortURL.CreateURL>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
 	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
-		s.Logger.RaiseError(ErrDataNotValid, "ShortURL.Create>CheckUpURL", nil)
+		s.Logger.RaiseError(ErrDataNotValid, "ShortURL.CreateURL>CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                           // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID          // Новый сокращенный URL
-	preRecord := mod.NewURLTb(0, correlationID, originURL, shortURL) // Создаем запись
-	record, err := s.Repo.Create(context.TODO(), preRecord)          // Кладем в DB данные
+	userID := s.Core.takeUserIdFromCtx(req) // Тащим идентификатор пользователя
+
+	correlationID := s.Core.encrypOriginURL()               // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
+
+	preRecord := mod.NewURLTb(0, correlationID, originURL, shortURL, userID) // Создаем запись
+	record, err := s.Repo.Create(context.TODO(), preRecord)                  // Кладем в DB данные
 
 	if err != nil && record == nil {
-		s.Logger.RaiseError(err, "ShortURL.Create>Repo.Create", nil)
+		s.Logger.RaiseError(err, "ShortURL.CreateURL>Repo.Create", nil)
 		return EmptyByteSlice, err
 	}
 
-	//
+	// Definition type
 	switch r := record.(type) {
 	case *mod.URLTb:
 		return []byte(r.ShortURL), err
@@ -83,7 +85,7 @@ func (s *ShortURL) Create(req *http.Request) ([]byte, error) {
 	}
 }
 
-func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
+func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
 	correlationID := strings.TrimLeft(req.URL.Path, "/")      // Достаем параметр correlationID
 	record, err := s.Repo.Read(context.TODO(), correlationID) // Достаем origin URL
 
@@ -92,6 +94,7 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
+	// Definition type
 	switch r := record.(type) {
 	case *mod.URLTb:
 		return []byte(r.OriginalURL), nil
@@ -101,15 +104,11 @@ func (s *ShortURL) Read(req *http.Request) ([]byte, error) {
 	}
 }
 
-func (s *ShortURL) CheckPing(req *http.Request) ([]byte, error) {
+func (s *ShortURL) CheckDB(req *http.Request) ([]byte, error) {
 	_, err := s.Repo.Ping(context.TODO())
 	if err != nil {
 		s.Logger.RaiseFatal(err, "ShortURL.CreaCheckPingte>Ping", nil)
 		return EmptyByteSlice, err
 	}
-	return StoreDBIsSucces, nil
-}
-
-func (s *ShortURL) SetBatch(req *http.Request) ([]byte, error) {
 	return StoreDBIsSucces, nil
 }

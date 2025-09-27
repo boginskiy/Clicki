@@ -5,9 +5,15 @@ import (
 )
 
 type CRUDer interface {
-	CheckPing(request *http.Request) ([]byte, error)
-	SetBatch(request *http.Request) ([]byte, error)
-	Create(request *http.Request) ([]byte, error)
-	Read(request *http.Request) ([]byte, error)
+	CheckDB(request *http.Request) ([]byte, error)
+	CreateSetURL(request *http.Request) ([]byte, error)
+	ReadSetUserURL(request *http.Request) ([]byte, error)
+	CreateURL(request *http.Request) ([]byte, error)
+	ReadURL(request *http.Request) ([]byte, error)
 	GetHeader() string
+}
+
+type CoreServicer interface {
+	takeUserIdFromCtx(*http.Request) int
+	encrypOriginURL() string
 }

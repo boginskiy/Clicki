@@ -47,16 +47,16 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 	}
 
 	errClassifier := NewPGErrorClass()
-	DB, ok := rd.DB.GetDB().(*sql.DB)
-	if !ok {
-		return nil, cerr.NewErrPlace("database not valid", nil)
-	}
 
 	// Strategy №2. SQl-Query-error.
 	for attempt := 0; attempt <= rd.Kwargs.GetMaxRetries(); attempt++ {
 
-		row, errDB := InsertRowToUrls(DB, context.TODO(),
-			record.CorrelationID, record.OriginalURL, record.ShortURL, record.CreatedAt)
+		row, errDB := InsertRowToUrls(rd.db, context.TODO(),
+			record.CorrelationID,
+			record.OriginalURL,
+			record.ShortURL,
+			record.CreatedAt,
+			record.UserID)
 
 		// Ошибок нет, данные записаны
 		if errDB == nil {
@@ -72,17 +72,20 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 		if code == pgerrcode.UniqueViolation {
 
 			// Делаем повторный запрос в БД
-			row := SelectRowByOriginalURL(DB, context.TODO(),
+			row := SelectRowByOriginalURL(rd.db, context.TODO(),
 				record.OriginalURL)
 
 			// Ошибок нет, возвращаем запись
-			if errScan := row.Scan(
+			errScan := row.Scan(
 				&record.ID,
 				&record.OriginalURL,
 				&record.ShortURL,
 				&record.CorrelationID,
-				&record.CreatedAt); errScan == nil {
+				&record.CreatedAt,
+				&record.UserID)
 
+			// Ошибок нет, возвращаем запись
+			if errScan == nil {
 				// В ответ отдаю именно errDB для установки статуса ответа
 				return record, errDB
 			} else {
@@ -92,7 +95,6 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 			// Логика, если запрос к БД не надо повторять
 		} else if needRetry == NonRetriable {
 			break
-
 			// Логика, если запрос к БД необходимо повторить
 		} else {
 			time.Sleep(3 * time.Millisecond)
@@ -102,24 +104,18 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 }
 
 func (rd *RepositoryDBURL) Read(ctx context.Context, correlID string) (any, error) {
-	DB, ok := rd.DB.GetDB().(*sql.DB)
-	if !ok {
-		return nil, cerr.NewErrPlace("database not valid", nil)
-	}
-
 	record := &mod.URLTb{}
-
-	row := SelectRowByCorrelID(DB, context.TODO(), correlID)
+	row := SelectRowByCorrelID(rd.db, context.TODO(), correlID)
 
 	if err := row.Scan(
 		&record.ID,
 		&record.OriginalURL,
 		&record.ShortURL,
 		&record.CorrelationID,
-		&record.CreatedAt); err != nil {
+		&record.CreatedAt,
+		&record.UserID); err != nil {
 		return nil, err
 	}
-
 	return record, nil
 }
 
@@ -129,12 +125,7 @@ func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 		return cerr.NewErrPlace("data not valid", nil)
 	}
 
-	DB, ok := rd.DB.GetDB().(*sql.DB)
-	if !ok {
-		return cerr.NewErrPlace("database not valid", nil)
-	}
-
-	tx, err := DB.BeginTx(ctx, nil)
+	tx, err := rd.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -142,7 +133,7 @@ func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 	for _, v := range rows {
 		// все изменения записываются в транзакцию
 		_, err := InsertRowToUrlsTX(tx, context.TODO(),
-			v.CorrelationID, v.OriginalURL, v.ShortURL, v.CreatedAt)
+			v.CorrelationID, v.OriginalURL, v.ShortURL, v.CreatedAt, v.UserID)
 
 		if err != nil {
 			// если ошибка, то откатываем изменения
@@ -153,4 +144,50 @@ func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 	// завершаем транзакцию
 	tx.Commit()
 	return nil
+}
+
+// New
+func (rd *RepositoryDBURL) TakeLastUser(ctx context.Context) (int, error) {
+	row := SelectMaxCntByUser(rd.db, context.TODO())
+	var MaxCntByUser int
+
+	err := row.Scan(&MaxCntByUser)
+	if err != nil {
+		return -1, cerr.NewErrPlace("scan row is bad", err)
+	}
+	return MaxCntByUser, nil
+}
+
+// New
+func (rd *RepositoryDBURL) CheckUser(ctx context.Context, userID int) (bool, error) {
+	var exists bool
+	row := IsThereUser(rd.db, ctx, userID)
+	err := row.Scan(&exists)
+	if err != nil {
+		return false, cerr.NewErrPlace("scan row is bad", err)
+	}
+	return exists, nil
+}
+
+// New
+func (rd *RepositoryDBURL) ReadSet(ctx context.Context, userID int) (any, error) {
+	records := []mod.ResUserURLSet{}
+	record := mod.ResUserURLSet{}
+
+	rows, err := SelectUserURLs(rd.db, ctx, userID)
+	if err != nil {
+		return nil, cerr.NewErrPlace("data not valid", nil)
+	}
+	defer rows.Close()
+
+	// Читаем данные
+	for rows.Next() {
+		err := rows.Scan(&record.OriginalURL, &record.ShortURL)
+		if err != nil {
+			// TODO! Залогировать бы на всяк случай
+			continue
+		}
+		records = append(records, record)
+	}
+	return records, nil
 }

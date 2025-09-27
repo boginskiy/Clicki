@@ -11,15 +11,17 @@ type URLTb struct {
 	ShortURL      string    `json:"short_url"`
 	CorrelationID string    `json:"correlation_id"`
 	CreatedAt     time.Time `json:"created_at"`
+	UserID        int       `json:"-"`
 }
 
-func NewURLTb(id int, correID, origin, short string) *URLTb {
+func NewURLTb(id int, correID, origin, short string, userID int) *URLTb {
 	return &URLTb{
 		ID:            id,
 		OriginalURL:   origin,
 		ShortURL:      short,
 		CorrelationID: correID,
 		CreatedAt:     time.Now(),
+		UserID:        userID,
 	}
 }
 

@@ -133,7 +133,7 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 	for _, r := range rows {
 		rf.cntLine += 1
 
-		row := mod.NewURLTb(rf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL)
+		row := mod.NewURLTb(rf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL, r.UserID)
 
 		// Добавляем данные в Map
 		rf.Store[row.CorrelationID] = row
@@ -153,4 +153,19 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 
 	rf.mu.Unlock()
 	return nil
+}
+
+// New
+func (rf *RepositoryFileURL) TakeLastUser(ctx context.Context) (int, error) {
+	return -1, nil
+}
+
+// New
+func (rf *RepositoryFileURL) CheckUser(ctx context.Context, userID int) (bool, error) {
+	return false, nil
+}
+
+// New
+func (rf *RepositoryFileURL) ReadSet(ctx context.Context, userID int) (any, error) {
+	return nil, nil
 }

@@ -12,12 +12,13 @@ import (
 	"testing"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
+	auth "github.com/boginskiy/Clicki/internal/auther"
 	db "github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logg"
 	midw "github.com/boginskiy/Clicki/internal/middleware"
 	mod "github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
-	"github.com/boginskiy/Clicki/internal/repository"
+	repo "github.com/boginskiy/Clicki/internal/repository"
 	route "github.com/boginskiy/Clicki/internal/router"
 	srv "github.com/boginskiy/Clicki/internal/service"
 	valid "github.com/boginskiy/Clicki/internal/validation"
@@ -40,7 +41,7 @@ func RunRouter() *chi.Mux {
 
 	// Специальное создание репозитория для теста с начальным обогащением данных
 	file, _ := db.GetDB().(*os.File)
-	repo := &repository.RepositoryFileURL{
+	repo := &repo.RepositoryFileURL{
 		Kwargs:  kwargs,
 		DB:      db,
 		Scanner: bufio.NewScanner(file),
@@ -49,7 +50,8 @@ func RunRouter() *chi.Mux {
 	repo.Store = store
 	repo.UniqueFields = uniqueFields
 
-	midWare := midw.NewMiddleware(infoLog)
+	auther := auth.NewAuth(kwargs, infoLog, repo)
+	midWare := midw.NewMiddleware(infoLog, auther)
 	extraFuncer := prep.NewExtraFunc()
 	checker := valid.NewChecker()
 

@@ -11,7 +11,6 @@ import (
 	prep "github.com/boginskiy/Clicki/internal/preparation"
 	repo "github.com/boginskiy/Clicki/internal/repository"
 	valid "github.com/boginskiy/Clicki/internal/validation"
-	"github.com/boginskiy/Clicki/pkg"
 )
 
 type APIShortURL struct {
@@ -20,6 +19,7 @@ type APIShortURL struct {
 	Kwargs      conf.VarGetter
 	Checker     valid.Checker
 	Logger      logg.Logger
+	Core        CoreServicer
 }
 
 func NewAPIShortURL(
@@ -27,6 +27,7 @@ func NewAPIShortURL(
 	checker valid.Checker, extraFuncer prep.ExtraFuncer) *APIShortURL {
 
 	return &APIShortURL{
+		Core:        NewCoreService(kwargs, logger, repo),
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Logger:      logger,
@@ -35,21 +36,19 @@ func NewAPIShortURL(
 	}
 }
 
-func (s *APIShortURL) encryptionLongURL() (correlID string) {
-	for {
-		correlID = pkg.Scramble(LONG)                   // Вызов шифратора
-		if s.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
-			break
-		}
-	}
-	return correlID
+func (s *APIShortURL) ReadURL(req *http.Request) ([]byte, error) {
+	return EmptyByteSlice, nil
+}
+
+func (s *APIShortURL) CheckDB(req *http.Request) ([]byte, error) {
+	return EmptyByteSlice, nil
 }
 
 func (s *APIShortURL) GetHeader() string {
 	return "application/json"
 }
 
-func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
+func (s *APIShortURL) CreateURL(req *http.Request) ([]byte, error) {
 	// Deserialization Body
 	bodyJSON := mod.NewURLJson()
 	err := s.ExtraFuncer.Deserialization(req, bodyJSON)
@@ -66,17 +65,19 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	correlationID := s.encryptionLongURL()                              // Уникальный идентификатор
-	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID             // Создаем новый сокращенный URL
-	preRecord := mod.NewURLTb(0, correlationID, bodyJSON.URL, shortURL) // Создаем черновую запись
-	record, err := s.Repo.Create(context.TODO(), preRecord)             // Кладем в DB данные
+	userID := s.Core.takeUserIdFromCtx(req)                 // Тащим идентификатор пользователя
+	correlationID := s.Core.encrypOriginURL()               // Уникальный идентификатор
+	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Создаем новый сокращенный URL
+
+	preRecord := mod.NewURLTb(0, correlationID, bodyJSON.URL, shortURL, userID) // Создаем черновую запись
+	record, err := s.Repo.Create(context.TODO(), preRecord)                     // Кладем в DB данные
 
 	if err != nil && record == nil {
 		s.Logger.RaiseError(err, "APIShortURL.Create>Repo.Create", nil)
 		return EmptyByteSlice, err
 	}
 
-	//
+	// Definition type
 	var resJSON *mod.ResultJSON
 	switch r := record.(type) {
 	case *mod.URLTb:
@@ -88,7 +89,7 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, err
 	}
 
-	// Serialization Body
+	// Serialization
 	result, err2 := s.ExtraFuncer.Serialization(resJSON)
 
 	if err2 != nil {
@@ -98,15 +99,7 @@ func (s *APIShortURL) Create(req *http.Request) ([]byte, error) {
 	return result, err
 }
 
-func (s *APIShortURL) Read(req *http.Request) ([]byte, error) {
-	return EmptyByteSlice, nil
-}
-
-func (s *APIShortURL) CheckPing(req *http.Request) ([]byte, error) {
-	return EmptyByteSlice, nil
-}
-
-func (s *APIShortURL) SetBatch(req *http.Request) ([]byte, error) {
+func (s *APIShortURL) CreateSetURL(req *http.Request) ([]byte, error) {
 	// Создаем декодер
 	decoder := json.NewDecoder(req.Body)
 
@@ -117,6 +110,9 @@ func (s *APIShortURL) SetBatch(req *http.Request) ([]byte, error) {
 			logg.Fields{"fatal": ErrDataNotValid.Error()})
 		return EmptyByteSlice, ErrDataNotValid
 	}
+
+	// Достаем идентификатор пользователя
+	userID := s.Core.takeUserIdFromCtx(req)
 
 	// Разбор тела запроса
 	respURLSet := make([]mod.ResURLSet, 0, 10)
@@ -130,12 +126,10 @@ func (s *APIShortURL) SetBatch(req *http.Request) ([]byte, error) {
 			return EmptyByteSlice, err
 		}
 
-		// TODO!
-		// shortURL := s.Kwargs.GetBaseURL() + "/" + s.encryptionLongURL()
 		shortURL := s.Kwargs.GetBaseURL() + "/" + rURL.CorrelationID
-
 		// Сбор множества URL
-		respURLSet = append(respURLSet, mod.NewResURLSet(rURL.CorrelationID, rURL.OriginalURL, shortURL))
+		respURLSet = append(respURLSet, mod.NewResURLSet(
+			rURL.CorrelationID, rURL.OriginalURL, shortURL, userID))
 	}
 
 	// Сохранение в БД
@@ -149,4 +143,33 @@ func (s *APIShortURL) SetBatch(req *http.Request) ([]byte, error) {
 	result, err := json.Marshal(respURLSet)
 	s.Logger.RaiseFatal(err, "ShortURL>SetBatch>Marshal", nil)
 	return result, nil
+}
+
+func (s *APIShortURL) ReadSetUserURL(req *http.Request) ([]byte, error) {
+	// Достаем идентификатор пользователя
+	userID := s.Core.takeUserIdFromCtx(req)
+
+	dataSet, err := s.Repo.ReadSet(context.TODO(), userID)
+	if err != nil {
+		s.Logger.RaiseError(err, "APIShortURL.ReadSetUserURL>ReadSet", nil)
+		return EmptyByteSlice, err
+	}
+
+	// Однозначно определяем наличие записей у пользователя
+	records, ok := dataSet.([]mod.ResUserURLSet)
+	if !ok {
+		s.Logger.RaiseError(ErrDataNotValid, "APIShortURL.ReadSetUserURL>Type?", nil)
+		return EmptyByteSlice, ErrDataNotValid
+	}
+	if len(records) == 0 {
+		return EmptyByteSlice, nil
+	}
+
+	// Serialization
+	result, err := s.ExtraFuncer.Serialization(records)
+	if err != nil {
+		s.Logger.RaiseError(err, "APIShortURL.ReadSetUserURL>Serialization", nil)
+		return EmptyByteSlice, err
+	}
+	return result, err
 }

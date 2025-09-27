@@ -11,7 +11,9 @@ type Repository interface {
 	CheckUnic(context.Context, string) bool
 	CreateSet(context.Context, any) error
 	Ping(context.Context) (bool, error)
-}
 
-// Update(any)
-// Delete(any)
+	// New
+	TakeLastUser(context.Context) (int, error)
+	CheckUser(context.Context, int) (bool, error)
+	ReadSet(context.Context, int) (any, error)
+}
