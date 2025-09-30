@@ -115,7 +115,8 @@ func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any
 		&record.ShortURL,
 		&record.CorrelationID,
 		&record.CreatedAt,
-		&record.UserID); err != nil {
+		&record.UserID,
+		&record.DeletedFlag); err != nil {
 		return nil, err
 	}
 	return record, nil

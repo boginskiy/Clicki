@@ -215,7 +215,7 @@ func (s *APIShortURL) destroyMessages() {
 	ticker := time.NewTicker(10 * time.Second)
 
 	// Каждые N-секунд перевод удаляемых данных "Hard Delete"
-	ticker2 := time.NewTicker(30 * time.Second)
+	ticker2 := time.NewTicker(50 * time.Second)
 
 	var delMessages []rep.DelMessage
 	var deletedSoft bool

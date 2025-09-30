@@ -28,7 +28,7 @@ func SelectRowByOriginalURL(db *sql.DB, ctx context.Context, origin string) *sql
 // SelectRowByCorrelID - выбор строки по полю 'correlation_id'
 func SelectRowByCorrelID(db *sql.DB, ctx context.Context, correlID string) *sql.Row {
 	return db.QueryRowContext(ctx,
-		`SELECT id, original_url, short_url, correlation_id, created_at, user_id
+		`SELECT id, original_url, short_url, correlation_id, created_at, user_id, deleted_flag
 		 FROM urls 
 		 WHERE correlation_id = $1;`,
 		correlID)
