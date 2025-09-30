@@ -25,7 +25,7 @@ func NewAuth(kwargs conf.VarGetter, logger logg.Logger, repo repo.Repository) *A
 
 		// Подгружаем данные из Репозитория об ID последнего записанного пользователя
 		// По ходу работы программы, новые пользователи будут получать следующие по порядку ID
-		LastUser: repo.TakeLastUser(context.TODO()),
+		LastUser: repo.ReadLastRecord(context.TODO()),
 	}
 
 }

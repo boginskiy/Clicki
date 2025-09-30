@@ -3,37 +3,46 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
+	"time"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/logg"
 	mod "github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
-	repo "github.com/boginskiy/Clicki/internal/repository"
+	rep "github.com/boginskiy/Clicki/internal/repository"
 	valid "github.com/boginskiy/Clicki/internal/validation"
 )
 
 type APIShortURL struct {
-	Repo        repo.Repository
+	Repo        rep.Repository
 	ExtraFuncer prep.ExtraFuncer
 	Kwargs      conf.VarGetter
 	Checker     valid.Checker
 	Logger      logg.Logger
 	Core        CoreServicer
+	delMessChan chan rep.DelMessage
 }
 
 func NewAPIShortURL(
-	kwargs conf.VarGetter, logger logg.Logger, repo repo.Repository,
+	kwargs conf.VarGetter, logger logg.Logger, repo rep.Repository,
 	checker valid.Checker, extraFuncer prep.ExtraFuncer) *APIShortURL {
 
-	return &APIShortURL{
+	instance := &APIShortURL{
 		Core:        NewCoreService(kwargs, logger, repo),
+		delMessChan: make(chan rep.DelMessage, 8),
 		ExtraFuncer: extraFuncer,
 		Checker:     checker,
 		Logger:      logger,
 		Kwargs:      kwargs,
 		Repo:        repo,
 	}
+
+	// Запуск фонового удаления данных
+	go instance.destroyMessages()
+
+	return instance
 }
 
 func (s *APIShortURL) ReadURL(req *http.Request) ([]byte, error) {
@@ -70,7 +79,7 @@ func (s *APIShortURL) CreateURL(req *http.Request) ([]byte, error) {
 	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Создаем новый сокращенный URL
 
 	preRecord := mod.NewURLTb(0, correlationID, bodyJSON.URL, shortURL, userID) // Создаем черновую запись
-	record, err := s.Repo.Create(context.TODO(), preRecord)                     // Кладем в DB данные
+	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)               // Кладем в DB данные
 
 	if err != nil && record == nil {
 		s.Logger.RaiseError(err, "APIShortURL.Create>Repo.Create", nil)
@@ -133,7 +142,7 @@ func (s *APIShortURL) CreateSetURL(req *http.Request) ([]byte, error) {
 	}
 
 	// Сохранение в БД
-	err := s.Repo.CreateSet(context.TODO(), respURLSet)
+	err := s.Repo.CreateRecords(context.TODO(), respURLSet)
 	if err != nil {
 		s.Logger.RaiseError(err, "APIShortURL>SetBatch>CreateSet", nil)
 		return EmptyByteSlice, err
@@ -149,7 +158,7 @@ func (s *APIShortURL) ReadSetUserURL(req *http.Request) ([]byte, error) {
 	// Достаем идентификатор пользователя
 	userID := s.Core.takeUserIDFromCtx(req)
 
-	dataSet, err := s.Repo.ReadSet(context.TODO(), userID)
+	dataSet, err := s.Repo.ReadRecords(context.TODO(), userID)
 	if err != nil {
 		s.Logger.RaiseError(err, "APIShortURL.ReadSetUserURL>ReadSet", nil)
 		return EmptyByteSlice, err
@@ -172,4 +181,58 @@ func (s *APIShortURL) ReadSetUserURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, err
 	}
 	return result, err
+}
+
+// Producer
+func (s *APIShortURL) DeleteSetUserURL(req *http.Request) ([]byte, error) {
+	// Принимаем список идентификаторов URLs
+	dataByte, err := io.ReadAll(req.Body)
+	if err != nil {
+		return EmptyByteSlice, err
+	}
+
+	// Подготовка delMessage
+	userID := s.Core.takeUserIDFromCtx(req)
+	delMessage := rep.NewDelMessage(userID)
+	err = json.Unmarshal(dataByte, &delMessage.ListCorrelID)
+
+	if err != nil {
+		return EmptyByteSlice, err
+	}
+
+	// Отправка сообщения в канал
+	s.delMessChan <- *delMessage
+
+	return EmptyByteSlice, nil
+}
+
+// TODO вынести переменную в Env
+// NewTicker
+
+// Concumer
+func (s *APIShortURL) destroyMessages() {
+	// Сохраняем сообщения, накопленные за последние 120 секунд
+	ticker := time.NewTicker(120 * time.Second)
+
+	var delMessages []rep.DelMessage
+
+	for {
+		select {
+		case msg := <-s.delMessChan:
+			delMessages = append(delMessages, msg)
+
+		case <-ticker.C:
+			if len(delMessages) == 0 {
+				continue
+			}
+
+			// Обращаемся к БД для маркировки удаляемых данных
+			err := s.Repo.DeleteRecords(context.TODO(), delMessages...)
+			if err != nil {
+				s.Logger.RaiseError(err, "APIShortURL>destroyMessages>DeleteRecords", nil)
+				continue
+			}
+			delMessages = delMessages[:0]
+		}
+	}
 }

@@ -35,8 +35,8 @@ func (c *CoreService) takeUserIDFromCtx(req *http.Request) int {
 
 func (c *CoreService) encrypOriginURL() (correlID string) {
 	for {
-		correlID = pkg.Scramble(LONG)                   // Вызов шифратора
-		if c.Repo.CheckUnic(context.TODO(), correlID) { // Проверка на уникальность
+		correlID = pkg.Scramble(LONG)                         // Вызов шифратора
+		if c.Repo.CheckUnicRecord(context.TODO(), correlID) { // Проверка на уникальность
 			break
 		}
 	}

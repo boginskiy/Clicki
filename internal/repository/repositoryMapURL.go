@@ -34,16 +34,16 @@ func NewRepositoryMapURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error
 	}, nil
 }
 
-func (rm *RepositoryMapURL) CheckUnic(ctx context.Context, correlID string) bool {
+func (rm *RepositoryMapURL) CheckUnicRecord(ctx context.Context, correlID string) bool {
 	_, ok := rm.store[correlID]
 	return !ok
 }
 
-func (rm *RepositoryMapURL) Ping(ctx context.Context) (bool, error) {
+func (rm *RepositoryMapURL) PingDB(ctx context.Context) (bool, error) {
 	return rm.DB.CheckOpen()
 }
 
-func (rm *RepositoryMapURL) Read(ctx context.Context, correlID string) (any, error) {
+func (rm *RepositoryMapURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
 	rm.muR.RLock()
 	defer rm.muR.RUnlock()
 
@@ -54,7 +54,7 @@ func (rm *RepositoryMapURL) Read(ctx context.Context, correlID string) (any, err
 	return record, nil
 }
 
-func (rm *RepositoryMapURL) Create(ctx context.Context, preRecord any) (any, error) {
+func (rm *RepositoryMapURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
 	row, ok := preRecord.(*mod.URLTb)
 	if !ok {
 		return nil, cerr.NewErrPlace("data not valid", nil)
@@ -78,7 +78,7 @@ func (rm *RepositoryMapURL) Create(ctx context.Context, preRecord any) (any, err
 	return row, nil
 }
 
-func (rm *RepositoryMapURL) CreateSet(ctx context.Context, records any) error {
+func (rm *RepositoryMapURL) CreateRecords(ctx context.Context, records any) error {
 	rows, ok := records.([]mod.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return cerr.NewErrPlace("data not valid", nil)
@@ -107,12 +107,17 @@ func (rm *RepositoryMapURL) CreateSet(ctx context.Context, records any) error {
 }
 
 // New
-func (rm *RepositoryMapURL) TakeLastUser(ctx context.Context) int {
+func (rm *RepositoryMapURL) ReadLastRecord(ctx context.Context) int {
 	return 0
 }
 
+func (rm *RepositoryMapURL) DeleteRecords(
+	ctx context.Context, messages ...DelMessage) error {
+	return nil
+}
+
 // New
-func (rm *RepositoryMapURL) ReadSet(ctx context.Context, userID int) (any, error) {
+func (rm *RepositoryMapURL) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []mod.ResUserURLSet{}
 
 	for _, v := range rm.store {

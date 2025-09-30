@@ -72,16 +72,21 @@ func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]s
 	return resultMap, resultSet
 }
 
-func (rf *RepositoryFileURL) CheckUnic(ctx context.Context, correlID string) bool {
+func (rf *RepositoryFileURL) CheckUnicRecord(ctx context.Context, correlID string) bool {
 	_, ok := rf.Store[correlID]
 	return !ok
 }
 
-func (rf *RepositoryFileURL) Ping(ctx context.Context) (bool, error) {
+func (rf *RepositoryFileURL) PingDB(ctx context.Context) (bool, error) {
 	return rf.DB.CheckOpen()
 }
 
-func (rf *RepositoryFileURL) Read(ctx context.Context, correlID string) (any, error) {
+func (rf *RepositoryFileURL) DeleteRecords(
+	ctx context.Context, messages ...DelMessage) error {
+	return nil
+}
+
+func (rf *RepositoryFileURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
 	rf.muR.RLock()
 	defer rf.muR.RUnlock()
 
@@ -92,7 +97,7 @@ func (rf *RepositoryFileURL) Read(ctx context.Context, correlID string) (any, er
 	return record, nil
 }
 
-func (rf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, error) {
+func (rf *RepositoryFileURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
 	row, ok := preRecord.(*mod.URLTb)
 	if !ok {
 		return nil, cerr.NewErrPlace("type is not available", nil)
@@ -124,7 +129,7 @@ func (rf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, er
 	return row, err
 }
 
-func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
+func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) error {
 	rows, ok := records.([]mod.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return errors.New("data not valid")
@@ -158,12 +163,12 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 }
 
 // New
-func (rf *RepositoryFileURL) TakeLastUser(ctx context.Context) int {
+func (rf *RepositoryFileURL) ReadLastRecord(ctx context.Context) int {
 	return rf.LastUser
 }
 
 // New
-func (rf *RepositoryFileURL) ReadSet(ctx context.Context, userID int) (any, error) {
+func (rf *RepositoryFileURL) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []mod.ResUserURLSet{}
 
 	for _, v := range rf.Store {

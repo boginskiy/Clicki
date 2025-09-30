@@ -28,6 +28,7 @@ func Router(mv midw.Middlewarer, apiURL, shortuRL srv.CRUDer) *chi.Mux {
 			r.Post("/shorten", mv.Conveyor(http.HandlerFunc(hAPIURL.CreateURL)))
 			r.Post("/shorten/batch", mv.Conveyor(http.HandlerFunc(hAPIURL.CreateSetURL)))
 			r.Get("/user/urls", mv.Conveyor(http.HandlerFunc(hAPIURL.ReadSetUserURL)))
+			r.Delete("/user/urls", mv.Conveyor(http.HandlerFunc(hAPIURL.DeleteSetUserURL)))
 		})
 
 		// PProf

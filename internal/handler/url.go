@@ -15,6 +15,12 @@ type HandlerURL struct {
 func (h *HandlerURL) ReadURL(res http.ResponseWriter, req *http.Request) {
 	// Запуск бизнес логики сервиса 'Service'
 	body, err := h.Service.ReadURL(req)
+
+	if err == srv.ErrReadRecord {
+		res.WriteHeader(http.StatusGone)
+		return
+	}
+
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
@@ -86,4 +92,12 @@ func (h *HandlerURL) ReadSetUserURL(res http.ResponseWriter, req *http.Request) 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write(body)
+}
+
+func (h *HandlerURL) DeleteSetUserURL(res http.ResponseWriter, req *http.Request) {
+	if _, err := h.Service.DeleteSetUserURL(req); err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	res.WriteHeader(http.StatusAccepted)
 }

@@ -16,6 +16,7 @@ func createUrls(db *sql.DB) error {
 						original_url TEXT NOT NULL UNIQUE,
 						short_url TEXT NOT NULL,
 						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						deleted_flag BOOLEAN NOT NULL DEFAULT FALSE,
 						user_id INT NOT NULL)`)
 	return err
 }

@@ -5,11 +5,12 @@ import (
 )
 
 type CRUDer interface {
-	CheckDB(request *http.Request) ([]byte, error)
-	CreateSetURL(request *http.Request) ([]byte, error)
-	ReadSetUserURL(request *http.Request) ([]byte, error)
-	CreateURL(request *http.Request) ([]byte, error)
-	ReadURL(request *http.Request) ([]byte, error)
+	DeleteSetUserURL(*http.Request) ([]byte, error)
+	ReadSetUserURL(*http.Request) ([]byte, error)
+	CreateSetURL(*http.Request) ([]byte, error)
+	CreateURL(*http.Request) ([]byte, error)
+	CheckDB(*http.Request) ([]byte, error)
+	ReadURL(*http.Request) ([]byte, error)
 	GetHeader() string
 }
 

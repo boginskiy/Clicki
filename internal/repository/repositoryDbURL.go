@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -30,17 +32,17 @@ func NewRepositoryDBURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error)
 	}, nil
 }
 
-func (rd *RepositoryDBURL) CheckUnic(ctx context.Context, correlationID string) bool {
+func (rd *RepositoryDBURL) CheckUnicRecord(ctx context.Context, correlationID string) bool {
 	// TODO! Нужно натсроить DataBase
 	// correlationID должно быть уникальное поле
 	return true
 }
 
-func (rd *RepositoryDBURL) Ping(ctx context.Context) (bool, error) {
+func (rd *RepositoryDBURL) PingDB(ctx context.Context) (bool, error) {
 	return rd.DB.CheckOpen()
 }
 
-func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, error) {
+func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
 	record, ok := preRecord.(*mod.URLTb)
 	if !ok {
 		return nil, cerr.NewErrPlace("data not valid", nil)
@@ -103,7 +105,7 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 	return nil, cerr.NewErrPlace("insert into is bad", nil)
 }
 
-func (rd *RepositoryDBURL) Read(ctx context.Context, correlID string) (any, error) {
+func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
 	record := &mod.URLTb{}
 	row := SelectRowByCorrelID(rd.db, ctx, correlID)
 
@@ -119,7 +121,7 @@ func (rd *RepositoryDBURL) Read(ctx context.Context, correlID string) (any, erro
 	return record, nil
 }
 
-func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
+func (rd *RepositoryDBURL) CreateRecords(ctx context.Context, records any) error {
 	rows, ok := records.([]mod.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return cerr.NewErrPlace("data not valid", nil)
@@ -147,7 +149,7 @@ func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 }
 
 // New
-func (rd *RepositoryDBURL) TakeLastUser(ctx context.Context) int {
+func (rd *RepositoryDBURL) ReadLastRecord(ctx context.Context) int {
 	row := SelectMaxCntByUser(rd.db, ctx)
 	var MaxCntByUser int
 
@@ -159,7 +161,7 @@ func (rd *RepositoryDBURL) TakeLastUser(ctx context.Context) int {
 }
 
 // New
-func (rd *RepositoryDBURL) ReadSet(ctx context.Context, userID int) (any, error) {
+func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []mod.ResUserURLSet{}
 	record := mod.ResUserURLSet{}
 
@@ -182,4 +184,38 @@ func (rd *RepositoryDBURL) ReadSet(ctx context.Context, userID int) (any, error)
 		return nil, cerr.NewErrPlace("scan not good", rows.Err())
 	}
 	return records, nil
+}
+
+func (rd *RepositoryDBURL) DeleteRecords(ctx context.Context, messages ...DelMessage) error {
+	// Для каждого пользователя создаем отдельный запрос
+	// Мозгов хватило только на это. Реализации, когда все в одном запросе
+	// привели меня к шизе.
+
+	values := make([]string, 0, 10)
+	args := make([]any, 0, 10)
+
+	for _, mess := range messages {
+
+		// Добавляем пользователя в аргументы
+		args = append(args, mess.UserID) // $1
+
+		for i, msg := range mess.ListCorrelID {
+			values = append(values, fmt.Sprintf("$%d", (i+2)))
+			args = append(args, msg)
+		}
+
+		query := `UPDATE urls
+			SET deleted_flag = TRUE
+			WHERE correlation_id IN (` + strings.Join(values, ",") + `)
+			AND user_id = $1`
+
+		_, err := rd.db.ExecContext(ctx, query, args...)
+		if err != nil {
+			return err
+		}
+		// Обнуление перед следующей итерацией
+		values = values[:0]
+		args = args[:0]
+	}
+	return nil
 }

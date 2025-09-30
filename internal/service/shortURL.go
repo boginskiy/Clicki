@@ -44,6 +44,10 @@ func (s *ShortURL) ReadSetUserURL(req *http.Request) ([]byte, error) {
 	return StoreDBIsSucces, nil
 }
 
+func (s *ShortURL) DeleteSetUserURL(req *http.Request) ([]byte, error) {
+	return StoreDBIsSucces, nil
+}
+
 func (s *ShortURL) GetHeader() string {
 	return "text/plain"
 }
@@ -68,7 +72,7 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 	shortURL := s.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
 
 	preRecord := mod.NewURLTb(0, correlationID, originURL, shortURL, userID) // Создаем запись
-	record, err := s.Repo.Create(context.TODO(), preRecord)                  // Кладем в DB данные
+	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)            // Кладем в DB данные
 
 	if err != nil && record == nil {
 		s.Logger.RaiseError(err, "ShortURL.CreateURL>Repo.Create", nil)
@@ -86,8 +90,8 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 }
 
 func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
-	correlationID := strings.TrimLeft(req.URL.Path, "/")      // Достаем параметр correlationID
-	record, err := s.Repo.Read(context.TODO(), correlationID) // Достаем origin URL
+	correlationID := strings.TrimLeft(req.URL.Path, "/")            // Достаем параметр correlationID
+	record, err := s.Repo.ReadRecord(context.TODO(), correlationID) // Достаем origin URL
 
 	if err != nil {
 		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read", nil)
@@ -97,7 +101,13 @@ func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
 	// Definition type
 	switch r := record.(type) {
 	case *mod.URLTb:
+
+		// Если фла==true, запись стоит в очереди на удаление
+		if r.DeletedFlag == true {
+			return EmptyByteSlice, ErrReadRecord
+		}
 		return []byte(r.OriginalURL), nil
+
 	default:
 		s.Logger.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
 		return EmptyByteSlice, ErrDataNotValid
@@ -105,7 +115,7 @@ func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
 }
 
 func (s *ShortURL) CheckDB(req *http.Request) ([]byte, error) {
-	_, err := s.Repo.Ping(context.TODO())
+	_, err := s.Repo.PingDB(context.TODO())
 	if err != nil {
 		s.Logger.RaiseFatal(err, "ShortURL.CreaCheckPingte>Ping", nil)
 		return EmptyByteSlice, err

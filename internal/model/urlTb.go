@@ -11,6 +11,7 @@ type URLTb struct {
 	ShortURL      string    `json:"short_url"`
 	CorrelationID string    `json:"correlation_id"`
 	CreatedAt     time.Time `json:"created_at"`
+	DeletedFlag   bool      `json:"deleted_flag"`
 	UserID        int       `json:"user_id"`
 }
 
@@ -21,6 +22,7 @@ func NewURLTb(id int, correID, origin, short string, userID int) *URLTb {
 		ShortURL:      short,
 		CorrelationID: correID,
 		CreatedAt:     time.Now(),
+		DeletedFlag:   false,
 		UserID:        userID,
 	}
 }
