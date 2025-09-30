@@ -25,5 +25,6 @@ type Repository interface {
 	// New
 	ReadLastRecord(ctx context.Context) int
 	ReadRecords(ctx context.Context, userID int) (any, error)
-	DeleteRecords(ctx context.Context, messages ...DelMessage) error
+	MarkerRecords(ctx context.Context, messages ...DelMessage) error
+	DeleteRecords(ctx context.Context) error
 }

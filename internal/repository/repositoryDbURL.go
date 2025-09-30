@@ -186,7 +186,7 @@ func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, er
 	return records, nil
 }
 
-func (rd *RepositoryDBURL) DeleteRecords(ctx context.Context, messages ...DelMessage) error {
+func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
 	// Для каждого пользователя создаем отдельный запрос
 	// Мозгов хватило только на это. Реализации, когда все в одном запросе
 	// привели меня к шизе.
@@ -218,4 +218,11 @@ func (rd *RepositoryDBURL) DeleteRecords(ctx context.Context, messages ...DelMes
 		args = args[:0]
 	}
 	return nil
+}
+
+func (rd *RepositoryDBURL) DeleteRecords(ctx context.Context) error {
+	_, err := rd.db.ExecContext(ctx,
+		`DELETE FROM urls
+	 	 WHERE deleted_flag = TRUE;`)
+	return err
 }

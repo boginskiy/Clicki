@@ -211,28 +211,45 @@ func (s *APIShortURL) DeleteSetUserURL(req *http.Request) ([]byte, error) {
 
 // Concumer
 func (s *APIShortURL) destroyMessages() {
-	// Сохраняем сообщения, накопленные за последние 120 секунд
+	// Каждые N-секунд перевод удаляемых данных в "Soft Delete"
 	ticker := time.NewTicker(10 * time.Second)
 
+	// Каждые N-секунд перевод удаляемых данных "Hard Delete"
+	ticker2 := time.NewTicker(30 * time.Second)
+
 	var delMessages []rep.DelMessage
+	var deletedSoft bool
 
 	for {
 		select {
+
+		// Добавление данных на удаление
 		case msg := <-s.delMessChan:
 			delMessages = append(delMessages, msg)
 
+		// Обращаемся к БД для маркировки удаляемых данных
 		case <-ticker.C:
 			if len(delMessages) == 0 {
 				continue
 			}
-
-			// Обращаемся к БД для маркировки удаляемых данных
-			err := s.Repo.DeleteRecords(context.TODO(), delMessages...)
+			err := s.Repo.MarkerRecords(context.TODO(), delMessages...)
 			if err != nil {
-				s.Logger.RaiseError(err, "APIShortURL>destroyMessages>DeleteRecords", nil)
+				s.Logger.RaiseError(err, "APIShortURL>destroyMessages>MarkerRecords", nil)
 				continue
 			}
+
 			delMessages = delMessages[:0]
+			deletedSoft = true
+
+		// Физическое удаление помеченных данных
+		case <-ticker2.C:
+			if deletedSoft {
+				err := s.Repo.DeleteRecords(context.TODO())
+				if err != nil {
+					s.Logger.RaiseError(err, "APIShortURL>destroyMessages>MarkerRecords", nil)
+				}
+				deletedSoft = false
+			}
 		}
 	}
 }

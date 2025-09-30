@@ -34,13 +34,29 @@ func NewRepositoryMapURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error
 	}, nil
 }
 
+// ReadLastRecord - Для реализации interface
+func (rm *RepositoryMapURL) ReadLastRecord(ctx context.Context) int {
+	return 0
+}
+
+// MarkerRecords - Для реализации interface
+func (rm *RepositoryMapURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
+	return nil
+}
+
+// DeleteRecords - Для реализации interface
+func (rm *RepositoryMapURL) DeleteRecords(ctx context.Context) error {
+	return nil
+}
+
+// PingDB - Для реализации interface
+func (rm *RepositoryMapURL) PingDB(ctx context.Context) (bool, error) {
+	return rm.DB.CheckOpen()
+}
+
 func (rm *RepositoryMapURL) CheckUnicRecord(ctx context.Context, correlID string) bool {
 	_, ok := rm.store[correlID]
 	return !ok
-}
-
-func (rm *RepositoryMapURL) PingDB(ctx context.Context) (bool, error) {
-	return rm.DB.CheckOpen()
 }
 
 func (rm *RepositoryMapURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
@@ -106,17 +122,6 @@ func (rm *RepositoryMapURL) CreateRecords(ctx context.Context, records any) erro
 	return nil
 }
 
-// New
-func (rm *RepositoryMapURL) ReadLastRecord(ctx context.Context) int {
-	return 0
-}
-
-func (rm *RepositoryMapURL) DeleteRecords(
-	ctx context.Context, messages ...DelMessage) error {
-	return nil
-}
-
-// New
 func (rm *RepositoryMapURL) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []mod.ResUserURLSet{}
 

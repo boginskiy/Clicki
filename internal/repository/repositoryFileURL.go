@@ -50,6 +50,26 @@ func NewRepositoryFileURL(kwargs conf.VarGetter, dber db.DBer) (Repository, erro
 	return tmpRepo, nil
 }
 
+// PingDB - Для реализации interface
+func (rf *RepositoryFileURL) PingDB(ctx context.Context) (bool, error) {
+	return rf.DB.CheckOpen()
+}
+
+// MarkerRecords - Для реализации interface
+func (rf *RepositoryFileURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
+	return nil
+}
+
+// DeleteRecords - Для реализации interface
+func (rf *RepositoryFileURL) DeleteRecords(ctx context.Context) error {
+	return nil
+}
+
+// ReadLastRecord - Для реализации interface
+func (rf *RepositoryFileURL) ReadLastRecord(ctx context.Context) int {
+	return rf.LastUser
+}
+
 func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]string) {
 	resultMap := make(map[string]*mod.URLTb, SIZE)
 	resultSet := make(map[string]string, SIZE)
@@ -75,15 +95,6 @@ func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]s
 func (rf *RepositoryFileURL) CheckUnicRecord(ctx context.Context, correlID string) bool {
 	_, ok := rf.Store[correlID]
 	return !ok
-}
-
-func (rf *RepositoryFileURL) PingDB(ctx context.Context) (bool, error) {
-	return rf.DB.CheckOpen()
-}
-
-func (rf *RepositoryFileURL) DeleteRecords(
-	ctx context.Context, messages ...DelMessage) error {
-	return nil
 }
 
 func (rf *RepositoryFileURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
@@ -162,12 +173,6 @@ func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) err
 	return nil
 }
 
-// New
-func (rf *RepositoryFileURL) ReadLastRecord(ctx context.Context) int {
-	return rf.LastUser
-}
-
-// New
 func (rf *RepositoryFileURL) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []mod.ResUserURLSet{}
 
