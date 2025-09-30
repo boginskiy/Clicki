@@ -103,7 +103,7 @@ func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
 	case *mod.URLTb:
 
 		// Если фла==true, запись стоит в очереди на удаление
-		if r.DeletedFlag == true {
+		if r.DeletedFlag {
 			return EmptyByteSlice, ErrReadRecord
 		}
 		return []byte(r.OriginalURL), nil

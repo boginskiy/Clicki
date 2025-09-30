@@ -212,7 +212,7 @@ func (s *APIShortURL) DeleteSetUserURL(req *http.Request) ([]byte, error) {
 // Concumer
 func (s *APIShortURL) destroyMessages() {
 	// Сохраняем сообщения, накопленные за последние 120 секунд
-	ticker := time.NewTicker(120 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 
 	var delMessages []rep.DelMessage
 
