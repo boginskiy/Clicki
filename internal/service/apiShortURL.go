@@ -206,16 +206,15 @@ func (s *APIShortURL) DeleteSetUserURL(req *http.Request) ([]byte, error) {
 	return EmptyByteSlice, nil
 }
 
-// TODO вынести переменную в Env
-// NewTicker
-
 // Concumer
 func (s *APIShortURL) destroyMessages() {
 	// Каждые N-секунд перевод удаляемых данных в "Soft Delete"
-	ticker := time.NewTicker(10 * time.Second)
+	Nsec := time.Duration(s.Kwargs.GetSoftDeleteTime())
+	ticker := time.NewTicker(Nsec * time.Second)
 
 	// Каждые N-секунд перевод удаляемых данных "Hard Delete"
-	ticker2 := time.NewTicker(50 * time.Second)
+	Nsec = time.Duration(s.Kwargs.GetHardDeleteTime())
+	ticker2 := time.NewTicker(Nsec * time.Second)
 
 	var delMessages []rep.DelMessage
 	var deletedSoft bool

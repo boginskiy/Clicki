@@ -3,8 +3,10 @@ package auther
 import "net/http"
 
 type Auther interface {
-	NextUser() int
-	CreateJWT(int) (string, error)
-	CreateCookie(string, string) *http.Cookie
-	GetIDAndValidJWT(string) (int, error)
+	Authentication(req *http.Request) (*http.Cookie, int, error)
+}
+
+type JWTer interface {
+	GetIDAndValidJWT(tokenStr string) (int, error)
+	CreateJWT(userID int) (string, error)
 }

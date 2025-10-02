@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -93,52 +92,21 @@ func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 
 func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, UserID, err := m.Auther.Authentication(r)
 
-		cookie, err := r.Cookie(NAMECOKI) // Достаем 'Cookie'
-		var UserID int                    // Идентификатор пользователя
-
-		// Авторизация. Отсутствуют 'Cookie'
-		if err != nil {
-			UserID = m.Auther.NextUser()
-			token, err := m.Auther.CreateJWT(UserID)
-			if err != nil {
-				m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
-			}
-			cookie := m.Auther.CreateCookie(token, NAMECOKI)
-			http.SetCookie(w, cookie)
-
-		} else {
-			// Аутентификация. Присутствуют 'Cookie'
-			UserID, err = m.Auther.GetIDAndValidJWT(cookie.Value)
-
-			// Условие непрохождения аутентификации
-			if UserID <= 0 {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			// Анализ ошибок
-			if err != nil {
-
-				// Условие для обновления токена
-				if errors.Is(err, auth.ErrTokenIsExpired) || errors.Is(err, auth.ErrTokenNotValid) {
-					token, err := m.Auther.CreateJWT(UserID)
-					if err != nil {
-						m.Logger.RaiseError(err, "Middleware>WithAuth>CreateJWT", nil)
-						// TODO! хреновое место
-					}
-					// Выдаем свежий токен
-					cookie := m.Auther.CreateCookie(token, NAMECOKI)
-					http.SetCookie(w, cookie)
-
-				} else {
-					m.Logger.RaiseError(err, "Middleware>WithAuth.GetIDAndValidJWT>SpecialErr", nil)
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-			}
+		// Ошибки 'пользователь не найден' и 'создание токена'
+		if err == auth.ErrUserNotFound || err == auth.ErrCreateToken {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
 		}
-		// Пакуем UserID в context
+
+		// Ошибки валидации токена
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.SetCookie(w, cookie)
 		ctx := context.WithValue(r.Context(), CtxUserID, UserID)
 		next(w, r.WithContext(ctx))
 	}

@@ -2,15 +2,12 @@ package auther
 
 import (
 	"errors"
-	"time"
 )
 
 var (
+	ErrCreateToken    = errors.New(`{"error":"token was not created"}`)
+	ErrUserNotFound   = errors.New(`{"error":"user is not found"}`)
 	ErrTokenNotValid  = errors.New(`{"error":"token is not valid"}`)
-	ErrDataNotValid   = errors.New(`{"error":"data not valid"}`)
+	ErrDataNotValid   = errors.New(`{"error":"data is not valid"}`)
 	ErrTokenIsExpired = errors.New(`{"error":"token is expired"}`)
 )
-
-// TODO! Вынести в переменные окружения
-const TOKENEXP = time.Second * 10
-const SECRETKEY = "1234"
