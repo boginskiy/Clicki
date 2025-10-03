@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -117,6 +118,8 @@ func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any
 		&record.CreatedAt,
 		&record.UserID,
 		&record.DeletedFlag); err != nil {
+
+		log.Println(">>", err) // TODO!
 		return nil, err
 	}
 	return record, nil
