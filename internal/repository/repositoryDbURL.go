@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -10,6 +11,7 @@ import (
 	cerr "github.com/boginskiy/Clicki/internal/error"
 	mod "github.com/boginskiy/Clicki/internal/model"
 	"github.com/jackc/pgerrcode"
+	"github.com/lib/pq"
 )
 
 type RepositoryDBURL struct {
@@ -202,8 +204,9 @@ func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMes
 				SELECT unnest($1::BIGINT[]), unnest($2::VARCHAR[])
 				)`
 
-	_, err := rd.db.ExecContext(ctx, query, userIDs, correlIDs)
+	_, err := rd.db.ExecContext(ctx, query, pq.Array(userIDs), pq.Array(correlIDs))
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil
