@@ -174,7 +174,7 @@ func testCompress(t *testing.T, server *httptest.Server) {
 		// Отправка запроса
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-		require.Equal(t, 409, res.StatusCode) // TODO! 201 Почему стало 409 ?
+		require.Equal(t, 409, res.StatusCode)
 		require.Equal(t, res.Header.Get("Content-Encoding"), "gzip")
 		defer res.Body.Close()
 
