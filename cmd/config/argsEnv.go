@@ -68,12 +68,12 @@ func (e *ArgsENV) ParseFlags() {
 
 	valueStr = strings.TrimSpace(os.Getenv("SOFT_DELETE_TIME"))
 	if len(valueStr) == 0 {
-		e.SoftDeleteTime = 10
+		e.SoftDeleteTime = 5
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("HARD_DELETE_TIME"))
 	if len(valueStr) == 0 {
-		e.HardDeleteTime = 60
+		e.HardDeleteTime = 50
 	}
 
 }
