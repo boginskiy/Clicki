@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -81,9 +82,15 @@ func (d *DelMess) StepByStepDelMessages(ctx context.Context) {
 	Nsec := time.Duration(d.Core.Kwargs.GetSoftDeleteTime())
 	ticker := time.NewTicker(Nsec * time.Second)
 
+	// TODO!
+	fmt.Println(Nsec * time.Second)
+
 	// Каждые N-секунд перевод удаляемых данных "Hard Delete"
 	Nsec = time.Duration(d.Core.Kwargs.GetHardDeleteTime())
 	ticker2 := time.NewTicker(Nsec * time.Second)
+
+	// TODO!
+	fmt.Println(Nsec * time.Second)
 
 	var delMessages []rep.DelMessage
 	var deletedSoft bool
