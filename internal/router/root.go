@@ -10,9 +10,9 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func Router(mv midw.Middlewarer, apiURL, shortuRL srv.CRUDer) *chi.Mux {
-	hAPIURL := h.HandlerURL{Service: apiURL}
-	hURL := h.HandlerURL{Service: shortuRL}
+func Router(mv midw.Middlewarer, apiURL, shortuRL srv.CrudSrver, apiDelMess srv.DelSrver) *chi.Mux {
+	hAPIURL := h.HandlerURL{CrudSrver: apiURL, DelSrver: apiDelMess}
+	hURL := h.HandlerURL{CrudSrver: shortuRL, DelSrver: nil}
 
 	r := chi.NewRouter()
 

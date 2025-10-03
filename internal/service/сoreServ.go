@@ -14,26 +14,26 @@ import (
 type CoreService struct {
 	Repo   repository.Repository
 	Kwargs conf.VarGetter
-	Logger logg.Logger
+	Logg   logg.Logger
 }
 
-func NewCoreService(kwargs conf.VarGetter, logger logg.Logger, repo repository.Repository) CoreServicer {
+func NewCoreService(kwargs conf.VarGetter, logg logg.Logger, repo repository.Repository) *CoreService {
 	return &CoreService{
-		Logger: logger,
+		Logg:   logg,
 		Kwargs: kwargs,
 		Repo:   repo,
 	}
 }
 
-func (c *CoreService) takeUserIDFromCtx(req *http.Request) int {
+func (c *CoreService) TakeUserIDFromCtx(req *http.Request) int {
 	UserID, ok := req.Context().Value(midw.CtxUserID).(int)
 	if !ok || UserID <= 0 {
-		c.Logger.RaiseError(ErrUserIDNotValid, "CoreService.takeUserIDFromCtx>CtxUserID", nil)
+		c.Logg.RaiseError(ErrUserIDNotValid, "CoreService.TakeUserIDFromCtx>CtxUserID", nil)
 	}
 	return UserID
 }
 
-func (c *CoreService) encrypOriginURL() (correlID string) {
+func (c *CoreService) EncrypOriginURL() (correlID string) {
 	for {
 		correlID = pkg.Scramble(LONG)                         // Вызов шифратора
 		if c.Repo.CheckUnicRecord(context.TODO(), correlID) { // Проверка на уникальность

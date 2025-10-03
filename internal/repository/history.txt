@@ -1,0 +1,56 @@
+func (rd *RepositoryDBURL) MarkerRecords2(ctx context.Context, messages ...DelMessage) error {
+	values := make([]string, 0, 10)
+	args := make([]any, 0, 10)
+
+	for _, mess := range messages {
+
+		// Добавляем пользователя в аргументы
+		args = append(args, mess.UserID) // $1
+
+		for i, msg := range mess.ListCorrelID {
+			values = append(values, fmt.Sprintf("$%d", (i+2)))
+			args = append(args, msg)
+		}
+
+		query := `UPDATE urls
+			SET deleted_flag = TRUE
+			WHERE correlation_id IN (` + strings.Join(values, ",") + `)
+			AND user_id = $1`
+
+		_, err := rd.db.ExecContext(ctx, query, args...)
+		if err != nil {
+			return err
+		}
+		// Обнуление перед следующей итерацией
+		values = values[:0]
+		args = args[:0]
+	}
+	return nil
+}
+
+func (rd *RepositoryDBURL) MarkerRecords3(ctx context.Context, messages ...DelMessage) error {
+	values := make([]string, 0, 50)
+	args := make([]any, 0, 50)
+	cnt := 1
+
+	// Сборка параметров
+	for _, mess := range messages {
+		for _, msg := range mess.ListCorrelID {
+			values = append(values, fmt.Sprintf("($%d, $%d)", cnt, (cnt+1)))
+			args = append(args, mess.UserID, msg)
+			cnt += 2
+		}
+	}
+
+	query := `UPDATE urls
+				SET deleted_flag = TRUE
+				WHERE (user_id, correlation_id) IN (
+				VALUES ` + strings.Join(values, ", ") + `);`
+
+	_, err := rd.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

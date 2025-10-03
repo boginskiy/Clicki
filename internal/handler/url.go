@@ -9,12 +9,13 @@ import (
 )
 
 type HandlerURL struct {
-	Service srv.CRUDer // CRUDer is the interface of business logic
+	CrudSrver srv.CrudSrver
+	DelSrver  srv.DelSrver
 }
 
 func (h *HandlerURL) ReadURL(res http.ResponseWriter, req *http.Request) {
-	// Запуск бизнес логики сервиса 'Service'
-	body, err := h.Service.ReadURL(req)
+	// Запуск бизнес логики сервиса 'CrudSrver'
+	body, err := h.CrudSrver.ReadURL(req)
 
 	if err == srv.ErrReadRecord {
 		res.WriteHeader(http.StatusGone)
@@ -31,8 +32,8 @@ func (h *HandlerURL) ReadURL(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HandlerURL) CreateURL(res http.ResponseWriter, req *http.Request) {
-	// Start of 'Service'
-	body, err := h.Service.CreateURL(req)
+	// Start of 'CrudSrver'
+	body, err := h.CrudSrver.CreateURL(req)
 	status := http.StatusCreated
 
 	// Обработка критичных ошибок
@@ -46,13 +47,13 @@ func (h *HandlerURL) CreateURL(res http.ResponseWriter, req *http.Request) {
 		status = http.StatusConflict
 	}
 
-	res.Header().Set("Content-Type", h.Service.GetHeader())
+	res.Header().Set("Content-Type", h.CrudSrver.GetHeader())
 	res.WriteHeader(status)
 	res.Write(body)
 }
 
 func (h *HandlerURL) CheckDB(res http.ResponseWriter, req *http.Request) {
-	body, err := h.Service.CheckDB(req)
+	body, err := h.CrudSrver.CheckDB(req)
 
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -64,7 +65,7 @@ func (h *HandlerURL) CheckDB(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HandlerURL) CreateSetURL(res http.ResponseWriter, req *http.Request) {
-	body, err := h.Service.CreateSetURL(req)
+	body, err := h.CrudSrver.CreateSetURL(req)
 
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
@@ -76,7 +77,7 @@ func (h *HandlerURL) CreateSetURL(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HandlerURL) ReadSetUserURL(res http.ResponseWriter, req *http.Request) {
-	body, err := h.Service.ReadSetUserURL(req)
+	body, err := h.CrudSrver.ReadSetUserURL(req)
 
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
@@ -95,7 +96,7 @@ func (h *HandlerURL) ReadSetUserURL(res http.ResponseWriter, req *http.Request) 
 }
 
 func (h *HandlerURL) DeleteSetUserURL(res http.ResponseWriter, req *http.Request) {
-	if _, err := h.Service.DeleteSetUserURL(req); err != nil {
+	if _, err := h.DelSrver.DeleteSetUserURL(req); err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}

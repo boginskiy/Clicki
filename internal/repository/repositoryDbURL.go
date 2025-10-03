@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"strings"
 	"time"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -188,35 +186,25 @@ func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, er
 }
 
 func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
-	// Для каждого пользователя создаем отдельный запрос
-	// Мозгов хватило только на это. Реализации, когда все в одном запросе
-	// привели меня к шизе.
+	userIDs := make([]int64, 0, 8)
+	correlIDs := make([]string, 0, 8)
 
-	values := make([]string, 0, 10)
-	args := make([]any, 0, 10)
-
+	// Сборка параметров
 	for _, mess := range messages {
+		userIDs = append(userIDs, mess.UserID)
+		correlIDs = append(correlIDs, mess.ListCorrelID...)
+	}
 
-		// Добавляем пользователя в аргументы
-		args = append(args, mess.UserID) // $1
+	query := `
+				UPDATE urls
+				SET deleted_flag = TRUE
+				WHERE (user_id, correlation_id) IN (
+				SELECT unnest($1::BIGINT[]), unnest($2::VARCHAR[])
+				)`
 
-		for i, msg := range mess.ListCorrelID {
-			values = append(values, fmt.Sprintf("$%d", (i+2)))
-			args = append(args, msg)
-		}
-
-		query := `UPDATE urls
-			SET deleted_flag = TRUE
-			WHERE correlation_id IN (` + strings.Join(values, ",") + `)
-			AND user_id = $1`
-
-		_, err := rd.db.ExecContext(ctx, query, args...)
-		if err != nil {
-			return err
-		}
-		// Обнуление перед следующей итерацией
-		values = values[:0]
-		args = args[:0]
+	_, err := rd.db.ExecContext(ctx, query, userIDs, correlIDs)
+	if err != nil {
+		return err
 	}
 	return nil
 }

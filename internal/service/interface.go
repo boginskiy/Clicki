@@ -4,8 +4,7 @@ import (
 	"net/http"
 )
 
-type CRUDer interface {
-	DeleteSetUserURL(*http.Request) ([]byte, error)
+type CrudSrver interface {
 	ReadSetUserURL(*http.Request) ([]byte, error)
 	CreateSetURL(*http.Request) ([]byte, error)
 	CreateURL(*http.Request) ([]byte, error)
@@ -14,7 +13,11 @@ type CRUDer interface {
 	GetHeader() string
 }
 
-type CoreServicer interface {
-	takeUserIDFromCtx(*http.Request) int
-	encrypOriginURL() string
+type CoreSrver interface {
+	TakeUserIDFromCtx(*http.Request) int
+	EncrypOriginURL() string
+}
+
+type DelSrver interface {
+	DeleteSetUserURL(req *http.Request) ([]byte, error)
 }

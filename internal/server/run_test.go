@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -55,11 +56,17 @@ func RunRouter() *chi.Mux {
 	extraFuncer := prep.NewExtraFunc()
 	checker := valid.NewChecker()
 
-	// Services
-	APIShortURL := srv.NewAPIShortURL(kwargs, infoLog, repo, checker, extraFuncer)
-	ShortURL := srv.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
+	// Ctx
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	return route.Router(midWare, APIShortURL, ShortURL)
+	// Services
+	core := srv.NewCoreService(kwargs, infoLog, repo)
+	APIShortURL := srv.NewAPIShortURL(core, repo, checker, extraFuncer)
+	ShortURL := srv.NewShortURL(core, repo, checker, extraFuncer)
+	APIDelMess := srv.NewDelMess(ctx, core, repo)
+
+	return route.Router(midWare, APIShortURL, ShortURL, APIDelMess)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -28,18 +29,26 @@ func Run(kwargs conf.VarGetter, baseLog logg.Logger, repo repo.Repository) {
 	midWare := midw.NewMiddleware(midWareLogger, auther)
 
 	// Extra
-	extraFuncer := prep.NewExtraFunc() // extraFuncer - дополнительные функции
-	checker := valid.NewChecker()      // checker - валидация данных
+	extraFuncer := prep.NewExtraFunc()
+	checker := valid.NewChecker()
+
+	// Ctx
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Services
-	APIShortURL := srv.NewAPIShortURL(kwargs, baseLog, repo, checker, extraFuncer)
-	ShortURL := srv.NewShortURL(kwargs, baseLog, repo, checker, extraFuncer)
+	CoreServ := srv.NewCoreService(kwargs, baseLog, repo)
+
+	APIShortURL := srv.NewAPIShortURL(CoreServ, repo, checker, extraFuncer)
+	ShortURL := srv.NewShortURL(CoreServ, repo, checker, extraFuncer)
+	APIDelMess := srv.NewDelMess(ctx, CoreServ, repo)
 
 	// writing log...
 	baseLog.RaiseInfo(logg.StartedServInfo, logg.Fields{"port": kwargs.GetSrvAddr()})
 
 	// Start server
-	err := http.ListenAndServe(kwargs.GetSrvAddr(), route.Router(midWare, APIShortURL, ShortURL))
+	err := http.ListenAndServe(
+		kwargs.GetSrvAddr(), route.Router(midWare, APIShortURL, ShortURL, APIDelMess))
 
 	// writing log...
 	baseLog.RaiseFatal(err, logg.StartedServFatal, logg.Fields{"port": kwargs.GetSrvAddr()})

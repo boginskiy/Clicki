@@ -7,10 +7,10 @@ import (
 // Structures for communication of channels channels
 type DelMessage struct {
 	ListCorrelID []string
-	UserID       int
+	UserID       int64
 }
 
-func NewDelMessage(userID int) *DelMessage {
+func NewDelMessage(userID int64) *DelMessage {
 	return &DelMessage{UserID: userID}
 }
 
