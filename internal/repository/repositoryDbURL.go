@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"strings"
 	"time"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -12,7 +12,6 @@ import (
 	cerr "github.com/boginskiy/Clicki/internal/error"
 	mod "github.com/boginskiy/Clicki/internal/model"
 	"github.com/jackc/pgerrcode"
-	"github.com/lib/pq"
 )
 
 type RepositoryDBURL struct {
@@ -118,8 +117,6 @@ func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any
 		&record.CreatedAt,
 		&record.UserID,
 		&record.DeletedFlag); err != nil {
-
-		log.Println(">>", err) // TODO!
 		return nil, err
 	}
 	return record, nil
@@ -191,25 +188,25 @@ func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, er
 }
 
 func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
-	userIDs := make([]int64, 0, 8)
-	correlIDs := make([]string, 0, 8)
+	values := make([]string, 0, 10)
+	args := make([]any, 0, 10)
+	c := 1
 
-	// Сборка параметров
 	for _, mess := range messages {
-		userIDs = append(userIDs, mess.UserID)
-		correlIDs = append(correlIDs, mess.ListCorrelID...)
+
+		for _, correlID := range mess.ListCorrelID {
+			values = append(values, fmt.Sprintf("($%d,$%d)", c, c+1))
+			args = append(args, mess.UserID, correlID)
+			c += 2
+		}
 	}
 
-	query := `
-				UPDATE urls
-				SET deleted_flag = TRUE
-				WHERE (user_id, correlation_id) IN (
-				SELECT unnest($1::BIGINT[]), unnest($2::VARCHAR[])
-				)`
+	query := fmt.Sprintf(`UPDATE urls
+                          SET deleted_flag = TRUE
+                          WHERE (user_id, correlation_id) IN (%s)`, strings.Join(values, ","))
 
-	_, err := rd.db.ExecContext(ctx, query, pq.Array(userIDs), pq.Array(correlIDs))
+	_, err := rd.db.ExecContext(ctx, query, args...)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	return nil

@@ -54,3 +54,30 @@ func (rd *RepositoryDBURL) MarkerRecords3(ctx context.Context, messages ...DelMe
 
 	return nil
 }
+
+func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
+	userIDs := make([]int64, 0, 8)
+	correlIDs := make([]string, 0, 8)
+
+	// Сборка параметров
+	for _, mess := range messages {
+		userIDs = append(userIDs, mess.UserID)
+		correlIDs = append(correlIDs, mess.ListCorrelID...)
+	}
+
+	fmt.Println(userIDs, correlIDs)
+
+	query := `
+				UPDATE urls
+				SET deleted_flag = TRUE
+				WHERE (user_id, correlation_id) IN (
+				SELECT unnest($1::BIGINT[]), unnest($2::VARCHAR[])
+				)`
+
+	_, err := rd.db.ExecContext(ctx, query, pq.Array(userIDs), pq.Array(correlIDs))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}

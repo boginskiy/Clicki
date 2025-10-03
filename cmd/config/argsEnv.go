@@ -73,7 +73,7 @@ func (e *ArgsENV) ParseFlags() {
 
 	valueStr = strings.TrimSpace(os.Getenv("HARD_DELETE_TIME"))
 	if len(valueStr) == 0 {
-		e.HardDeleteTime = 57
+		e.HardDeleteTime = 50
 	}
 
 }
