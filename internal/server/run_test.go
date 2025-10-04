@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,12 +13,13 @@ import (
 	"testing"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
+	auth "github.com/boginskiy/Clicki/internal/auther"
 	db "github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logg"
 	midw "github.com/boginskiy/Clicki/internal/middleware"
 	mod "github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
-	"github.com/boginskiy/Clicki/internal/repository"
+	repo "github.com/boginskiy/Clicki/internal/repository"
 	route "github.com/boginskiy/Clicki/internal/router"
 	srv "github.com/boginskiy/Clicki/internal/service"
 	valid "github.com/boginskiy/Clicki/internal/validation"
@@ -40,7 +42,7 @@ func RunRouter() *chi.Mux {
 
 	// Специальное создание репозитория для теста с начальным обогащением данных
 	file, _ := db.GetDB().(*os.File)
-	repo := &repository.RepositoryFileURL{
+	repo := &repo.RepositoryFileURL{
 		Kwargs:  kwargs,
 		DB:      db,
 		Scanner: bufio.NewScanner(file),
@@ -49,15 +51,22 @@ func RunRouter() *chi.Mux {
 	repo.Store = store
 	repo.UniqueFields = uniqueFields
 
-	midWare := midw.NewMiddleware(infoLog)
+	auther := auth.NewAuth(kwargs, infoLog, repo)
+	midWare := midw.NewMiddleware(infoLog, auther)
 	extraFuncer := prep.NewExtraFunc()
 	checker := valid.NewChecker()
 
-	// Services
-	APIShortURL := srv.NewAPIShortURL(kwargs, infoLog, repo, checker, extraFuncer)
-	ShortURL := srv.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
+	// Ctx
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	return route.Router(midWare, APIShortURL, ShortURL)
+	// Services
+	core := srv.NewCoreService(kwargs, infoLog, repo)
+	APIShortURL := srv.NewAPIShortURL(core, repo, checker, extraFuncer)
+	ShortURL := srv.NewShortURL(core, repo, checker, extraFuncer)
+	APIDelMess := srv.NewDelMess(ctx, core, repo)
+
+	return route.Router(midWare, APIShortURL, ShortURL, APIDelMess)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {
@@ -165,7 +174,7 @@ func testCompress(t *testing.T, server *httptest.Server) {
 		// Отправка запроса
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-		require.Equal(t, 409, res.StatusCode) // TODO! 201 Почему стало 409 ?
+		require.Equal(t, 409, res.StatusCode)
 		require.Equal(t, res.Header.Get("Content-Encoding"), "gzip")
 		defer res.Body.Close()
 

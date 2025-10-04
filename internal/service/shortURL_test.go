@@ -20,11 +20,12 @@ var kwargs = &config.Variables{
 
 var dber, _ = db.NewStoreMap(kwargs, infoLog)
 var repo, _ = repository.NewRepositoryMapURL(kwargs, dber)
+var core = service.NewCoreService(kwargs, infoLog, repo)
 
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 
-var ShURL = service.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
+var ShURL = service.NewShortURL(core, repo, checker, extraFuncer)
 
 func TestEncryptionLongURL(t *testing.T) {
 	name := "Check EncryptionLongURL from ProURL"

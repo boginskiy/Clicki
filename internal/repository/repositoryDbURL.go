@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
@@ -30,33 +32,33 @@ func NewRepositoryDBURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error)
 	}, nil
 }
 
-func (rd *RepositoryDBURL) CheckUnic(ctx context.Context, correlationID string) bool {
+func (rd *RepositoryDBURL) CheckUnicRecord(ctx context.Context, correlationID string) bool {
 	// TODO! Нужно натсроить DataBase
 	// correlationID должно быть уникальное поле
 	return true
 }
 
-func (rd *RepositoryDBURL) Ping(ctx context.Context) (bool, error) {
+func (rd *RepositoryDBURL) PingDB(ctx context.Context) (bool, error) {
 	return rd.DB.CheckOpen()
 }
 
-func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, error) {
+func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
 	record, ok := preRecord.(*mod.URLTb)
 	if !ok {
 		return nil, cerr.NewErrPlace("data not valid", nil)
 	}
 
 	errClassifier := NewPGErrorClass()
-	DB, ok := rd.DB.GetDB().(*sql.DB)
-	if !ok {
-		return nil, cerr.NewErrPlace("database not valid", nil)
-	}
 
 	// Strategy №2. SQl-Query-error.
 	for attempt := 0; attempt <= rd.Kwargs.GetMaxRetries(); attempt++ {
 
-		row, errDB := InsertRowToUrls(DB, context.TODO(),
-			record.CorrelationID, record.OriginalURL, record.ShortURL, record.CreatedAt)
+		row, errDB := InsertRowToUrls(rd.db, ctx,
+			record.CorrelationID,
+			record.OriginalURL,
+			record.ShortURL,
+			record.CreatedAt,
+			record.UserID)
 
 		// Ошибок нет, данные записаны
 		if errDB == nil {
@@ -72,17 +74,20 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 		if code == pgerrcode.UniqueViolation {
 
 			// Делаем повторный запрос в БД
-			row := SelectRowByOriginalURL(DB, context.TODO(),
+			row := SelectRowByOriginalURL(rd.db, ctx,
 				record.OriginalURL)
 
 			// Ошибок нет, возвращаем запись
-			if errScan := row.Scan(
+			errScan := row.Scan(
 				&record.ID,
 				&record.OriginalURL,
 				&record.ShortURL,
 				&record.CorrelationID,
-				&record.CreatedAt); errScan == nil {
+				&record.CreatedAt,
+				&record.UserID)
 
+			// Ошибок нет, возвращаем запись
+			if errScan == nil {
 				// В ответ отдаю именно errDB для установки статуса ответа
 				return record, errDB
 			} else {
@@ -92,7 +97,6 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 			// Логика, если запрос к БД не надо повторять
 		} else if needRetry == NonRetriable {
 			break
-
 			// Логика, если запрос к БД необходимо повторить
 		} else {
 			time.Sleep(3 * time.Millisecond)
@@ -101,48 +105,38 @@ func (rd *RepositoryDBURL) Create(ctx context.Context, preRecord any) (any, erro
 	return nil, cerr.NewErrPlace("insert into is bad", nil)
 }
 
-func (rd *RepositoryDBURL) Read(ctx context.Context, correlID string) (any, error) {
-	DB, ok := rd.DB.GetDB().(*sql.DB)
-	if !ok {
-		return nil, cerr.NewErrPlace("database not valid", nil)
-	}
-
+func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
 	record := &mod.URLTb{}
-
-	row := SelectRowByCorrelID(DB, context.TODO(), correlID)
+	row := SelectRowByCorrelID(rd.db, ctx, correlID)
 
 	if err := row.Scan(
 		&record.ID,
 		&record.OriginalURL,
 		&record.ShortURL,
 		&record.CorrelationID,
-		&record.CreatedAt); err != nil {
+		&record.CreatedAt,
+		&record.UserID,
+		&record.DeletedFlag); err != nil {
 		return nil, err
 	}
-
 	return record, nil
 }
 
-func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
+func (rd *RepositoryDBURL) CreateRecords(ctx context.Context, records any) error {
 	rows, ok := records.([]mod.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return cerr.NewErrPlace("data not valid", nil)
 	}
 
-	DB, ok := rd.DB.GetDB().(*sql.DB)
-	if !ok {
-		return cerr.NewErrPlace("database not valid", nil)
-	}
-
-	tx, err := DB.BeginTx(ctx, nil)
+	tx, err := rd.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
 	for _, v := range rows {
 		// все изменения записываются в транзакцию
-		_, err := InsertRowToUrlsTX(tx, context.TODO(),
-			v.CorrelationID, v.OriginalURL, v.ShortURL, v.CreatedAt)
+		_, err := InsertRowToUrlsTX(tx, ctx,
+			v.CorrelationID, v.OriginalURL, v.ShortURL, v.CreatedAt, v.UserID)
 
 		if err != nil {
 			// если ошибка, то откатываем изменения
@@ -153,4 +147,74 @@ func (rd *RepositoryDBURL) CreateSet(ctx context.Context, records any) error {
 	// завершаем транзакцию
 	tx.Commit()
 	return nil
+}
+
+// New
+func (rd *RepositoryDBURL) ReadLastRecord(ctx context.Context) int {
+	row := SelectMaxCntByUser(rd.db, ctx)
+	var MaxCntByUser int
+
+	err := row.Scan(&MaxCntByUser)
+	if err != nil {
+		return 0
+	}
+	return MaxCntByUser
+}
+
+// New
+func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, error) {
+	records := []mod.ResUserURLSet{}
+	record := mod.ResUserURLSet{}
+
+	rows, err := SelectUserURLs(rd.db, ctx, userID)
+	if err != nil {
+		return nil, cerr.NewErrPlace("data not valid", nil)
+	}
+	defer rows.Close()
+
+	// Читаем данные
+	for rows.Next() {
+		err := rows.Scan(&record.OriginalURL, &record.ShortURL)
+		if err != nil {
+			// TODO! Залогировать бы на всяк случай
+			continue
+		}
+		records = append(records, record)
+	}
+	if rows.Err() != nil {
+		return nil, cerr.NewErrPlace("scan not good", rows.Err())
+	}
+	return records, nil
+}
+
+func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
+	values := make([]string, 0, 10)
+	args := make([]any, 0, 10)
+	c := 1
+
+	for _, mess := range messages {
+
+		for _, correlID := range mess.ListCorrelID {
+			values = append(values, fmt.Sprintf("($%d,$%d)", c, c+1))
+			args = append(args, mess.UserID, correlID)
+			c += 2
+		}
+	}
+
+	query := fmt.Sprintf(`UPDATE urls
+                          SET deleted_flag = TRUE
+                          WHERE (user_id, correlation_id) IN (%s)`, strings.Join(values, ","))
+
+	_, err := rd.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rd *RepositoryDBURL) DeleteRecords(ctx context.Context) error {
+	_, err := rd.db.ExecContext(ctx,
+		`DELETE FROM urls
+	 	 WHERE deleted_flag = TRUE;`)
+	return err
 }

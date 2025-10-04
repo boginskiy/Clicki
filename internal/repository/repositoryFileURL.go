@@ -26,7 +26,8 @@ type RepositoryFileURL struct {
 	muR          sync.RWMutex
 	mu           sync.Mutex
 	File         *os.File
-	cntLine      int
+	LastRec      int
+	LastUser     int
 }
 
 func NewRepositoryFileURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error) {
@@ -49,6 +50,26 @@ func NewRepositoryFileURL(kwargs conf.VarGetter, dber db.DBer) (Repository, erro
 	return tmpRepo, nil
 }
 
+// PingDB - Для реализации interface
+func (rf *RepositoryFileURL) PingDB(ctx context.Context) (bool, error) {
+	return rf.DB.CheckOpen()
+}
+
+// MarkerRecords - Для реализации interface
+func (rf *RepositoryFileURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
+	return nil
+}
+
+// DeleteRecords - Для реализации interface
+func (rf *RepositoryFileURL) DeleteRecords(ctx context.Context) error {
+	return nil
+}
+
+// ReadLastRecord - Для реализации interface
+func (rf *RepositoryFileURL) ReadLastRecord(ctx context.Context) int {
+	return rf.LastUser
+}
+
 func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]string) {
 	resultMap := make(map[string]*mod.URLTb, SIZE)
 	resultSet := make(map[string]string, SIZE)
@@ -65,21 +86,18 @@ func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]s
 		}
 		resultMap[record.CorrelationID] = record             // Сохранение данных с map
 		resultSet[record.OriginalURL] = record.CorrelationID // Сохранение данных с set
-		rf.cntLine = max(rf.cntLine, record.ID)              // Счетчик для UUID
+		rf.LastRec = max(rf.LastRec, record.ID)              // Счетчик для ID
+		rf.LastUser = max(rf.LastUser, record.UserID)        // Счетчик для User
 	}
 	return resultMap, resultSet
 }
 
-func (rf *RepositoryFileURL) CheckUnic(ctx context.Context, correlID string) bool {
+func (rf *RepositoryFileURL) CheckUnicRecord(ctx context.Context, correlID string) bool {
 	_, ok := rf.Store[correlID]
 	return !ok
 }
 
-func (rf *RepositoryFileURL) Ping(ctx context.Context) (bool, error) {
-	return rf.DB.CheckOpen()
-}
-
-func (rf *RepositoryFileURL) Read(ctx context.Context, correlID string) (any, error) {
+func (rf *RepositoryFileURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
 	rf.muR.RLock()
 	defer rf.muR.RUnlock()
 
@@ -90,7 +108,7 @@ func (rf *RepositoryFileURL) Read(ctx context.Context, correlID string) (any, er
 	return record, nil
 }
 
-func (rf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, error) {
+func (rf *RepositoryFileURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
 	row, ok := preRecord.(*mod.URLTb)
 	if !ok {
 		return nil, cerr.NewErrPlace("type is not available", nil)
@@ -105,8 +123,8 @@ func (rf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, er
 
 	// Логика, если данные отсутствуют в Store
 	rf.mu.Lock()
-	rf.cntLine += 1
-	row.ID = rf.cntLine
+	rf.LastRec += 1
+	row.ID = rf.LastRec
 	rf.Store[row.CorrelationID] = row
 	rf.UniqueFields[row.OriginalURL] = row.CorrelationID
 	rf.mu.Unlock()
@@ -122,7 +140,7 @@ func (rf *RepositoryFileURL) Create(ctx context.Context, preRecord any) (any, er
 	return row, err
 }
 
-func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
+func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) error {
 	rows, ok := records.([]mod.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return errors.New("data not valid")
@@ -131,9 +149,9 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 	rf.mu.Lock()
 
 	for _, r := range rows {
-		rf.cntLine += 1
+		rf.LastRec += 1
 
-		row := mod.NewURLTb(rf.cntLine, r.CorrelationID, r.OriginalURL, r.ShortURL)
+		row := mod.NewURLTb(rf.LastRec, r.CorrelationID, r.OriginalURL, r.ShortURL, r.UserID)
 
 		// Добавляем данные в Map
 		rf.Store[row.CorrelationID] = row
@@ -153,4 +171,17 @@ func (rf *RepositoryFileURL) CreateSet(ctx context.Context, records any) error {
 
 	rf.mu.Unlock()
 	return nil
+}
+
+func (rf *RepositoryFileURL) ReadRecords(ctx context.Context, userID int) (any, error) {
+	records := []mod.ResUserURLSet{}
+
+	for _, v := range rf.Store {
+		if v.UserID == userID {
+			records = append(records, mod.ResUserURLSet{
+				OriginalURL: v.OriginalURL,
+				ShortURL:    v.ShortURL})
+		}
+	}
+	return records, nil
 }

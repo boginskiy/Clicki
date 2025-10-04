@@ -4,14 +4,27 @@ import (
 	"context"
 )
 
-type Repository interface {
-	Read(context.Context, string) (any, error)
-	Create(context.Context, any) (any, error)
-
-	CheckUnic(context.Context, string) bool
-	CreateSet(context.Context, any) error
-	Ping(context.Context) (bool, error)
+// Structures for communication of channels channels
+type DelMessage struct {
+	ListCorrelID []string
+	UserID       int64
 }
 
-// Update(any)
-// Delete(any)
+func NewDelMessage(userID int64) *DelMessage {
+	return &DelMessage{UserID: userID}
+}
+
+type Repository interface {
+	ReadRecord(ctx context.Context, recordID string) (any, error)
+	CreateRecord(ctx context.Context, record any) (any, error)
+
+	CheckUnicRecord(ctx context.Context, recordID string) bool
+	CreateRecords(ctx context.Context, records any) error
+	PingDB(ctx context.Context) (bool, error)
+
+	// New
+	ReadLastRecord(ctx context.Context) int
+	ReadRecords(ctx context.Context, userID int) (any, error)
+	MarkerRecords(ctx context.Context, messages ...DelMessage) error
+	DeleteRecords(ctx context.Context) error
+}

@@ -15,7 +15,9 @@ func createUrls(db *sql.DB) error {
 						correlation_id TEXT,
 						original_url TEXT NOT NULL UNIQUE,
 						short_url TEXT NOT NULL,
-						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`)
+						created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+						deleted_flag BOOLEAN NOT NULL DEFAULT FALSE,
+						user_id INT NOT NULL)`)
 	return err
 }
 

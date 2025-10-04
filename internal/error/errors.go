@@ -32,9 +32,31 @@ func NewErrPlace(mess string, err error) *ErrPlace {
 }
 
 func (p *ErrPlace) Error() string {
-	return fmt.Sprintf("%s at %s:%d > %v", p.Message, p.File, p.Line, p.Err)
+	return fmt.Sprintf("[ERROR]:%s>%v|%s %d",
+		p.Message, p.Err, p.File, p.Line)
 }
 
 func (p *ErrPlace) Unwrap() error {
 	return p.Err
+}
+
+// ErrWrap
+type ErrWrap struct {
+	Message string
+	Err     error
+}
+
+func NewErrWrap(mess string, err error) *ErrWrap {
+	return &ErrWrap{
+		Message: mess,
+		Err:     err,
+	}
+}
+
+func (w *ErrWrap) Error() string {
+	return fmt.Sprintf("[ERROR]:%s>%v", w.Message, w.Err)
+}
+
+func (w *ErrWrap) Unwrap() error {
+	return w.Err
 }

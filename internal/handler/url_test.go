@@ -32,10 +32,11 @@ var dbase = &db.StoreMap{Store: map[string]*model.URLTb{
 	}}}
 
 var repo, _ = repository.NewRepositoryMapURL(kwargs, dbase)
+var core = service.NewCoreService(kwargs, infoLog, repo)
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 
-var shURL = service.NewShortURL(kwargs, infoLog, repo, checker, extraFuncer)
+var shURL = service.NewShortURL(core, repo, checker, extraFuncer)
 
 // TestHandlerURL check only POST request
 func TestPostURL(t *testing.T) {
@@ -92,8 +93,8 @@ func TestPostURL(t *testing.T) {
 			// Recorder
 			response := httptest.NewRecorder()
 			// Handler
-			h := handler.HandlerURL{Service: shURL}
-			h.Post(response, request)
+			h := handler.HandlerURL{CrudSrver: shURL, DelSrver: nil}
+			h.CreateURL(response, request)
 
 			// Check >>
 
@@ -189,9 +190,9 @@ func TestGetURL(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			// Handler
-			h := handler.HandlerURL{Service: shURL}
+			h := handler.HandlerURL{CrudSrver: shURL, DelSrver: nil}
 
-			h.Get(response, request)
+			h.ReadURL(response, request)
 
 			// Check >>
 

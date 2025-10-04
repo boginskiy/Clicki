@@ -60,6 +60,10 @@ func (v *Variables) GetPathToStore() (PathToStore string) {
 	return v.PathToStore
 }
 
+func (v *Variables) GetDB() (DB string) {
+	return v.DB
+}
+
 func (v *Variables) GetLogFile() (LogFile string) {
 	return v.ArgsENV.LogFile
 }
@@ -68,6 +72,26 @@ func (v *Variables) GetMaxRetries() (MaxRetries int) {
 	return v.ArgsENV.MaxRetries
 }
 
-func (v *Variables) GetDB() (DB string) {
-	return v.DB
+func (v *Variables) GetTokenLiveTime() (TokenLiveTime int) {
+	return v.ArgsENV.TokenLiveTime
+}
+
+func (v *Variables) GetCokiLiveTime() (CokiLiveTime int) {
+	return v.ArgsENV.CokiLiveTime
+}
+
+func (v *Variables) GetNameCoki() (NameCoki string) {
+	return v.ArgsENV.NameCoki
+}
+
+func (v *Variables) GetSecretKey() (SecretKey string) {
+	return v.ArgsENV.SecretKey
+}
+
+func (v *Variables) GetSoftDeleteTime() (SoftDeleteTime int) {
+	return v.ArgsENV.SoftDeleteTime
+}
+
+func (v *Variables) GetHardDeleteTime() (HardDeleteTime int) {
+	return v.ArgsENV.HardDeleteTime
 }

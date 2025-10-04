@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
 
+	auth "github.com/boginskiy/Clicki/internal/auther"
 	"github.com/boginskiy/Clicki/internal/gzip"
 	"github.com/boginskiy/Clicki/internal/logg"
 )
@@ -12,15 +14,16 @@ import (
 type MvFunc func(http.HandlerFunc) http.HandlerFunc
 
 type Middleware struct {
+	Auther auth.Auther
 	Logger logg.Logger
 }
 
-func NewMiddleware(logger logg.Logger) *Middleware {
-	return &Middleware{Logger: logger}
+func NewMiddleware(logger logg.Logger, auther auth.Auther) *Middleware {
+	return &Middleware{Logger: logger, Auther: auther}
 }
 
 func (m *Middleware) Conveyor(next http.HandlerFunc) http.HandlerFunc {
-	for _, middleware := range []MvFunc{m.WithInfoLogger, m.WithGzip} {
+	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} {
 		next = middleware(next)
 	}
 	return next
@@ -33,7 +36,7 @@ func (m *Middleware) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
 		method := r.Method
 
 		// Extension standart ResponseWriter
-		extW := NewExtRespWrtr(w)
+		extW := NewExResWriter(w)
 		next(extW, r)
 
 		duration := time.Since(start)
@@ -84,5 +87,27 @@ func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 		}
 		// Передача управления
 		next(tmpW, r)
+	}
+}
+
+func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, UserID, err := m.Auther.Authentication(r)
+
+		// Ошибки 'пользователь не найден' и 'создание токена'
+		if err == auth.ErrUserNotFound || err == auth.ErrCreateToken {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		// Ошибки валидации токена
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.SetCookie(w, cookie)
+		ctx := context.WithValue(r.Context(), CtxUserID, UserID)
+		next(w, r.WithContext(ctx))
 	}
 }
