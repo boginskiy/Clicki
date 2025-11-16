@@ -6,6 +6,8 @@ type Argsmenter interface {
 
 type ArgsCLIGetter interface {
 	GetPathToStore() (PathToStore string)
+	GetAuditFile() (AuditFile string)
+	GetAuditURL() (AuditURL string)
 	GetSrvAddr() (ServerAddress string)
 	GetBaseURL() (BaseURL string)
 	GetDB() (DB string)
@@ -29,8 +31,10 @@ type VarGetter interface {
 	GetPathToStore() (PathToStore string)
 	GetCokiLiveTime() (CokiLiveTime int)
 	GetSrvAddr() (ServerAddress string)
+	GetAuditFile() (AuditFile string)
 	GetSecretKey() (SecretKey string)
 	GetMaxRetries() (MaxRetries int)
+	GetAuditURL() (AuditURL string)
 	GetNameCoki() (NameCoki string)
 	GetLogFile() (LogFile string)
 	GetBaseURL() (BaseURL string)

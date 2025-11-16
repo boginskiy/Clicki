@@ -13,6 +13,8 @@ type ArgsENV struct {
 	PathToStore    string `env:"FILE_STORAGE_PATH"` //
 	DB             string `env:"DATABASE_DSN"`      //
 	BaseURL        string `env:"BASE_URL"`          //
+	AuditFile      string `env:"AUDIT_FILE"`        //
+	AuditURL       string `env:"AUDIT_URL"`         //
 	LogFile        string `env:"LOG_FILE"`
 	MaxRetries     int    `env:"MAX_RETRIES"`
 	TokenLiveTime  int    `env:"TOKEN_LIVE_TIME"`
@@ -92,4 +94,12 @@ func (e *ArgsENV) GetPathToStore() (PathToStore string) {
 
 func (e *ArgsENV) GetDB() (DB string) {
 	return e.DB
+}
+
+func (e *ArgsENV) GetAuditFile() (AuditFile string) {
+	return e.AuditFile
+}
+
+func (e *ArgsENV) GetAuditURL() (AuditURL string) {
+	return e.AuditURL
 }
