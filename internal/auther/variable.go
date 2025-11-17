@@ -11,3 +11,7 @@ var (
 	ErrDataNotValid   = errors.New(`{"error":"data is not valid"}`)
 	ErrTokenIsExpired = errors.New(`{"error":"token is expired"}`)
 )
+
+type contextKey struct{}
+
+var CtxUserID = contextKey{}

@@ -46,7 +46,6 @@ func (s *ShortURL) GetHeader() string {
 
 func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req) // Вынимаем тело запроса
-
 	if err != nil {
 		s.Core.Logg.RaiseFatal(err, "ShortURL.CreateURL>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
@@ -58,8 +57,7 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	userID := s.Core.TakeUserIDFromCtx(req) // Тащим идентификатор пользователя
-
+	userID := s.Core.TakeUserIDFromCtx(req)                      // Тащим идентификатор пользователя
 	correlationID := s.Core.EncrypOriginURL()                    // Уникальный идентификатор
 	shortURL := s.Core.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
 
@@ -71,14 +69,10 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, err
 	}
 
-	// Definition type
-	switch r := record.(type) {
-	case *mod.URLTb:
-		return []byte(r.ShortURL), err
-	default:
-		s.Core.Logg.RaiseError(err, "ShortURL.Create>switch", nil)
-		return EmptyByteSlice, err
-	}
+	// Аудит
+	s.Core.EventOfAudit("shorten", userID, originURL)
+
+	return []byte(record.(*mod.URLTb).ShortURL), err
 }
 
 func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/boginskiy/Clicki/internal/auther"
 	auth "github.com/boginskiy/Clicki/internal/auther"
 	"github.com/boginskiy/Clicki/internal/gzip"
 	"github.com/boginskiy/Clicki/internal/logg"
@@ -23,7 +24,7 @@ func NewMiddleware(logger logg.Logger, auther auth.Auther) *Middleware {
 }
 
 func (m *Middleware) Conveyor(next http.HandlerFunc) http.HandlerFunc {
-	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} {
+	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} { // m.WithAudit
 		next = middleware(next)
 	}
 	return next
@@ -107,7 +108,25 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		http.SetCookie(w, cookie)
-		ctx := context.WithValue(r.Context(), CtxUserID, UserID)
+		ctx := context.WithValue(r.Context(), auther.CtxUserID, UserID)
 		next(w, r.WithContext(ctx))
 	}
 }
+
+// func (m *Middleware) WithAudit(next http.HandlerFunc) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		// Проверка требований для прохождения аудита
+// 		if !m.Auditer.NeedAudit(r) {
+// 			next(w, r)
+// 		} else {
+
+// 			next(w, r)
+
+// 			// POST
+// 			m.Auditer.NoticeCreateLink(r)
+
+// 			// GET
+// 			m.Auditer.NoticeFollowLink(r)
+// 		}
+// 	}
+// }

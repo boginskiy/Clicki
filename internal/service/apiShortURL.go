@@ -74,6 +74,9 @@ func (s *APIShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, err
 	}
 
+	// Аудит
+	s.Core.EventOfAudit("shorten", userID, bodyJSON.URL)
+
 	// Definition type
 	var resJSON *mod.ResultJSON
 	switch r := record.(type) {
@@ -88,7 +91,6 @@ func (s *APIShortURL) CreateURL(req *http.Request) ([]byte, error) {
 
 	// Serialization
 	result, err2 := s.ExtraFuncer.Serialization(resJSON)
-
 	if err2 != nil {
 		s.Core.Logg.RaiseError(err2, "APIShortURL.Create>NewResultJSON", nil)
 		return EmptyByteSlice, err2
