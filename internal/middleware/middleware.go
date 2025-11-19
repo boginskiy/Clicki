@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boginskiy/Clicki/internal/auther"
 	auth "github.com/boginskiy/Clicki/internal/auther"
 	"github.com/boginskiy/Clicki/internal/gzip"
 	"github.com/boginskiy/Clicki/internal/logg"
@@ -108,7 +107,7 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		http.SetCookie(w, cookie)
-		ctx := context.WithValue(r.Context(), auther.CtxUserID, UserID)
+		ctx := context.WithValue(r.Context(), auth.CtxUserID, UserID)
 		next(w, r.WithContext(ctx))
 	}
 }
