@@ -1,7 +1,10 @@
 package audit
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
+	"net/http"
 	"os"
 
 	"github.com/boginskiy/Clicki/internal/logg"
@@ -11,7 +14,7 @@ import (
 type FileReceiver struct {
 	Logger logg.Logger
 	F      *os.File
-	id     int
+	ID     int
 }
 
 func NewFileReceiver(logger logg.Logger, pathToFile string, id int) *FileReceiver {
@@ -23,7 +26,7 @@ func NewFileReceiver(logger logg.Logger, pathToFile string, id int) *FileReceive
 	return &FileReceiver{
 		Logger: logger,
 		F:      file,
-		id:     id,
+		ID:     id,
 	}
 }
 
@@ -32,7 +35,7 @@ func (fR *FileReceiver) serialization(event any) ([]byte, error) {
 }
 
 func (fR *FileReceiver) GetID() int {
-	return fR.id
+	return fR.ID
 }
 
 func (fR *FileReceiver) Clouse() {
@@ -60,17 +63,26 @@ func (fR *FileReceiver) Update(event any) {
 type ServerReceiver struct {
 	Logger logg.Logger
 	URL    string
-	id     int
+	ID     int
+	ctx    context.Context
+	cancel context.CancelFunc
+	client *http.Client
 }
 
 func NewServerReceiver(logger logg.Logger, url string, id int) *ServerReceiver {
 	if url == "" {
 		id = 0
 	}
+	// Context
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return &ServerReceiver{
 		Logger: logger,
 		URL:    url,
-		id:     id,
+		ID:     id,
+		ctx:    ctx,
+		cancel: cancel,
+		client: &http.Client{},
 	}
 }
 
@@ -79,23 +91,40 @@ func (sR *ServerReceiver) serialization(event any) ([]byte, error) {
 }
 
 func (sR *ServerReceiver) GetID() int {
-	return sR.id
+	return sR.ID
 }
 
 func (sR *ServerReceiver) Clouse() {
-
+	sR.cancel()
 }
 
 func (sR *ServerReceiver) Update(event any) {
-	// go func() {
-	// 	// Serialization
-	// 	jsonData, err := sR.serialization(event)
-	// 	if err != nil {
-	// 		sR.Logger.RaiseError(err, "ServerReceiver>Update>serialization", nil)
-	// 		return
-	// 	}
 
-	// }()
+	go func(ctx context.Context) {
+		// Serializ
+		jsonByte, err := sR.serialization(event)
+		if err != nil {
+			sR.Logger.RaiseError(err, "bad serialization", nil)
+			return
+		}
+
+		// Request
+		req, err := http.NewRequestWithContext(ctx, "POST", sR.URL, bytes.NewReader(jsonByte))
+		if err != nil {
+			sR.Logger.RaiseError(err, "bad prepar request", nil)
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		// Client
+		res, err := sR.client.Do(req)
+		if err != nil {
+			sR.Logger.RaiseError(err, "bad request", nil)
+			return
+		}
+
+		sR.Logger.RaiseInfo("ServerReceiver: response", logg.Fields{"statusCode": res.StatusCode})
+		defer res.Body.Close()
+
+	}(sR.ctx)
 }
-
-// TODO!!!  Реализация ServerReceiver!

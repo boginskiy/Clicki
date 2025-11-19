@@ -19,18 +19,18 @@ import (
 
 func Run(kwargs conf.VarGetter, baseLog logg.Logger, repo repo.Repository) {
 	// Loggers
-	midWareLogger := logg.NewLogg(kwargs.GetLogFile(), "INFO")
-	authLogger := logg.NewLogg("LogRegister.log", "ERROR")
+	infraLogg := logg.NewLogg(kwargs.GetLogFile(), "INFO")
+	authLogg := logg.NewLogg("LogRegister.log", "ERROR")
 
 	// Audit
-	sub1 := audit.NewFileReceiver(baseLog, kwargs.GetAuditFile(), 1)
-	sub2 := audit.NewServerReceiver(baseLog, kwargs.GetAuditURL(), 2)
+	sub1 := audit.NewFileReceiver(infraLogg, kwargs.GetAuditFile(), 1)
+	sub2 := audit.NewServerReceiver(infraLogg, kwargs.GetAuditURL(), 2)
 	publisher := audit.NewPublish(sub1, sub2)
 
 	// Middleware & Registr
 	// audit := audit.NewAudit(kwargs, baseLog, publisher)
-	auther := auth.NewAuth(kwargs, authLogger, repo)
-	midWare := midw.NewMiddleware(midWareLogger, auther)
+	auther := auth.NewAuth(kwargs, authLogg, repo)
+	midWare := midw.NewMiddleware(infraLogg, auther)
 
 	// Extra
 	extraFuncer := prep.NewExtraFunc()
@@ -56,8 +56,8 @@ func Run(kwargs conf.VarGetter, baseLog logg.Logger, repo repo.Repository) {
 	baseLog.RaiseFatal(err, logg.StartedServFatal, logg.Fields{"port": kwargs.GetSrvAddr()})
 
 	// defer
-	defer midWareLogger.CloseDesc()
-	defer authLogger.CloseDesc()
+	defer infraLogg.CloseDesc()
+	defer authLogg.CloseDesc()
 	defer sub1.Clouse()
 	defer sub2.Clouse()
 	defer cancel()

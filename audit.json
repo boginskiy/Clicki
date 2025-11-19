@@ -33,4 +33,69 @@
 	"action": "shorten",
 	"user_id": 1,
 	"url": "https://practicum.yandex.ru5"
+}{
+	"ts": 1763579833,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763579918,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763579951,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763580088,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763580466,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763580583,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763580629,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763580666,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763580710,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.ru5"
+}{
+	"ts": 1763581033,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.ru6"
+}{
+	"ts": 1763581300,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1763585946,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.ru7"
+}{
+	"ts": 1763586001,
+	"action": "follow",
+	"user_id": 1,
+	"url": "https://practicum.yandex.ru7"
 }
