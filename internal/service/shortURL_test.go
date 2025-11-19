@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/internal/audit"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/preparation"
@@ -20,8 +21,13 @@ var kwargs = &config.Variables{
 
 var dber, _ = db.NewStoreMap(kwargs, infoLog)
 var repo, _ = repository.NewRepositoryMapURL(kwargs, dber)
-var core = service.NewCoreService(kwargs, infoLog, repo)
 
+// Publisher
+var sub1 = audit.NewFileReceiver(infoLog, kwargs.GetAuditFile(), 1)
+var sub2 = audit.NewServerReceiver(infoLog, kwargs.GetAuditURL(), 2)
+var publisher = audit.NewPublish(sub1, sub2)
+
+var core = service.NewCoreService(kwargs, infoLog, repo, publisher)
 var extraFuncer = preparation.NewExtraFunc()
 var checker = validation.NewChecker()
 

@@ -10,6 +10,8 @@ type Variables struct {
 	Logger        logg.Logger
 	ServerAddress string
 	PathToStore   string
+	AuditFile     string
+	AuditURL      string
 	BaseURL       string
 	DB            string
 	ArgsCLI       *ArgsCLI
@@ -44,6 +46,8 @@ func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
 func (v *Variables) extSettingsArgs() {
 	v.PathToStore = v.argsPrioryty(v.ArgsENV.GetPathToStore, v.ArgsCLI.GetPathToStore)
 	v.ServerAddress = v.argsPrioryty(v.ArgsENV.GetSrvAddr, v.ArgsCLI.GetSrvAddr)
+	v.AuditFile = v.argsPrioryty(v.ArgsENV.GetAuditFile, v.ArgsCLI.GetAuditFile)
+	v.AuditURL = v.argsPrioryty(v.ArgsENV.GetAuditURL, v.ArgsCLI.GetAuditURL)
 	v.BaseURL = v.argsPrioryty(v.ArgsENV.GetBaseURL, v.ArgsCLI.GetBaseURL)
 	v.DB = v.argsPrioryty(v.ArgsENV.GetDB, v.ArgsCLI.GetDB)
 }
@@ -94,4 +98,12 @@ func (v *Variables) GetSoftDeleteTime() (SoftDeleteTime int) {
 
 func (v *Variables) GetHardDeleteTime() (HardDeleteTime int) {
 	return v.ArgsENV.HardDeleteTime
+}
+
+func (v *Variables) GetAuditFile() (AuditFile string) {
+	return v.AuditFile
+}
+
+func (v *Variables) GetAuditURL() (AuditURL string) {
+	return v.AuditURL
 }

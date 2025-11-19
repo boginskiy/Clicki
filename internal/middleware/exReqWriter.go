@@ -7,6 +7,6 @@ type ExReqWriter struct {
 	UserID int
 }
 
-type contextKey struct{}
+// type contextKey struct{}
 
-var CtxUserID = contextKey{}
+// var CtxUserID = contextKey{}

@@ -1,0 +1,76 @@
+{
+	"ts": 1763586446,
+	"action": "shorten",
+	"user_id": 2,
+	"url": "https://docs.google.com/"
+}{
+	"ts": 1763586446,
+	"action": "shorten",
+	"user_id": 3,
+	"url": "https://docs.google.com/"
+}{
+	"ts": 1763586446,
+	"action": "follow",
+	"user_id": 5,
+	"url": "https://translate.yandex.ru/"
+}{
+	"ts": 1763586446,
+	"action": "shorten",
+	"user_id": 6,
+	"url": "https://practicum.yandex.ru"
+}{
+	"ts": 1763586446,
+	"action": "shorten",
+	"user_id": 7,
+	"url": "https://practicum.yandex.ru"
+}{
+	"ts": 1763586459,
+	"action": "shorten",
+	"user_id": 2,
+	"url": "https://docs.google.com/"
+}{
+	"ts": 1763586459,
+	"action": "shorten",
+	"user_id": 3,
+	"url": "https://docs.google.com/"
+}{
+	"ts": 1763586459,
+	"action": "follow",
+	"user_id": 5,
+	"url": "https://translate.yandex.ru/"
+}{
+	"ts": 1763586459,
+	"action": "shorten",
+	"user_id": 6,
+	"url": "https://practicum.yandex.ru"
+}{
+	"ts": 1763586459,
+	"action": "shorten",
+	"user_id": 7,
+	"url": "https://practicum.yandex.ru"
+}{
+	"ts": 1763586547,
+	"action": "shorten",
+	"user_id": 2,
+	"url": "https://docs.google.com/"
+}{
+	"ts": 1763586547,
+	"action": "shorten",
+	"user_id": 3,
+	"url": "https://docs.google.com/"
+}{
+	"ts": 1763586547,
+	"action": "follow",
+	"user_id": 5,
+	"url": "https://translate.yandex.ru/"
+}{
+	"ts": 1763586547,
+	"action": "shorten",
+	"user_id": 6,
+	"url": "https://practicum.yandex.ru"
+}{
+	"ts": 1763586547,
+	"action": "shorten",
+	"user_id": 7,
+	"url": "https://practicum.yandex.ru"
+}

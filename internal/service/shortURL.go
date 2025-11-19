@@ -46,7 +46,6 @@ func (s *ShortURL) GetHeader() string {
 
 func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req) // Вынимаем тело запроса
-
 	if err != nil {
 		s.Core.Logg.RaiseFatal(err, "ShortURL.CreateURL>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
@@ -58,8 +57,7 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	userID := s.Core.TakeUserIDFromCtx(req) // Тащим идентификатор пользователя
-
+	userID := s.Core.TakeUserIDFromCtx(req)                      // Тащим идентификатор пользователя
 	correlationID := s.Core.EncrypOriginURL()                    // Уникальный идентификатор
 	shortURL := s.Core.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
 
@@ -71,17 +69,14 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, err
 	}
 
-	// Definition type
-	switch r := record.(type) {
-	case *mod.URLTb:
-		return []byte(r.ShortURL), err
-	default:
-		s.Core.Logg.RaiseError(err, "ShortURL.Create>switch", nil)
-		return EmptyByteSlice, err
-	}
+	// Аудит
+	s.Core.EventOfAudit("shorten", userID, originURL)
+
+	return []byte(record.(*mod.URLTb).ShortURL), err
 }
 
 func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
+	userID := s.Core.TakeUserIDFromCtx(req)                         // Тащим идентификатор пользователя
 	correlationID := strings.TrimLeft(req.URL.Path, "/")            // Достаем параметр correlationID
 	record, err := s.Repo.ReadRecord(context.TODO(), correlationID) // Достаем origin URL
 
@@ -90,20 +85,22 @@ func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	// Definition type
-	switch r := record.(type) {
-	case *mod.URLTb:
-
+	if r, ok := record.(*mod.URLTb); ok {
 		// Если фла==true, запись стоит в очереди на удаление
 		if r.DeletedFlag {
 			return EmptyByteSlice, ErrReadRecord
-		}
-		return []byte(r.OriginalURL), nil
 
-	default:
-		s.Core.Logg.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
-		return EmptyByteSlice, ErrDataNotValid
+		} else {
+			// Аудит
+			s.Core.EventOfAudit("follow", userID, r.OriginalURL)
+			//
+			return []byte(r.OriginalURL), nil
+		}
 	}
+
+	// Default
+	s.Core.Logg.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
+	return EmptyByteSlice, ErrDataNotValid
 }
 
 func (s *ShortURL) CheckDB(req *http.Request) ([]byte, error) {

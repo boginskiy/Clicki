@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/internal/audit"
 	auth "github.com/boginskiy/Clicki/internal/auther"
 	db "github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logg"
@@ -27,6 +28,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestMain(t *testing.T) {
+	server := httptest.NewServer(RunRouter())
+	defer server.Close()
+
+	// Test Router
+	testRouter(t, server)
+
+	// Test Compress
+	testCompress(t, server)
+}
 
 func RunRouter() *chi.Mux {
 	infoLog := logg.NewLogg("Test.log", "INFO")
@@ -60,8 +72,13 @@ func RunRouter() *chi.Mux {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Publisher
+	var sub1 = audit.NewFileReceiver(infoLog, kwargs.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(infoLog, kwargs.GetAuditURL(), 2)
+	var publisher = audit.NewPublish(sub1, sub2)
+
 	// Services
-	core := srv.NewCoreService(kwargs, infoLog, repo)
+	core := srv.NewCoreService(kwargs, infoLog, repo, publisher)
 	APIShortURL := srv.NewAPIShortURL(core, repo, checker, extraFuncer)
 	ShortURL := srv.NewShortURL(core, repo, checker, extraFuncer)
 	APIDelMess := srv.NewDelMess(ctx, core, repo)
@@ -191,15 +208,4 @@ func testCompress(t *testing.T, server *httptest.Server) {
 
 		require.Contains(t, b.String(), "http://localhost:8080")
 	})
-}
-
-func TestMain(t *testing.T) {
-	server := httptest.NewServer(RunRouter())
-	defer server.Close()
-
-	// Test Router
-	testRouter(t, server)
-
-	// Test Compress
-	testCompress(t, server)
 }
