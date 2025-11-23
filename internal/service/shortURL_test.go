@@ -25,7 +25,7 @@ const (
 
 func BenchmarkReadURL(b *testing.B) {
 	// Init
-	logger := InitLogg("../tester/logs/init.log", "INFO")
+	logger := InitLogg("test.log", "INFO")
 	kwargs := InitKwargs()
 	db := InitDB()
 
@@ -51,7 +51,7 @@ func BenchmarkReadURL(b *testing.B) {
 
 func BenchmarkCreateURL(b *testing.B) {
 	// Init
-	logger := InitLogg("../tester/logs/init.log", "INFO")
+	logger := InitLogg("test.log", "INFO")
 	kwargs := InitKwargs()
 	db := InitDB()
 
@@ -94,7 +94,7 @@ func BenchmarkCreateURL(b *testing.B) {
 
 func TestShortURL(t *testing.T) {
 	// Init
-	logger := InitLogg("../tester/logs/init.log", "INFO")
+	logger := InitLogg("test.log", "INFO")
 	kwargs := InitKwargs()
 	db := InitDB()
 

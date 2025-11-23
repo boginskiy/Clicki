@@ -63,3 +63,5 @@
 {"uuid":2,"original_url":"https://practicum.yandex.ru","short_url":"http://localhost:8080/Tu41dH4I","correlation_id":"Tu41dH4I","created_at":"2025-11-20T00:07:39.498528741+03:00","deleted_flag":false,"user_id":6}
 {"uuid":1,"original_url":"https://docs.google.com/","short_url":"http://localhost:8080/6xkiS0XY","correlation_id":"6xkiS0XY","created_at":"2025-11-20T00:09:07.400230724+03:00","deleted_flag":false,"user_id":2}
 {"uuid":2,"original_url":"https://practicum.yandex.ru","short_url":"http://localhost:8080/CXQ67zEr","correlation_id":"CXQ67zEr","created_at":"2025-11-20T00:09:07.402779224+03:00","deleted_flag":false,"user_id":6}
+{"uuid":1,"original_url":"https://docs.google.com/","short_url":"http://localhost:8080/d7qDaL8m","correlation_id":"d7qDaL8m","created_at":"2025-11-23T13:26:19.98702725+03:00","deleted_flag":false,"user_id":2}
+{"uuid":2,"original_url":"https://practicum.yandex.ru","short_url":"http://localhost:8080/CTe7c3l5","correlation_id":"CTe7c3l5","created_at":"2025-11-23T13:26:19.989641308+03:00","deleted_flag":false,"user_id":6}
