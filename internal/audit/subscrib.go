@@ -71,6 +71,7 @@ type ServerReceiver struct {
 
 func NewServerReceiver(logger logg.Logger, url string, id int) *ServerReceiver {
 	if url == "" {
+		logger.RaiseError(ErrURLServerReceiver, "FileReceiver>NewFileReceiver>OpenFile", nil)
 		id = 0
 	}
 	// Context

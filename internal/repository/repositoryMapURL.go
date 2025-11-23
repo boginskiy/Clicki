@@ -29,7 +29,7 @@ func NewRepositoryMapURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error
 	return &RepositoryMapURL{
 		Kwargs:       kwargs,
 		DB:           dber,
-		uniqueFields: make(map[string]string, SIZE),
+		uniqueFields: make(map[string]string, db.SIZE),
 		store:        store,
 	}, nil
 }

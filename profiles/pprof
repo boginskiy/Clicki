@@ -1,0 +1,55 @@
+// Консольный режим
+
+// Запуск
+go tool pprof -seconds=30 http://localhost:8080/debug/pprof/profile
+
+// Помощь
+(pprof) help
+
+// Время выполнения функции foo
+(pprof) list foo
+
+// Список вызовов на которое ушло больше всего времени
+(pprof) top foo
+
+// Открыть страницу с деревом вызовов
+(pprof) web
+
+// Аналогично профилирование делается и по другим параметрам:
+// allocs — информация обо всех выделениях памяти. Этот режим, в отличие от heap, отображает общее количество байт, выделенных с момента запуска программы.
+// block — трассировка стека, которая привела к блокировке примитивов синхронизации.
+// goroutine — трассировка стека всех текущих горутин.
+// mutex — трассировка стека держателей конкурирующих мьютексов.
+
+
+; Запустить ваше приложение с поддержкой профилирования:go run yourapp.go
+; Открыть доступ к профилированию через Web-интерфейс (если используется net/http/pprof):curl localhost:6060/debug/pprof/profile > profiles/base.pprof
+; Посмотрите на полученные данные с помощью инструментов визуализации:go tool pprof -web profiles/base.
+
+curl -sK -v http://localhost:8080/debug/pprof/heap > heap.out
+go tool pprof -http=":9090" -seconds=30 heap.out
+
+###
+Создаем файл, куда далее будем писать данные
+$ curl -sK -v http://localhost:8080/debug/pprof/heap > ./profiles/base.pprof
+Запись
+$go tool pprof -seconds=30 ./profiles/base.pprof
+Анализ
+$go tool pprof ./profiles/base.pprof
+
+// hey
+for i in {1..30}; do     text_value="https://practicum.yandex-$i";     hey -m POST -H "Content-Type: text/plain" -d "$text_value" http://localhost:8080; done
+
+// Web-режим
+go tool pprof -http=":9090" -seconds=30 heap.out 
+
+// Консольный
+go tool pprof -seconds=30 heap.out 
+
+// План 
+1) Сделать чтобы hey отправлял разные POST
+2) Собрать профиль в файл
+3) Анализ
+4) Рефакторинг
+5) Сбор метрик снова
+далее ...

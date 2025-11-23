@@ -18,34 +18,56 @@ import (
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-var infoLog = logg.NewLogg("Test.log", "INFO")
-var kwargs = &config.Variables{
-	ServerAddress: "localhost:8080",
-	BaseURL:       "http://localhost:8081",
+func TestHandlerURL(t *testing.T) {
+	// Init
+	logger := InitLogg("../tester/logs/TestHandlerURL.log", "INFO")
+	kwargs := InitKwargs()
+	db := InitDB()
+
+	servShortURL := Init(logger, kwargs, db)
+
+	// Testing
+	testPostURL(t, servShortURL)
+	testGetURL(t, servShortURL)
 }
 
-var dbase = &db.StoreMap{Store: map[string]*model.URLTb{
-	"H3HIkks3": {
-		ID:            0,
-		OriginalURL:   "https://practicum.yandex.ru/",
-		ShortURL:      "short_url",
-		CorrelationID: "H3HIkks3",
-	}}}
+func Init(logger logg.Logger, kwargs config.VarGetter, db db.DBer) *service.ShortURL {
+	var repo, _ = repository.NewRepositoryMapURL(kwargs, db)
 
-var repo, _ = repository.NewRepositoryMapURL(kwargs, dbase)
+	var sub1 = audit.NewFileReceiver(logger, kwargs.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(logger, kwargs.GetAuditURL(), 2)
+	var publisher = audit.NewPublish(sub1, sub2)
 
-var sub1 = audit.NewFileReceiver(infoLog, kwargs.GetAuditFile(), 1)
-var sub2 = audit.NewServerReceiver(infoLog, kwargs.GetAuditURL(), 2)
-var publisher = audit.NewPublish(sub1, sub2)
+	var core = service.NewCoreService(kwargs, logger, repo, publisher)
+	var extraFuncer = preparation.NewExtraFunc()
+	var checker = validation.NewChecker()
 
-var core = service.NewCoreService(kwargs, infoLog, repo, publisher)
-var extraFuncer = preparation.NewExtraFunc()
-var checker = validation.NewChecker()
+	return service.NewShortURL(core, repo, checker, extraFuncer)
+}
 
-var shURL = service.NewShortURL(core, repo, checker, extraFuncer)
+func InitKwargs() config.VarGetter {
+	return &config.Variables{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8081",
+	}
+}
+
+func InitLogg(name, mod string) logg.Logger {
+	return logg.NewLogg(name, mod)
+}
+
+func InitDB() db.DBer {
+	return &db.StoreMap{Store: map[string]*model.URLTb{
+		"H3HIkks3": {
+			ID:            0,
+			OriginalURL:   "https://practicum.yandex.ru/",
+			ShortURL:      "short_url",
+			CorrelationID: "H3HIkks3",
+		}}}
+}
 
 // TestHandlerURL check only POST request
-func TestPostURL(t *testing.T) {
+func testPostURL(t *testing.T, shURL *service.ShortURL) {
 	type req struct {
 		url  string
 		body string
@@ -129,7 +151,7 @@ func TestPostURL(t *testing.T) {
 }
 
 // TestHandlerURL2 check only GET request
-func TestGetURL(t *testing.T) {
+func testGetURL(t *testing.T, shURL *service.ShortURL) {
 	type req struct {
 		url string
 	}
@@ -200,8 +222,6 @@ func TestGetURL(t *testing.T) {
 
 			h.ReadURL(response, request)
 
-			// Check >>
-
 			// StatusCode
 			if response.Code != tt.want.statusCode {
 				t.Errorf("%s:\n\texpected: %v\n\tactual: %v", tt.name, tt.want.statusCode, response.Code)
@@ -216,9 +236,6 @@ func TestGetURL(t *testing.T) {
 			if response.Header().Get("Location") != tt.want.location {
 				t.Errorf("%s:\n\texpected: %v\n\tactual: %v", tt.name, tt.want.location, response.Header().Get("Location"))
 			}
-			// <<
 		})
 	}
 }
-
-//

@@ -14,8 +14,6 @@ import (
 	mod "github.com/boginskiy/Clicki/internal/model"
 )
 
-const SIZE = 20
-
 type RepositoryFileURL struct {
 	Kwargs conf.VarGetter
 	DB     db.DBer // *os.File
@@ -71,8 +69,8 @@ func (rf *RepositoryFileURL) ReadLastRecord(ctx context.Context) int {
 }
 
 func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]string) {
-	resultMap := make(map[string]*mod.URLTb, SIZE)
-	resultSet := make(map[string]string, SIZE)
+	resultMap := make(map[string]*mod.URLTb, db.SIZE)
+	resultSet := make(map[string]string, db.SIZE)
 
 	// Проход по строкам
 	for rf.Scanner.Scan() {

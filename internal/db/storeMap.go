@@ -7,7 +7,7 @@ import (
 	mod "github.com/boginskiy/Clicki/internal/model"
 )
 
-const SIZE = 20
+const SIZE = 1024
 
 type StoreMap struct {
 	Store map[string]*mod.URLTb

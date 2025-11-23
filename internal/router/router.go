@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	h "github.com/boginskiy/Clicki/internal/handler"
+	"github.com/boginskiy/Clicki/internal/handler"
 	midw "github.com/boginskiy/Clicki/internal/middleware"
 	srv "github.com/boginskiy/Clicki/internal/service"
 	"github.com/go-chi/chi"
 )
 
 func Router(mv midw.Middlewarer, apiURL, shortuRL srv.CrudSrver, apiDelMess srv.DelSrver) *chi.Mux {
-	hAPIURL := h.HandlerURL{CrudSrver: apiURL, DelSrver: apiDelMess}
-	hURL := h.HandlerURL{CrudSrver: shortuRL, DelSrver: nil}
+	hAPIURL := handler.HandlerURL{CrudSrver: apiURL, DelSrver: apiDelMess}
+	hURL := handler.HandlerURL{CrudSrver: shortuRL, DelSrver: nil}
 
 	r := chi.NewRouter()
 
@@ -38,6 +38,9 @@ func Router(mv midw.Middlewarer, apiURL, shortuRL srv.CrudSrver, apiDelMess srv.
 			r.Get("/profile", pprof.Profile)
 			r.Get("/symbol", pprof.Symbol)
 			r.Get("/trace", pprof.Trace)
+			r.Get("/heap", func(w http.ResponseWriter, r *http.Request) {
+				pprof.Handler("heap").ServeHTTP(w, r)
+			})
 		})
 	})
 	return r
