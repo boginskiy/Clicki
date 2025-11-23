@@ -20,7 +20,7 @@ import (
 
 func TestHandlerURL(t *testing.T) {
 	// Init
-	logger := InitLogg("../tester/logs/TestHandlerURL.log", "INFO")
+	logger := InitLogg("test.log", "INFO")
 	kwargs := InitKwargs()
 	db := InitDB()
 
