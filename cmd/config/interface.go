@@ -4,7 +4,7 @@ type Argsmenter interface {
 	ParseFlags()
 }
 
-type ArgsCLIGetter interface {
+type IArgsCLI interface {
 	GetPathToStore() (PathToStore string)
 	GetAuditFile() (AuditFile string)
 	GetAuditURL() (AuditURL string)
@@ -13,7 +13,7 @@ type ArgsCLIGetter interface {
 	GetDB() (DB string)
 }
 
-type ArgsENVGetter interface {
+type IArgsENV interface {
 	GetSoftDeleteTime() (SoftDeleteTime int)
 	GetHardDeleteTime() (HardDeleteTime int)
 	GetTokenLiveTime() (TokenLiveTime int)
@@ -24,19 +24,7 @@ type ArgsENVGetter interface {
 	GetLogFile() (LogFile string)
 }
 
-type VarGetter interface {
-	GetSoftDeleteTime() (SoftDeleteTime int)
-	GetHardDeleteTime() (HardDeleteTime int)
-	GetTokenLiveTime() (TokenLiveTime int)
-	GetPathToStore() (PathToStore string)
-	GetCokiLiveTime() (CokiLiveTime int)
-	GetSrvAddr() (ServerAddress string)
-	GetAuditFile() (AuditFile string)
-	GetSecretKey() (SecretKey string)
-	GetMaxRetries() (MaxRetries int)
-	GetAuditURL() (AuditURL string)
-	GetNameCoki() (NameCoki string)
-	GetLogFile() (LogFile string)
-	GetBaseURL() (BaseURL string)
-	GetDB() (DB string)
+type Config interface {
+	IArgsENV
+	IArgsCLI
 }

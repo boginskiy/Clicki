@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
-	cerr "github.com/boginskiy/Clicki/internal/error"
+	"github.com/boginskiy/Clicki/internal/errs"
 	"github.com/boginskiy/Clicki/internal/logg"
 	_ "github.com/lib/pq"
 )
@@ -22,12 +22,12 @@ func createUrls(db *sql.DB) error {
 }
 
 type StoreDB struct {
-	Logger logg.Logger
-	DB     *sql.DB
+	Logg logg.Logger
+	DB   *sql.DB
 }
 
-func NewStoreDB(kwargs conf.VarGetter, logger logg.Logger) (DBer, error) {
-	db, err := sql.Open("postgres", kwargs.GetDB())
+func NewStoreDB(config conf.Config, logger logg.Logger) (DBer, error) {
+	db, err := sql.Open("postgres", config.GetDB())
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +38,8 @@ func NewStoreDB(kwargs conf.VarGetter, logger logg.Logger) (DBer, error) {
 	}
 
 	return &StoreDB{
-		Logger: logger,
-		DB:     db,
+		Logg: logger,
+		DB:   db,
 	}, nil
 }
 
@@ -54,7 +54,7 @@ func (sd *StoreDB) GetDB() any {
 func (sd *StoreDB) CheckOpen() (bool, error) {
 	err := sd.DB.Ping()
 	if err != nil {
-		return false, cerr.ErrPingDataBase
+		return false, errs.ErrPingDataBase
 	}
 	return true, nil
 }

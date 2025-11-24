@@ -9,26 +9,26 @@ import (
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	cerr "github.com/boginskiy/Clicki/internal/error"
-	mod "github.com/boginskiy/Clicki/internal/model"
+	"github.com/boginskiy/Clicki/internal/errs"
+	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/jackc/pgerrcode"
 )
 
 type RepositoryDBURL struct {
-	Kwargs conf.VarGetter
-	DB     db.DBer // *sql.DB
-	db     *sql.DB
+	Cfg conf.Config
+	DB  db.DBer // *sql.DB
+	db  *sql.DB
 }
 
-func NewRepositoryDBURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error) {
+func NewRepositoryDBURL(config conf.Config, dber db.DBer) (Repository, error) {
 	database, ok := dber.GetDB().(*sql.DB)
 	if !ok {
-		return nil, cerr.NewErrPlace("database not valid", nil)
+		return nil, errs.NewErrPlace("database not valid", nil)
 	}
 	return &RepositoryDBURL{
-		Kwargs: kwargs,
-		DB:     dber,
-		db:     database,
+		Cfg: config,
+		DB:  dber,
+		db:  database,
 	}, nil
 }
 
@@ -43,15 +43,15 @@ func (rd *RepositoryDBURL) PingDB(ctx context.Context) (bool, error) {
 }
 
 func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
-	record, ok := preRecord.(*mod.URLTb)
+	record, ok := preRecord.(*model.URLTb)
 	if !ok {
-		return nil, cerr.NewErrPlace("data not valid", nil)
+		return nil, errs.NewErrPlace("data not valid", nil)
 	}
 
 	errClassifier := NewPGErrorClass()
 
 	// Strategy №2. SQl-Query-error.
-	for attempt := 0; attempt <= rd.Kwargs.GetMaxRetries(); attempt++ {
+	for attempt := 0; attempt <= rd.Cfg.GetMaxRetries(); attempt++ {
 
 		row, errDB := InsertRowToUrls(rd.db, ctx,
 			record.CorrelationID,
@@ -102,11 +102,11 @@ func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any
 			time.Sleep(3 * time.Millisecond)
 		}
 	}
-	return nil, cerr.NewErrPlace("insert into is bad", nil)
+	return nil, errs.NewErrPlace("insert into is bad", nil)
 }
 
 func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
-	record := &mod.URLTb{}
+	record := &model.URLTb{}
 	row := SelectRowByCorrelID(rd.db, ctx, correlID)
 
 	if err := row.Scan(
@@ -123,9 +123,9 @@ func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any
 }
 
 func (rd *RepositoryDBURL) CreateRecords(ctx context.Context, records any) error {
-	rows, ok := records.([]mod.ResURLSet)
+	rows, ok := records.([]model.ResURLSet)
 	if !ok || len(rows) == 0 {
-		return cerr.NewErrPlace("data not valid", nil)
+		return errs.NewErrPlace("data not valid", nil)
 	}
 
 	tx, err := rd.db.BeginTx(ctx, nil)
@@ -163,12 +163,12 @@ func (rd *RepositoryDBURL) ReadLastRecord(ctx context.Context) int {
 
 // New
 func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, error) {
-	records := []mod.ResUserURLSet{}
-	record := mod.ResUserURLSet{}
+	records := []model.ResUserURLSet{}
+	record := model.ResUserURLSet{}
 
 	rows, err := SelectUserURLs(rd.db, ctx, userID)
 	if err != nil {
-		return nil, cerr.NewErrPlace("data not valid", nil)
+		return nil, errs.NewErrPlace("data not valid", nil)
 	}
 	defer rows.Close()
 
@@ -182,7 +182,7 @@ func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, er
 		records = append(records, record)
 	}
 	if rows.Err() != nil {
-		return nil, cerr.NewErrPlace("scan not good", rows.Err())
+		return nil, errs.NewErrPlace("scan not good", rows.Err())
 	}
 	return records, nil
 }

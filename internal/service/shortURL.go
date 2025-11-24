@@ -5,30 +5,30 @@ import (
 	"net/http"
 	"strings"
 
-	mod "github.com/boginskiy/Clicki/internal/model"
+	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
 	repo "github.com/boginskiy/Clicki/internal/repository"
-	valid "github.com/boginskiy/Clicki/internal/validation"
+	"github.com/boginskiy/Clicki/internal/validation"
 )
 
 type ShortURL struct {
-	ExtraFuncer prep.ExtraFuncer
-	Repo        repo.Repository
-	Checker     valid.Checker
-	Core        *CoreService
+	ExFunc  prep.ExtraFuncer
+	Repo    repo.Repository
+	Checker validation.Checker
+	Core    *CoreService
 }
 
 func NewShortURL(
 	core *CoreService,
-	repo repo.Repository,
-	checker valid.Checker,
+	repository repo.Repository,
+	checker validation.Checker,
 	extraFuncer prep.ExtraFuncer) *ShortURL {
 
 	return &ShortURL{
-		ExtraFuncer: extraFuncer,
-		Core:        core,
-		Checker:     checker,
-		Repo:        repo,
+		ExFunc:  extraFuncer,
+		Core:    core,
+		Checker: checker,
+		Repo:    repository,
 	}
 }
 
@@ -45,7 +45,7 @@ func (s *ShortURL) GetHeader() string {
 }
 
 func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
-	originURL, err := s.ExtraFuncer.TakeAllBodyFromReq(req) // Вынимаем тело запроса
+	originURL, err := s.ExFunc.TakeAllBodyFromReq(req) // Вынимаем тело запроса
 	if err != nil {
 		s.Core.Logg.RaiseFatal(err, "ShortURL.CreateURL>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
@@ -57,12 +57,12 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	userID := s.Core.TakeUserIDFromCtx(req)                      // Тащим идентификатор пользователя
-	correlationID := s.Core.EncrypOriginURL()                    // Уникальный идентификатор
-	shortURL := s.Core.Kwargs.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
+	userID := s.Core.TakeUserIDFromCtx(req)                   // Тащим идентификатор пользователя
+	correlationID := s.Core.EncrypOriginURL()                 // Уникальный идентификатор
+	shortURL := s.Core.Cfg.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
 
-	preRecord := mod.NewURLTb(0, correlationID, originURL, shortURL, userID) // Создаем запись
-	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)            // Кладем в DB данные
+	preRecord := model.NewURLTb(0, correlationID, originURL, shortURL, userID) // Создаем запись
+	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)              // Кладем в DB данные
 
 	if err != nil && record == nil {
 		s.Core.Logg.RaiseError(err, "ShortURL.CreateURL>Repo.Create", nil)
@@ -72,7 +72,7 @@ func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
 	// Аудит
 	s.Core.EventOfAudit("shorten", userID, originURL)
 
-	return []byte(record.(*mod.URLTb).ShortURL), err
+	return []byte(record.(*model.URLTb).ShortURL), err
 }
 
 func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
@@ -85,7 +85,7 @@ func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	if r, ok := record.(*mod.URLTb); ok {
+	if r, ok := record.(*model.URLTb); ok {
 		// Если фла==true, запись стоит в очереди на удаление
 		if r.DeletedFlag {
 			return EmptyByteSlice, ErrReadRecord

@@ -10,15 +10,15 @@ import (
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	cerr "github.com/boginskiy/Clicki/internal/error"
-	mod "github.com/boginskiy/Clicki/internal/model"
+	"github.com/boginskiy/Clicki/internal/errs"
+	"github.com/boginskiy/Clicki/internal/model"
 )
 
 type RepositoryFileURL struct {
-	Kwargs conf.VarGetter
-	DB     db.DBer // *os.File
+	Cfg conf.Config
+	DB  db.DBer // *os.File
 
-	Store        map[string]*mod.URLTb
+	Store        map[string]*model.URLTb
 	UniqueFields map[string]string
 	Scanner      *bufio.Scanner
 	muR          sync.RWMutex
@@ -28,15 +28,15 @@ type RepositoryFileURL struct {
 	LastUser     int
 }
 
-func NewRepositoryFileURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error) {
+func NewRepositoryFileURL(config conf.Config, dber db.DBer) (Repository, error) {
 	// Create Scanner
 	file, ok := dber.GetDB().(*os.File)
 	if !ok {
-		return nil, cerr.NewErrPlace("database not valid", nil)
+		return nil, errs.NewErrPlace("database not valid", nil)
 	}
 	// Create
 	tmpRepo := &RepositoryFileURL{
-		Kwargs:  kwargs,
+		Cfg:     config,
 		DB:      dber,
 		Scanner: bufio.NewScanner(file),
 		File:    file,
@@ -68,13 +68,13 @@ func (rf *RepositoryFileURL) ReadLastRecord(ctx context.Context) int {
 	return rf.LastUser
 }
 
-func (rf *RepositoryFileURL) dataRecovery() (map[string]*mod.URLTb, map[string]string) {
-	resultMap := make(map[string]*mod.URLTb, db.SIZE)
+func (rf *RepositoryFileURL) dataRecovery() (map[string]*model.URLTb, map[string]string) {
+	resultMap := make(map[string]*model.URLTb, db.SIZE)
 	resultSet := make(map[string]string, db.SIZE)
 
 	// Проход по строкам
 	for rf.Scanner.Scan() {
-		record := &mod.URLTb{}
+		record := &model.URLTb{}
 		line := rf.Scanner.Text()
 
 		// Десериализация
@@ -101,21 +101,21 @@ func (rf *RepositoryFileURL) ReadRecord(ctx context.Context, correlID string) (a
 
 	record, ok := rf.Store[correlID]
 	if !ok {
-		return nil, cerr.NewErrPlace("data is not available", nil)
+		return nil, errs.NewErrPlace("data is not available", nil)
 	}
 	return record, nil
 }
 
 func (rf *RepositoryFileURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
-	row, ok := preRecord.(*mod.URLTb)
+	row, ok := preRecord.(*model.URLTb)
 	if !ok {
-		return nil, cerr.NewErrPlace("type is not available", nil)
+		return nil, errs.NewErrPlace("type is not available", nil)
 	}
 
 	// Логика, если данные уже есть в Store
 	rf.muR.RLock()
 	if correlID, ok := rf.UniqueFields[row.OriginalURL]; ok {
-		return rf.Store[correlID], cerr.ErrUniqueData
+		return rf.Store[correlID], errs.ErrUniqueData
 	}
 	rf.muR.RUnlock()
 
@@ -129,7 +129,7 @@ func (rf *RepositoryFileURL) CreateRecord(ctx context.Context, preRecord any) (a
 
 	jsonData, err := json.Marshal(row)
 	if err != nil {
-		return nil, cerr.NewErrPlace("type is not available", err)
+		return nil, errs.NewErrPlace("type is not available", err)
 	}
 	jsonData = append(jsonData, byte('\n'))
 
@@ -139,7 +139,7 @@ func (rf *RepositoryFileURL) CreateRecord(ctx context.Context, preRecord any) (a
 }
 
 func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) error {
-	rows, ok := records.([]mod.ResURLSet)
+	rows, ok := records.([]model.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return errors.New("data not valid")
 	}
@@ -149,7 +149,7 @@ func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) err
 	for _, r := range rows {
 		rf.LastRec += 1
 
-		row := mod.NewURLTb(rf.LastRec, r.CorrelationID, r.OriginalURL, r.ShortURL, r.UserID)
+		row := model.NewURLTb(rf.LastRec, r.CorrelationID, r.OriginalURL, r.ShortURL, r.UserID)
 
 		// Добавляем данные в Map
 		rf.Store[row.CorrelationID] = row
@@ -172,11 +172,11 @@ func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) err
 }
 
 func (rf *RepositoryFileURL) ReadRecords(ctx context.Context, userID int) (any, error) {
-	records := []mod.ResUserURLSet{}
+	records := []model.ResUserURLSet{}
 
 	for _, v := range rf.Store {
 		if v.UserID == userID {
-			records = append(records, mod.ResUserURLSet{
+			records = append(records, model.ResUserURLSet{
 				OriginalURL: v.OriginalURL,
 				ShortURL:    v.ShortURL})
 		}

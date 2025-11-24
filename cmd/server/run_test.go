@@ -14,16 +14,16 @@ import (
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/audit"
-	auth "github.com/boginskiy/Clicki/internal/auther"
-	db "github.com/boginskiy/Clicki/internal/db"
+	"github.com/boginskiy/Clicki/internal/auth"
+	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logg"
-	midw "github.com/boginskiy/Clicki/internal/middleware"
-	mod "github.com/boginskiy/Clicki/internal/model"
+	mv "github.com/boginskiy/Clicki/internal/middleware"
+	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
 	repo "github.com/boginskiy/Clicki/internal/repository"
-	route "github.com/boginskiy/Clicki/internal/router"
-	srv "github.com/boginskiy/Clicki/internal/service"
-	valid "github.com/boginskiy/Clicki/internal/validation"
+	"github.com/boginskiy/Clicki/internal/router"
+	"github.com/boginskiy/Clicki/internal/service"
+	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,21 +41,21 @@ func TestMain(t *testing.T) {
 }
 
 func RunRouter() *chi.Mux {
-	infoLog := logg.NewLogg("Test.log", "INFO")
-	kwargs := conf.NewVariables(infoLog) // agrs - атрибуты командной строки
-	kwargs.PathToStore = "test"
+	logg := logg.NewLogg("Test.log", "INFO")
+	config := conf.NewVariables(logg) // agrs - атрибуты командной строки
+	config.PathToStore = "test"
 
-	db, _ := db.NewStoreFile(kwargs, infoLog)
+	db, _ := db.NewStoreFile(config, logg)
 
 	// Данные для тестирования
-	url := &mod.URLTb{CorrelationID: "DcKa7J8d", OriginalURL: "https://translate.yandex.ru/"}
-	store := map[string]*mod.URLTb{"DcKa7J8d": url}
+	url := &model.URLTb{CorrelationID: "DcKa7J8d", OriginalURL: "https://translate.yandex.ru/"}
+	store := map[string]*model.URLTb{"DcKa7J8d": url}
 	uniqueFields := map[string]string{url.OriginalURL: url.CorrelationID}
 
 	// Специальное создание репозитория для теста с начальным обогащением данных
 	file, _ := db.GetDB().(*os.File)
 	repo := &repo.RepositoryFileURL{
-		Kwargs:  kwargs,
+		Cfg:     config,
 		DB:      db,
 		Scanner: bufio.NewScanner(file),
 		File:    file,
@@ -63,27 +63,27 @@ func RunRouter() *chi.Mux {
 	repo.Store = store
 	repo.UniqueFields = uniqueFields
 
-	auther := auth.NewAuth(kwargs, infoLog, repo)
-	midWare := midw.NewMiddleware(infoLog, auther)
+	auther := auth.NewAuth(config, logg, repo)
+	midWare := mv.NewMiddleware(logg, auther)
 	extraFuncer := prep.NewExtraFunc()
-	checker := valid.NewChecker()
+	checker := validation.NewChecker()
 
 	// Ctx
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Publisher
-	var sub1 = audit.NewFileReceiver(infoLog, kwargs.GetAuditFile(), 1)
-	var sub2 = audit.NewServerReceiver(infoLog, kwargs.GetAuditURL(), 2)
+	var sub1 = audit.NewFileReceiver(logg, config.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(logg, config.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
 	// Services
-	core := srv.NewCoreService(kwargs, infoLog, repo, publisher)
-	APIShortURL := srv.NewAPIShortURL(core, repo, checker, extraFuncer)
-	ShortURL := srv.NewShortURL(core, repo, checker, extraFuncer)
-	APIDelMess := srv.NewDelMess(ctx, core, repo)
+	core := service.NewCoreService(config, logg, repo, publisher)
+	APIShortURL := service.NewAPIShortURL(core, repo, checker, extraFuncer)
+	ShortURL := service.NewShortURL(core, repo, checker, extraFuncer)
+	APIDelMess := service.NewDelMess(ctx, core, repo)
 
-	return route.Router(midWare, APIShortURL, ShortURL, APIDelMess)
+	return router.Router(midWare, APIShortURL, ShortURL, APIDelMess)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {

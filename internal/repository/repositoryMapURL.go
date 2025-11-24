@@ -6,28 +6,28 @@ import (
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/db"
-	cerr "github.com/boginskiy/Clicki/internal/error"
-	mod "github.com/boginskiy/Clicki/internal/model"
+	"github.com/boginskiy/Clicki/internal/errs"
+	"github.com/boginskiy/Clicki/internal/model"
 )
 
 type RepositoryMapURL struct {
-	Kwargs conf.VarGetter
-	DB     db.DBer // map[string]*mod.URLTb
+	Cfg conf.Config
+	DB  db.DBer // map[string]*model.URLTb
 
-	store        map[string]*mod.URLTb
+	store        map[string]*model.URLTb
 	uniqueFields map[string]string
 	muR          sync.RWMutex
 	mu           sync.Mutex
 }
 
-func NewRepositoryMapURL(kwargs conf.VarGetter, dber db.DBer) (Repository, error) {
-	store, ok := dber.GetDB().(map[string]*mod.URLTb)
+func NewRepositoryMapURL(config conf.Config, dber db.DBer) (Repository, error) {
+	store, ok := dber.GetDB().(map[string]*model.URLTb)
 	if !ok {
-		return nil, cerr.NewErrPlace("database not valid", nil)
+		return nil, errs.NewErrPlace("database not valid", nil)
 	}
 
 	return &RepositoryMapURL{
-		Kwargs:       kwargs,
+		Cfg:          config,
 		DB:           dber,
 		uniqueFields: make(map[string]string, db.SIZE),
 		store:        store,
@@ -65,15 +65,15 @@ func (rm *RepositoryMapURL) ReadRecord(ctx context.Context, correlID string) (an
 
 	record, ok := rm.store[correlID]
 	if !ok {
-		return nil, cerr.NewErrPlace("data is not available", nil)
+		return nil, errs.NewErrPlace("data is not available", nil)
 	}
 	return record, nil
 }
 
 func (rm *RepositoryMapURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
-	row, ok := preRecord.(*mod.URLTb)
+	row, ok := preRecord.(*model.URLTb)
 	if !ok {
-		return nil, cerr.NewErrPlace("data not valid", nil)
+		return nil, errs.NewErrPlace("data not valid", nil)
 	}
 
 	// Логика, если данные уже есть в Store
@@ -81,7 +81,7 @@ func (rm *RepositoryMapURL) CreateRecord(ctx context.Context, preRecord any) (an
 	defer rm.muR.RUnlock()
 
 	if correlID, ok := rm.uniqueFields[row.OriginalURL]; ok {
-		return rm.store[correlID], cerr.ErrUniqueData
+		return rm.store[correlID], errs.ErrUniqueData
 	}
 
 	// Добавление записи в map
@@ -95,9 +95,9 @@ func (rm *RepositoryMapURL) CreateRecord(ctx context.Context, preRecord any) (an
 }
 
 func (rm *RepositoryMapURL) CreateRecords(ctx context.Context, records any) error {
-	rows, ok := records.([]mod.ResURLSet)
+	rows, ok := records.([]model.ResURLSet)
 	if !ok || len(rows) == 0 {
-		return cerr.NewErrPlace("data not valid", nil)
+		return errs.NewErrPlace("data not valid", nil)
 	}
 
 	rm.mu.Lock()
@@ -108,7 +108,7 @@ func (rm *RepositoryMapURL) CreateRecords(ctx context.Context, records any) erro
 		// TODO! Перекладка с ResURLSet в URLTb не супер оптимально
 		// однако пока так ...
 
-		rm.store[r.CorrelationID] = &mod.URLTb{
+		rm.store[r.CorrelationID] = &model.URLTb{
 			ID:            0,
 			OriginalURL:   r.OriginalURL,
 			ShortURL:      r.ShortURL,
@@ -123,11 +123,11 @@ func (rm *RepositoryMapURL) CreateRecords(ctx context.Context, records any) erro
 }
 
 func (rm *RepositoryMapURL) ReadRecords(ctx context.Context, userID int) (any, error) {
-	records := []mod.ResUserURLSet{}
+	records := []model.ResUserURLSet{}
 
 	for _, v := range rm.store {
 		if v.UserID == userID {
-			records = append(records, mod.ResUserURLSet{
+			records = append(records, model.ResUserURLSet{
 				OriginalURL: v.OriginalURL,
 				ShortURL:    v.ShortURL})
 		}

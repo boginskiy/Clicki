@@ -1,4 +1,4 @@
-package auther
+package auth
 
 import (
 	"errors"
@@ -9,63 +9,63 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// Claims - собственное утверждение
+// Claims - own statement
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID int
 }
 
 type JWTService struct {
-	Kwargs conf.VarGetter
+	Cfg conf.Config
 }
 
-func NewJWTService(kwargs conf.VarGetter) *JWTService {
-	return &JWTService{Kwargs: kwargs}
+func NewJWTService(config conf.Config) *JWTService {
+	return &JWTService{Cfg: config}
 }
 
-// CreateToken - создание токена
+// CreateToken - create token
 func (j *JWTService) CreateJWT(userID int) (string, error) {
-	// Новый токен
+	// New token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(j.Kwargs.GetTokenLiveTime())))},
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(j.Cfg.GetTokenLiveTime())))},
 		UserID: userID,
 	})
 
-	// Строка токена
-	tokenStr, err := token.SignedString([]byte(j.Kwargs.GetSecretKey()))
+	// Line of token
+	tokenStr, err := token.SignedString([]byte(j.Cfg.GetSecretKey()))
 	if err != nil {
 		return "", err
 	}
 	return tokenStr, nil
 }
 
-// GetUserID - получение идентификатора клиента
+// GetUserID - get id of client
 func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
-	// экземпляр структуры с утверждениями
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
-		return []byte(j.Kwargs.GetSecretKey()), nil
+		return []byte(j.Cfg.GetSecretKey()), nil
 	})
 
 	if err != nil {
-		// Анализ просроченного токена
+		// Analize of expired token
 		var validErr *jwt.ValidationError
+
 		if errors.As(err, &validErr) {
-			// Битовый И. Проверка флага просроченного токена
+			// Bit И. Check flag expired token
 			if validErr.Errors&jwt.ValidationErrorExpired != 0 {
 				return claims.UserID, ErrTokenIsExpired
 			}
 		}
-		// Другие ошибки
+		// Some errors
 		return 0, err
 	}
 
-	// Анализ невалидного токена
+	// Analize of invalid token
 	if !token.Valid {
 		return claims.UserID, ErrTokenNotValid
 	}

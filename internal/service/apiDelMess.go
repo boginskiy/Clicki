@@ -7,20 +7,20 @@ import (
 	"net/http"
 	"time"
 
-	rep "github.com/boginskiy/Clicki/internal/repository"
+	repo "github.com/boginskiy/Clicki/internal/repository"
 )
 
 type DelMess struct {
 	Core        *CoreService
-	Repo        rep.Repository
-	delMessChan chan rep.DelMessage
+	Repo        repo.Repository
+	delMessChan chan repo.DelMessage
 }
 
-func NewDelMess(ctx context.Context, core *CoreService, repo rep.Repository) *DelMess {
+func NewDelMess(ctx context.Context, core *CoreService, repository repo.Repository) *DelMess {
 	item := &DelMess{
-		delMessChan: make(chan rep.DelMessage, 8),
+		delMessChan: make(chan repo.DelMessage, 8),
 		Core:        core,
-		Repo:        repo,
+		Repo:        repository,
 	}
 	// Запуск фонового удаления данных
 	go item.StepByStepDelMessages(ctx)
@@ -37,7 +37,7 @@ func (d *DelMess) DeleteSetUserURL(req *http.Request) ([]byte, error) {
 
 	// Подготовка delMessage
 	userID := d.Core.TakeUserIDFromCtx(req)
-	delMessage := rep.NewDelMessage(int64(userID))
+	delMessage := repo.NewDelMessage(int64(userID))
 	err = json.Unmarshal(dataByte, &delMessage.ListCorrelID)
 
 	if err != nil {
@@ -50,7 +50,7 @@ func (d *DelMess) DeleteSetUserURL(req *http.Request) ([]byte, error) {
 	return EmptyByteSlice, nil
 }
 
-func (d *DelMess) sendSoftDeletion(data []rep.DelMessage, isDel *bool) []rep.DelMessage {
+func (d *DelMess) sendSoftDeletion(data []repo.DelMessage, isDel *bool) []repo.DelMessage {
 	if 0 < len(data) {
 		err := d.Repo.MarkerRecords(context.TODO(), data...)
 
@@ -78,14 +78,14 @@ func (d *DelMess) sendHardDeletion(isDel *bool) bool {
 // Concumer
 func (d *DelMess) StepByStepDelMessages(ctx context.Context) {
 	// Каждые N-секунд перевод удаляемых данных в "Soft Delete"
-	Nsec := time.Duration(d.Core.Kwargs.GetSoftDeleteTime())
+	Nsec := time.Duration(d.Core.Cfg.GetSoftDeleteTime())
 	ticker := time.NewTicker(Nsec * time.Second)
 
 	// Каждые N-секунд перевод удаляемых данных "Hard Delete"
-	Nsec = time.Duration(d.Core.Kwargs.GetHardDeleteTime())
+	Nsec = time.Duration(d.Core.Cfg.GetHardDeleteTime())
 	ticker2 := time.NewTicker(Nsec * time.Second)
 
-	var delMessages []rep.DelMessage
+	var delMessages []repo.DelMessage
 	var deletedSoft bool
 
 	for {

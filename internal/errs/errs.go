@@ -1,4 +1,4 @@
-package error
+package errs
 
 import (
 	"errors"
@@ -7,11 +7,13 @@ import (
 )
 
 var (
-	ErrUniqueData   = errors.New("attempt to overwrite unique data") // Ошибка при попытке перезаписать поле с уникальными данными
-	ErrPingDataBase = errors.New("bad database ping")                // Ошибка подключения к БД
+	// ErrUniqueData - if try not unic data
+	ErrUniqueData = errors.New("attempt to overwrite unique data")
+	// ErrPingDataBase - if db not available
+	ErrPingDataBase = errors.New("bad database ping")
 )
 
-// ErrPlace
+// ErrPlace -
 type ErrPlace struct {
 	Message string
 	File    string
@@ -20,7 +22,7 @@ type ErrPlace struct {
 }
 
 func NewErrPlace(mess string, err error) *ErrPlace {
-	// Получаем информацию о месте вызова
+	// Get info about place of call
 	_, file, line, _ := runtime.Caller(1)
 
 	return &ErrPlace{

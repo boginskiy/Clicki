@@ -6,5 +6,5 @@ type Logger interface {
 	RaiseError(error, string, Fields)
 	RaiseFatal(error, string, Fields)
 	RaisePanic(error, string, Fields)
-	CloseDesc()
+	Close()
 }

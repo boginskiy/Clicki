@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	auth "github.com/boginskiy/Clicki/internal/auther"
+	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/gzip"
 	"github.com/boginskiy/Clicki/internal/logg"
 )
@@ -14,12 +14,12 @@ import (
 type MvFunc func(http.HandlerFunc) http.HandlerFunc
 
 type Middleware struct {
-	Auther auth.Auther
-	Logger logg.Logger
+	Auth auth.Auther
+	Logg logg.Logger
 }
 
 func NewMiddleware(logger logg.Logger, auther auth.Auther) *Middleware {
-	return &Middleware{Logger: logger, Auther: auther}
+	return &Middleware{Logg: logger, Auth: auther}
 }
 
 func (m *Middleware) Conveyor(next http.HandlerFunc) http.HandlerFunc {
@@ -41,7 +41,7 @@ func (m *Middleware) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
 
 		duration := time.Since(start)
 
-		m.Logger.RaiseInfo(
+		m.Logg.RaiseInfo(
 			logg.DataReqResInfo,
 			map[string]any{
 				"uri":      uri,
@@ -92,7 +92,7 @@ func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 
 func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, UserID, err := m.Auther.Authentication(r)
+		cookie, UserID, err := m.Auth.Authentication(r)
 
 		// Ошибки 'пользователь не найден' и 'создание токена'
 		if err == auth.ErrUserNotFound || err == auth.ErrCreateToken {

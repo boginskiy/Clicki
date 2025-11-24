@@ -7,34 +7,34 @@ import (
 	"regexp"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/internal/auther"
+	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
 type Audit struct {
 	Publisher Publisher
-	Kwargs    conf.VarGetter
-	Logger    logg.Logger
-	Rex       *regexp.Regexp
+	Cfg       conf.Config
+	Logg      logg.Logger
+	Rx        *regexp.Regexp
 }
 
-func NewAudit(kwargs conf.VarGetter, logger logg.Logger, publisher Publisher) *Audit {
+func NewAudit(config conf.Config, logger logg.Logger, publisher Publisher) *Audit {
 	// Компилируем регулярное выражение. Далее будет проверка URL
-	rex, err := regexp.Compile(pattern)
+	rx, err := regexp.Compile(pattern)
 	if err != nil {
 		logger.RaiseFatal(err, "Audit>NewAudit>Compile", nil)
 	}
 
 	return &Audit{
 		Publisher: publisher,
-		Kwargs:    kwargs,
-		Logger:    logger,
-		Rex:       rex,
+		Cfg:       config,
+		Logg:      logger,
+		Rx:        rx,
 	}
 }
 
 func (a *Audit) takeUserID(req *http.Request) int {
-	UserID, ok := req.Context().Value(auther.CtxUserID).(int)
+	UserID, ok := req.Context().Value(auth.CtxUserID).(int)
 	if !ok {
 		return 0
 	}
@@ -78,7 +78,7 @@ func (a *Audit) TakeOriginURL(req *http.Request) (string, error) {
 func (a *Audit) isItRightURL(req *http.Request) bool {
 	if req.URL.String() == "/" && req.Method == "POST" ||
 		req.URL.String() == "/api/shorten" && req.Method == "POST" ||
-		a.Rex.MatchString(req.URL.String()) && req.Method == "GET" {
+		a.Rx.MatchString(req.URL.String()) && req.Method == "GET" {
 		return true
 	}
 	return false
@@ -97,7 +97,7 @@ func (a *Audit) NoticeCreateLink(req *http.Request) {
 	// Берем оригинальный URL
 	originURL, err := a.TakeOriginURL(req)
 	if err != nil {
-		a.Logger.RaiseError(err, "Audit>CreateLink>TakeOriginURL", nil)
+		a.Logg.RaiseError(err, "Audit>CreateLink>TakeOriginURL", nil)
 		return
 	}
 	// Собираем событие аудита

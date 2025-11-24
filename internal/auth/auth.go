@@ -1,4 +1,4 @@
-package auther
+package auth
 
 import (
 	"context"
@@ -11,28 +11,27 @@ import (
 )
 
 type Auth struct {
-	Kwargs     conf.VarGetter
-	Logger     logg.Logger
+	Cfg        conf.Config
+	Logg       logg.Logger
 	Repo       repo.Repository
 	LastUser   int
 	JWTService JWTer
 }
 
-func NewAuth(kwargs conf.VarGetter, logger logg.Logger, repo repo.Repository) *Auth {
+func NewAuth(config conf.Config, logger logg.Logger, repo repo.Repository) *Auth {
 	return &Auth{
-		Kwargs:     kwargs,
-		Logger:     logger,
+		Cfg:        config,
+		Logg:       logger,
 		Repo:       repo,
-		JWTService: NewJWTService(kwargs),
+		JWTService: NewJWTService(config),
 
-		// Подгружаем данные из Репозитория об ID последнего записанного пользователя
-		// По ходу работы программы, новые пользователи будут получать следующие по порядку ID
+		// Louding last userID from last record
 		LastUser: repo.ReadLastRecord(context.TODO()),
 	}
 }
 
 func (a *Auth) createCookie(token, name string) *http.Cookie {
-	cokiTime := a.Kwargs.GetCokiLiveTime()
+	cokiTime := a.Cfg.GetCokiLiveTime()
 	return &http.Cookie{
 		Name:     name,
 		Value:    token,
@@ -53,15 +52,15 @@ func (a *Auth) Authorization(req *http.Request) (*http.Cookie, int, error) {
 	UserID := a.nextUser()
 	token, err := a.JWTService.CreateJWT(UserID)
 	if err != nil {
-		a.Logger.RaiseError(err, "Auth>Authorization>CreateJWT", nil)
+		a.Logg.RaiseError(err, "Auth>Authorization>CreateJWT", nil)
 		return nil, 0, ErrCreateToken
 	}
-	return a.createCookie(token, a.Kwargs.GetNameCoki()), UserID, nil
+	return a.createCookie(token, a.Cfg.GetNameCoki()), UserID, nil
 }
 
 func (a *Auth) Authentication(req *http.Request) (*http.Cookie, int, error) {
 	// Достаем 'Cookie'
-	cookie, err := req.Cookie(a.Kwargs.GetNameCoki())
+	cookie, err := req.Cookie(a.Cfg.GetNameCoki())
 
 	// Авторизация если отсутствуют 'Cookie'
 	if err != nil {
@@ -73,7 +72,7 @@ func (a *Auth) Authentication(req *http.Request) (*http.Cookie, int, error) {
 
 	// Условие непрохождения аутентификации. Пользователь не найден
 	if UserID <= 0 {
-		a.Logger.RaiseInfo(ErrUserNotFound.Error(), logg.Fields{"userID": UserID})
+		a.Logg.RaiseInfo(ErrUserNotFound.Error(), logg.Fields{"userID": UserID})
 		return nil, 0, ErrUserNotFound
 	}
 
@@ -83,13 +82,13 @@ func (a *Auth) Authentication(req *http.Request) (*http.Cookie, int, error) {
 		if errors.Is(err, ErrTokenIsExpired) || errors.Is(err, ErrTokenNotValid) {
 			token, err := a.JWTService.CreateJWT(UserID)
 			if err != nil {
-				a.Logger.RaiseError(err, "Auth>Authentication>CreateJWT", nil)
+				a.Logg.RaiseError(err, "Auth>Authentication>CreateJWT", nil)
 				return nil, 0, ErrCreateToken
 			}
 			// Выдаем свежий токен
-			return a.createCookie(token, a.Kwargs.GetNameCoki()), UserID, nil
+			return a.createCookie(token, a.Cfg.GetNameCoki()), UserID, nil
 		}
-		a.Logger.RaiseError(err, "Auth>Authentication>CreateJWT", nil)
+		a.Logg.RaiseError(err, "Auth>Authentication>CreateJWT", nil)
 		return nil, 0, ErrTokenNotValid
 	}
 	return cookie, UserID, nil

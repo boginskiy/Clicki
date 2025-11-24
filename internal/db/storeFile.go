@@ -4,23 +4,23 @@ import (
 	"os"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
-	cerr "github.com/boginskiy/Clicki/internal/error"
+	"github.com/boginskiy/Clicki/internal/errs"
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
 type StoreFile struct {
-	Logger logg.Logger
+	Logg   logg.Logger
 	File   *os.File
 	isOpen bool
 }
 
-func NewStoreFile(kwargs conf.VarGetter, logger logg.Logger) (DBer, error) {
-	f, err := os.OpenFile(kwargs.GetPathToStore(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+func NewStoreFile(config conf.Config, logger logg.Logger) (DBer, error) {
+	f, err := os.OpenFile(config.GetPathToStore(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err
 	}
 	return &StoreFile{
-		Logger: logger,
+		Logg:   logger,
 		File:   f,
 		isOpen: true,
 	}, nil
@@ -37,7 +37,7 @@ func (sf *StoreFile) CloseDB() {
 
 func (sf *StoreFile) CheckOpen() (bool, error) {
 	if !sf.isOpen {
-		return false, cerr.ErrPingDataBase
+		return false, errs.ErrPingDataBase
 	}
 	return sf.isOpen, nil
 }

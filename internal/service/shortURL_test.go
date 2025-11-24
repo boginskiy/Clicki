@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/boginskiy/Clicki/cmd/config"
+	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/audit"
-	"github.com/boginskiy/Clicki/internal/auther"
+	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/db"
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/model"
@@ -25,12 +25,12 @@ const (
 
 func BenchmarkReadURL(b *testing.B) {
 	// Init
-	logger := InitLogg("test.log", "INFO")
-	kwargs := InitKwargs()
+	logg := InitLogg("test.log", "INFO")
+	cfg := InitConfig()
 	db := InitDB()
 
 	// Service
-	servShortURL := Init(logger, kwargs, db)
+	servShortURL := Init(logg, cfg, db)
 
 	// Request
 	Method := "GET"
@@ -38,7 +38,7 @@ func BenchmarkReadURL(b *testing.B) {
 	URL := "/H3HIkks3"
 
 	// Ctx
-	ctx := context.WithValue(context.Background(), auther.CtxUserID, UserID)
+	ctx := context.WithValue(context.Background(), auth.CtxUserID, UserID)
 	request := tester.PreparRequest(ctx, Method, URL, nil)
 
 	b.ResetTimer() // Обнуление счетчика
@@ -51,12 +51,12 @@ func BenchmarkReadURL(b *testing.B) {
 
 func BenchmarkCreateURL(b *testing.B) {
 	// Init
-	logger := InitLogg("test.log", "INFO")
-	kwargs := InitKwargs()
+	logg := InitLogg("test.log", "INFO")
+	cfg := InitConfig()
 	db := InitDB()
 
 	// Service
-	servShortURL := Init(logger, kwargs, db)
+	servShortURL := Init(logg, cfg, db)
 
 	// Request
 	body := []byte(fmt.Sprintf("%s%d%s", "https://practicum.yandex-", 0, ".ru"))
@@ -68,7 +68,7 @@ func BenchmarkCreateURL(b *testing.B) {
 	start, N := 0, 20 // Счетчик | Количество URL на пользователя
 
 	for i := 1; i < b.N; i++ {
-		ctx := context.WithValue(context.Background(), auther.CtxUserID, UserID)
+		ctx := context.WithValue(context.Background(), auth.CtxUserID, UserID)
 		request := tester.PreparRequest(ctx, Method, URL, body)
 
 		dataByte, _ := servShortURL.CreateURL(request)
@@ -94,16 +94,16 @@ func BenchmarkCreateURL(b *testing.B) {
 
 func TestShortURL(t *testing.T) {
 	// Init
-	logger := InitLogg("test.log", "INFO")
-	kwargs := InitKwargs()
+	logg := InitLogg("test.log", "INFO")
+	cfg := InitConfig()
 	db := InitDB()
 
 	// Service
-	servShortURL := Init(logger, kwargs, db)
+	servShortURL := Init(logg, cfg, db)
 
 	// Ctx
 	userID := 100
-	ctx := context.WithValue(context.Background(), auther.CtxUserID, userID)
+	ctx := context.WithValue(context.Background(), auth.CtxUserID, userID)
 
 	testCreateURL(t, ctx, servShortURL)
 	testReadURL(t, ctx, servShortURL)
@@ -142,22 +142,22 @@ func testCreateURL(t *testing.T, ctx context.Context, srv *service.ShortURL) {
 	}
 }
 
-func Init(logger logg.Logger, kwargs config.VarGetter, db db.DBer) *service.ShortURL {
-	var repo, _ = repository.NewRepositoryMapURL(kwargs, db)
+func Init(logg logg.Logger, cfg conf.Config, db db.DBer) *service.ShortURL {
+	var repo, _ = repository.NewRepositoryMapURL(cfg, db)
 
-	var sub1 = audit.NewFileReceiver(logger, kwargs.GetAuditFile(), 1)
-	var sub2 = audit.NewServerReceiver(logger, kwargs.GetAuditURL(), 2)
+	var sub1 = audit.NewFileReceiver(logg, cfg.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(logg, cfg.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
-	var core = service.NewCoreService(kwargs, logger, repo, publisher)
+	var core = service.NewCoreService(cfg, logg, repo, publisher)
 	var extraFuncer = preparation.NewExtraFunc()
 	var checker = validation.NewChecker()
 
 	return service.NewShortURL(core, repo, checker, extraFuncer)
 }
 
-func InitKwargs() config.VarGetter {
-	return &config.Variables{
+func InitConfig() conf.Config {
+	return &conf.Conf{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8081",
 	}

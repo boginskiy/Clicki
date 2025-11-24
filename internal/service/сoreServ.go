@@ -6,35 +6,35 @@ import (
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/audit"
-	"github.com/boginskiy/Clicki/internal/auther"
+	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/logg"
-	"github.com/boginskiy/Clicki/internal/repository"
+	repo "github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/pkg"
 )
 
 type CoreService struct {
-	Repo      repository.Repository
+	Repo      repo.Repository
 	Publisher audit.Publisher
-	Kwargs    conf.VarGetter
+	Cfg       conf.Config
 	Logg      logg.Logger
 }
 
 func NewCoreService(
-	kwargs conf.VarGetter,
-	logg logg.Logger,
-	repo repository.Repository,
+	config conf.Config,
+	logger logg.Logger,
+	repository repo.Repository,
 	publisher audit.Publisher) *CoreService {
 
 	return &CoreService{
-		Logg:      logg,
-		Kwargs:    kwargs,
-		Repo:      repo,
+		Logg:      logger,
+		Cfg:       config,
+		Repo:      repository,
 		Publisher: publisher,
 	}
 }
 
 func (c *CoreService) TakeUserIDFromCtx(req *http.Request) int {
-	UserID, ok := req.Context().Value(auther.CtxUserID).(int)
+	UserID, ok := req.Context().Value(auth.CtxUserID).(int)
 	if !ok || UserID <= 0 {
 		c.Logg.RaiseError(ErrUserIDNotValid, "CoreService.TakeUserIDFromCtx>CtxUserID", nil)
 	}
