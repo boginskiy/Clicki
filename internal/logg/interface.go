@@ -1,5 +1,6 @@
 package logg
 
+// Logger - .
 type Logger interface {
 	RaiseInfo(string, Fields)
 	RaiseWarn(string, Fields)

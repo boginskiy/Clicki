@@ -8,13 +8,14 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
+// StoreFile - store is file database.
 type StoreFile struct {
 	Logg   logg.Logger
 	File   *os.File
 	isOpen bool
 }
 
-func NewStoreFile(config conf.Config, logger logg.Logger) (DBer, error) {
+func NewStoreFile(config conf.Config, logger logg.Logger) (DataBase, error) {
 	f, err := os.OpenFile(config.GetPathToStore(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return nil, err

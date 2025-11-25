@@ -2,13 +2,14 @@ package config
 
 import "flag"
 
+// ArgsCLI - struct for args comm line interface.
 type ArgsCLI struct {
-	ServerAddress string // StartPort is the port for start application
-	PathToStore   string // PathToStore is the path to store URL
-	AuditFile     string // AuditFile
-	AuditURL      string // AuditURL
-	BaseURL       string // ResultPort is the port after changing
-	DB            string // Data of connected DB
+	ServerAddress string // StartPort is the port for start application.
+	PathToStore   string // PathToStore is the path to store URL.
+	AuditFile     string // AuditFile is for turn on a file.
+	AuditURL      string // AuditURL is for turn on a server.
+	BaseURL       string // BaseURL is result port is the port after changing.
+	DB            string // DB is data of connected.
 }
 
 func NewArgsCLI() *ArgsCLI {
@@ -19,7 +20,6 @@ func NewArgsCLI() *ArgsCLI {
 
 func (c *ArgsCLI) ParseFlags() {
 	// defaultStoreDB := "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable"
-
 	// AuditFile - "./audit.json"
 	// AuditURL -  "http://localhost:8081/"
 

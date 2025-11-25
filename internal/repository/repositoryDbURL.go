@@ -14,34 +14,37 @@ import (
 	"github.com/jackc/pgerrcode"
 )
 
+// RepositoryDBURL - repository for dataBase.
 type RepositoryDBURL struct {
 	Cfg conf.Config
-	DB  db.DBer // *sql.DB
+	DB  db.DataBase
 	db  *sql.DB
 }
 
-func NewRepositoryDBURL(config conf.Config, dber db.DBer) (Repository, error) {
-	database, ok := dber.GetDB().(*sql.DB)
+func NewRepositoryDBURL(config conf.Config, dataBase db.DataBase) (Repository, error) {
+	tmpdb, ok := dataBase.GetDB().(*sql.DB)
 	if !ok {
 		return nil, errs.NewErrPlace("database not valid", nil)
 	}
 	return &RepositoryDBURL{
 		Cfg: config,
-		DB:  dber,
-		db:  database,
+		DB:  dataBase,
+		db:  tmpdb,
 	}, nil
 }
 
+// CheckUnicRecord - .
 func (rd *RepositoryDBURL) CheckUnicRecord(ctx context.Context, correlationID string) bool {
-	// TODO! Нужно натсроить DataBase
-	// correlationID должно быть уникальное поле
+	// TODO! Need settings DataBase. CorrelationID must be unic field.
 	return true
 }
 
+// PingDB - .
 func (rd *RepositoryDBURL) PingDB(ctx context.Context) (bool, error) {
 	return rd.DB.CheckOpen()
 }
 
+// CreateRecord - .
 func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any, error) {
 	record, ok := preRecord.(*model.URLTb)
 	if !ok {
@@ -60,24 +63,24 @@ func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any
 			record.CreatedAt,
 			record.UserID)
 
-		// Ошибок нет, данные записаны
+		// There are not errors. Data is recorded.
 		if errDB == nil {
 			id, _ := row.LastInsertId()
 			record.ID = int(id)
 			return record, nil
 		}
 
-		// Определяем поведение при получении ошибки
+		// Behaviour with gotting errors.
 		code, needRetry := errClassifier.Classify(errDB)
 
-		// Логика, если добавляемая запись не уникальна в БД
+		// Логика, если добавляемая запись не уникальна в БД.
 		if code == pgerrcode.UniqueViolation {
 
-			// Делаем повторный запрос в БД
+			// Делаем повторный запрос в БД.
 			row := SelectRowByOriginalURL(rd.db, ctx,
 				record.OriginalURL)
 
-			// Ошибок нет, возвращаем запись
+			// Ошибок нет, возвращаем запись.
 			errScan := row.Scan(
 				&record.ID,
 				&record.OriginalURL,
@@ -86,18 +89,18 @@ func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any
 				&record.CreatedAt,
 				&record.UserID)
 
-			// Ошибок нет, возвращаем запись
+			// Ошибок нет, возвращаем запись.
 			if errScan == nil {
-				// В ответ отдаю именно errDB для установки статуса ответа
+				// В ответ отдаю именно errDB для установки статуса ответа.
 				return record, errDB
 			} else {
 				break
 			}
 
-			// Логика, если запрос к БД не надо повторять
+			// Логика, если запрос к БД не надо повторять.
 		} else if needRetry == NonRetriable {
 			break
-			// Логика, если запрос к БД необходимо повторить
+			// Логика, если запрос к БД необходимо повторить.
 		} else {
 			time.Sleep(3 * time.Millisecond)
 		}
@@ -105,6 +108,7 @@ func (rd *RepositoryDBURL) CreateRecord(ctx context.Context, preRecord any) (any
 	return nil, errs.NewErrPlace("insert into is bad", nil)
 }
 
+// ReadRecord - .
 func (rd *RepositoryDBURL) ReadRecord(ctx context.Context, correlID string) (any, error) {
 	record := &model.URLTb{}
 	row := SelectRowByCorrelID(rd.db, ctx, correlID)
@@ -134,22 +138,22 @@ func (rd *RepositoryDBURL) CreateRecords(ctx context.Context, records any) error
 	}
 
 	for _, v := range rows {
-		// все изменения записываются в транзакцию
+		// все изменения записываются в транзакцию.
 		_, err := InsertRowToUrlsTX(tx, ctx,
 			v.CorrelationID, v.OriginalURL, v.ShortURL, v.CreatedAt, v.UserID)
 
 		if err != nil {
-			// если ошибка, то откатываем изменения
+			// если ошибка, то откатываем изменения.
 			tx.Rollback()
 			return err
 		}
 	}
-	// завершаем транзакцию
+	// завершаем транзакцию.
 	tx.Commit()
 	return nil
 }
 
-// New
+// ReadLastRecord - .
 func (rd *RepositoryDBURL) ReadLastRecord(ctx context.Context) int {
 	row := SelectMaxCntByUser(rd.db, ctx)
 	var MaxCntByUser int
@@ -161,7 +165,7 @@ func (rd *RepositoryDBURL) ReadLastRecord(ctx context.Context) int {
 	return MaxCntByUser
 }
 
-// New
+// ReadRecords - .
 func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []model.ResUserURLSet{}
 	record := model.ResUserURLSet{}
@@ -172,11 +176,11 @@ func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, er
 	}
 	defer rows.Close()
 
-	// Читаем данные
+	// Читаем данные.
 	for rows.Next() {
 		err := rows.Scan(&record.OriginalURL, &record.ShortURL)
 		if err != nil {
-			// TODO! Залогировать бы на всяк случай
+			// TODO: Залогировать бы на всяк случай.
 			continue
 		}
 		records = append(records, record)
@@ -187,6 +191,7 @@ func (rd *RepositoryDBURL) ReadRecords(ctx context.Context, userID int) (any, er
 	return records, nil
 }
 
+// MarkerRecords - .
 func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
 	values := make([]string, 0, 10)
 	args := make([]any, 0, 10)
@@ -212,6 +217,7 @@ func (rd *RepositoryDBURL) MarkerRecords(ctx context.Context, messages ...DelMes
 	return nil
 }
 
+// DeleteRecords - .
 func (rd *RepositoryDBURL) DeleteRecords(ctx context.Context) error {
 	_, err := rd.db.ExecContext(ctx,
 		`DELETE FROM urls

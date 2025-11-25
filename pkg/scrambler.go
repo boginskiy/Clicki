@@ -7,7 +7,7 @@ import (
 
 var Symbols = []rune("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
-// Scramble. temporary function instead of Scrambler
+// Scramble. temporary function instead of Scrambler.
 func Scramble(quantityElems int) string {
 	slByte := make([]byte, quantityElems)
 
@@ -21,7 +21,6 @@ func Scramble(quantityElems int) string {
 Description:
 
 	Attention! Need deep modification and test
-
 	Encryptor for the site domain
 
 attr:

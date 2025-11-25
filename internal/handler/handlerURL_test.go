@@ -31,7 +31,7 @@ func TestHandlerURL(t *testing.T) {
 	testGetURL(t, servShortURL)
 }
 
-func Init(logger logg.Logger, cfg conf.Config, db db.DBer) *service.ShortURL {
+func Init(logger logg.Logger, cfg conf.Config, db db.DataBase) *service.ShortURL {
 	var repo, _ = repository.NewRepositoryMapURL(cfg, db)
 
 	var sub1 = audit.NewFileReceiver(logger, cfg.GetAuditFile(), 1)
@@ -56,7 +56,7 @@ func InitLogg(name, mod string) logg.Logger {
 	return logg.NewLogg(name, mod)
 }
 
-func InitDB() db.DBer {
+func InitDB() db.DataBase {
 	return &db.StoreMap{Store: map[string]*model.URLTb{
 		"H3HIkks3": {
 			ID:            0,

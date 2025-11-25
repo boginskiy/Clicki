@@ -6,6 +6,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
+// Conf - struct about config interface.
 type Conf struct {
 	Logger        logg.Logger
 	ServerAddress string

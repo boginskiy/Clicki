@@ -11,6 +11,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
+// ShortURL - service about generation short URL.
 type ShortURL struct {
 	ExFunc  prep.ExtraFuncer
 	Repo    repo.Repository
@@ -45,40 +46,41 @@ func (s *ShortURL) GetHeader() string {
 }
 
 func (s *ShortURL) CreateURL(req *http.Request) ([]byte, error) {
-	originURL, err := s.ExFunc.TakeAllBodyFromReq(req) // Вынимаем тело запроса
+	// Take body request.
+	originURL, err := s.ExFunc.TakeAllBodyFromReq(req)
 	if err != nil {
 		s.Core.Logg.RaiseFatal(err, "ShortURL.CreateURL>TakeAllBodyFromReq", nil)
 		return EmptyByteSlice, err
 	}
 
-	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта
+	// Validation URL. Check regular expression, that line is domen of site.
 	if !s.Checker.CheckUpURL(originURL) || originURL == "" {
 		s.Core.Logg.RaiseError(ErrDataNotValid, "ShortURL.CreateURL>CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	userID := s.Core.TakeUserIDFromCtx(req)                   // Тащим идентификатор пользователя
-	correlationID := s.Core.EncrypOriginURL()                 // Уникальный идентификатор
-	shortURL := s.Core.Cfg.GetBaseURL() + "/" + correlationID // Новый сокращенный URL
+	userID := s.Core.TakeUserIDFromCtx(req)                   //  Take user id.
+	correlationID := s.Core.EncrypOriginURL()                 // Take unic id.
+	shortURL := s.Core.Cfg.GetBaseURL() + "/" + correlationID // New short URL.
 
-	preRecord := model.NewURLTb(0, correlationID, originURL, shortURL, userID) // Создаем запись
-	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)              // Кладем в DB данные
+	preRecord := model.NewURLTb(0, correlationID, originURL, shortURL, userID) // Create record.
+	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)              // Put record in the DB.
 
 	if err != nil && record == nil {
 		s.Core.Logg.RaiseError(err, "ShortURL.CreateURL>Repo.Create", nil)
 		return EmptyByteSlice, err
 	}
 
-	// Аудит
+	// Audit.
 	s.Core.EventOfAudit("shorten", userID, originURL)
 
 	return []byte(record.(*model.URLTb).ShortURL), err
 }
 
 func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
-	userID := s.Core.TakeUserIDFromCtx(req)                         // Тащим идентификатор пользователя
-	correlationID := strings.TrimLeft(req.URL.Path, "/")            // Достаем параметр correlationID
-	record, err := s.Repo.ReadRecord(context.TODO(), correlationID) // Достаем origin URL
+	userID := s.Core.TakeUserIDFromCtx(req)                         // Take user id.
+	correlationID := strings.TrimLeft(req.URL.Path, "/")            // Take params correlationID.
+	record, err := s.Repo.ReadRecord(context.TODO(), correlationID) // Take origin URL.
 
 	if err != nil {
 		s.Core.Logg.RaiseError(err, "ShortURL.Read>DB.Read", nil)
@@ -86,19 +88,18 @@ func (s *ShortURL) ReadURL(req *http.Request) ([]byte, error) {
 	}
 
 	if r, ok := record.(*model.URLTb); ok {
-		// Если фла==true, запись стоит в очереди на удаление
+		// if flag == true, record is in queue on deleting
 		if r.DeletedFlag {
 			return EmptyByteSlice, ErrReadRecord
 
 		} else {
-			// Аудит
+			// Audit.
 			s.Core.EventOfAudit("follow", userID, r.OriginalURL)
-			//
 			return []byte(r.OriginalURL), nil
 		}
 	}
 
-	// Default
+	// Default.
 	s.Core.Logg.RaiseError(err, "ShortURL.Read>DB.Read>switch", nil)
 	return EmptyByteSlice, ErrDataNotValid
 }

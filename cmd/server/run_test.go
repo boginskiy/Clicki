@@ -64,7 +64,7 @@ func RunRouter() *chi.Mux {
 	repo.UniqueFields = uniqueFields
 
 	auther := auth.NewAuth(config, logg, repo)
-	midWare := mv.NewMiddleware(logg, auther)
+	midWare := mv.NewMdlwere(logg, auther)
 	extraFuncer := prep.NewExtraFunc()
 	checker := validation.NewChecker()
 

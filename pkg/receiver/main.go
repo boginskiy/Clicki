@@ -1,3 +1,8 @@
+/*
+	This code is needed for imitation work reciver of message
+	in Audit's momen.
+*/
+
 package main
 
 import (
@@ -9,6 +14,7 @@ import (
 	"time"
 )
 
+// HardWork - func of imitation.
 func HardWork(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "method is not supported", http.StatusBadRequest)

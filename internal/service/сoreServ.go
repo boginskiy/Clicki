@@ -12,6 +12,7 @@ import (
 	"github.com/boginskiy/Clicki/pkg"
 )
 
+// CoreService - core.
 type CoreService struct {
 	Repo      repo.Repository
 	Publisher audit.Publisher
@@ -33,6 +34,7 @@ func NewCoreService(
 	}
 }
 
+// TakeUserIDFromCtx -
 func (c *CoreService) TakeUserIDFromCtx(req *http.Request) int {
 	UserID, ok := req.Context().Value(auth.CtxUserID).(int)
 	if !ok || UserID <= 0 {
@@ -41,19 +43,21 @@ func (c *CoreService) TakeUserIDFromCtx(req *http.Request) int {
 	return UserID
 }
 
+// EncrypOriginURL -
 func (c *CoreService) EncrypOriginURL() (correlID string) {
 	for {
-		correlID = pkg.Scramble(LONG)                         // Вызов шифратора
-		if c.Repo.CheckUnicRecord(context.TODO(), correlID) { // Проверка на уникальность
+		correlID = pkg.Scramble(LONG)                         // Call scramble.
+		if c.Repo.CheckUnicRecord(context.TODO(), correlID) { // Check on unic.
 			break
 		}
 	}
 	return correlID
 }
 
+// EventOfAudit -
 func (c *CoreService) EventOfAudit(action string, userID int, url string) {
-	// Собираем событие аудита
+	// Collection event audit.
 	event := audit.NewEvent(action, userID, url)
-	// Отправка события подписчикам
+	// Send event.
 	c.Publisher.Send(event)
 }

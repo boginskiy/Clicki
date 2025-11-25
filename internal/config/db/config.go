@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Config - is for connection to database.
 type Config struct {
 	DBHost     string
 	DBPort     int
@@ -16,8 +17,9 @@ type Config struct {
 	DBName     string
 }
 
-// "postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable"
-// "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable"
+// Path to DataBase.
+// "postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable".
+// "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable".
 
 func NewConfig() *Config {
 	return &Config{
@@ -29,11 +31,13 @@ func NewConfig() *Config {
 	}
 }
 
+// GetDBConnectionString - is a requisites for activation database.
 func (c *Config) GetDBConnectionString() string {
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName)
 }
 
+// OpenDatabase - .
 func OpenDatabase(c *Config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", c.GetDBConnectionString())
 	if err != nil {
@@ -46,23 +50,3 @@ func OpenDatabase(c *Config) (*sql.DB, error) {
 	}
 	return db, nil
 }
-
-// cfg := config.NewConfig()
-// db, err := config.OpenDatabase(cfg)
-
-// // db, err := sql.Open("postgres", kwargs.GetDB())
-// if err != nil {
-// 	log.Fatal(">>NewStoreDB", err)
-// }
-
-// // Применяем миграции сразу после открытия соединения с базой данных
-// if err := migration.ApplyMigrations(db); err != nil {
-// 	log.Fatalf("Error applying migrations: %v\\n", err)
-// }
-
-// err = db.Ping()
-// if err != nil {
-// 	log.Println(">>1> Database connection is closed:", err)
-// } else {
-// 	log.Println(">>1> Database connection is active.")
-// }

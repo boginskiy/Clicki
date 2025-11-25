@@ -2,7 +2,7 @@ package audit
 
 import "time"
 
-// Event is message
+// Event - is message for Subscribers.
 type Event struct {
 	TimeS  int64  `json:"ts"`
 	Action string `json:"action"`
@@ -19,7 +19,7 @@ func NewEvent(action string, userID int, url string) *Event {
 	}
 }
 
-// Publish is publisher
+// Publish - is publisher :) .
 type Publish struct {
 	Subscribers map[int]Subscriber
 	Count       int
@@ -40,10 +40,12 @@ func NewPublish(subs ...Subscriber) *Publish {
 	return &Publish{Subscribers: tmpMap, Count: cnt}
 }
 
+// CheckSubscribers - check.
 func (p *Publish) CheckSubscribers() bool {
 	return p.Count != 0
 }
 
+// Register - is a registration Subscribers.
 func (p *Publish) Register(sub Subscriber) {
 	if sub == nil {
 		return
@@ -52,11 +54,13 @@ func (p *Publish) Register(sub Subscriber) {
 	p.Count++
 }
 
+// Deregister - is a delete subscription.
 func (p *Publish) Deregister(sub Subscriber) {
 	delete(p.Subscribers, sub.GetID())
 	p.Count--
 }
 
+// Send - is a send messages.
 func (p *Publish) Send(event any) {
 	for _, subscriber := range p.Subscribers {
 		if subscriber != nil {

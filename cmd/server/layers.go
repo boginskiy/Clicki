@@ -9,16 +9,17 @@ import (
 	repo "github.com/boginskiy/Clicki/internal/repository"
 )
 
+// ErrCreateLayerDB - error about create layer DB.
 var ErrCreateLayerDB = errors.New(`{"error":"layer of databse didn't create"}`)
 
+// Layers - struct about layers of Appl.
 type Layers struct {
 	Cfg  conf.Config
 	Logg logg.Logger
-	db   db.DBer
+	db   db.DataBase
 	rp   repo.Repository
 }
 
-// NewLayers -
 func NewLayers(config conf.Config, logger logg.Logger) *Layers {
 	return &Layers{
 		Cfg:  config,
@@ -26,27 +27,26 @@ func NewLayers(config conf.Config, logger logg.Logger) *Layers {
 	}
 }
 
-// Close -
 func (l *Layers) Close() {
 	l.db.CloseDB()
 }
 
-// NewLayerDB -
-func (l *Layers) NewLayerDB() db.DBer {
-	dber, err := l.choiceLayerDB()
+// NewLayerDB - for create Repo layer.
+func (l *Layers) NewLayerDB() db.DataBase {
+	tmpdb, err := l.choiceLayerDB()
 	if err != nil {
 		l.Logg.RaiseFatal(err, "Layers>NewLayerDB", nil)
 	}
-	l.db = dber
-	return dber
+	l.db = tmpdb
+	return tmpdb
 }
 
-// NewLayerRepo -
-func (l *Layers) NewLayerRepo() repo.Repository {
-	if l.db == nil {
+// NewLayerRepo - for create Repo layer.
+func (l *Layers) NewLayerRepo(database db.DataBase) repo.Repository {
+	if database == nil {
 		l.Logg.RaiseFatal(ErrCreateLayerDB, "Layers>NewLayerRepo", nil)
 	}
-	repository, err := l.choiceLayerRepo(l.db)
+	repository, err := l.choiceLayerRepo(database)
 	if err != nil {
 		l.Logg.RaiseFatal(err, "Layers>NewLayerRepo", nil)
 	}
@@ -54,9 +54,9 @@ func (l *Layers) NewLayerRepo() repo.Repository {
 	return repository
 }
 
-// ChoiceRepo - for create Repo layer
-func (l *Layers) choiceLayerRepo(database db.DBer) (repo.Repository, error) {
-	var newRepo func(conf.Config, db.DBer) (repo.Repository, error)
+// ChoiceRepo - for a choise Repo layer.
+func (l *Layers) choiceLayerRepo(database db.DataBase) (repo.Repository, error) {
+	var newRepo func(conf.Config, db.DataBase) (repo.Repository, error)
 
 	switch database.(type) {
 	case *db.StoreDB:
@@ -69,9 +69,9 @@ func (l *Layers) choiceLayerRepo(database db.DBer) (repo.Repository, error) {
 	return newRepo(l.Cfg, database)
 }
 
-// choiceLayerDB - for create DB layer
-func (l *Layers) choiceLayerDB() (db.DBer, error) {
-	var newStore func(conf.Config, logg.Logger) (db.DBer, error)
+// choiceLayerDB - for a choise DB layer.
+func (l *Layers) choiceLayerDB() (db.DataBase, error) {
+	var newStore func(conf.Config, logg.Logger) (db.DataBase, error)
 
 	if l.Cfg.GetDB() != "" {
 		newStore = db.NewStoreDB

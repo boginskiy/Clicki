@@ -8,59 +8,59 @@ import (
 )
 
 const (
-	NonRetriable = 0 // NonRetriable - операцию не следует повторять
-	Retriable    = 1 // Retriable - операцию можно повторить
+	NonRetriable = 0 // NonRetriable - операцию не следует повторять.
+	Retriable    = 1 // Retriable - операцию можно повторить.
 
 )
 
+// PGErrorClass - struct abount classification errors Database.
 type PGErrorClass struct{}
 
 func NewPGErrorClass() *PGErrorClass {
 	return &PGErrorClass{}
 }
 
-// Classify классифицирует ошибку и возвращает кодировку
+// Classify - classification error and return code.
 func (p *PGErrorClass) Classify(err error) (pq.ErrorCode, int) {
 	if err == nil {
 		return "", NonRetriable
 	}
 
-	// Проверяем и конвертируем в pgconn.PgError, если это возможно
-	// var pgErr *pgconn.PgError
+	// Check and convertation in pgconn.PgError, if it possible.
 	var pgErr *pq.Error
 	if errors.As(err, &pgErr) {
 		return ClassifyPgError(pgErr)
 	}
 
-	// По умолчанию считаем ошибку неповторяемой
+	// Default think that error doesn't repeate.
 	return pgerrcode.Warning, NonRetriable
 }
 
 func ClassifyPgError(pgErr *pq.Error) (pq.ErrorCode, int) {
 	switch pgErr.Code {
 
-	// Класс 08 - Ошибки соединения
+	// Grade 08 - Erorrs about connection.
 	case pgerrcode.ConnectionException,
 		pgerrcode.ConnectionDoesNotExist,
 		pgerrcode.ConnectionFailure:
 		return pgErr.Code, Retriable
 
-	// Класс 40 - Откат транзакции
+	// Grade 40 - Erorrs about rollback of a transaction.
 	case pgerrcode.TransactionRollback,
 		pgerrcode.SerializationFailure,
 		pgerrcode.DeadlockDetected:
 		return pgErr.Code, Retriable
 
-	// Класс 57 - Ошибка оператора
+	// Grade 57 - Erorrs about operator.
 	case pgerrcode.CannotConnectNow:
 		return pgErr.Code, Retriable
 
-	// Класс 22 - Ошибки данных
+	// Grade 22 - Erorrs about data.
 	case pgerrcode.DataException,
 		pgerrcode.NullValueNotAllowedDataException:
 		return pgErr.Code, NonRetriable
 
-	// Класс 23 - Нарушение ограничений целостности
+	// Grade 23 - Erorrs about violation of integrity constraints.
 	case pgerrcode.IntegrityConstraintViolation,
 		pgerrcode.RestrictViolation,
 		pgerrcode.NotNullViolation,
@@ -69,7 +69,7 @@ func ClassifyPgError(pgErr *pq.Error) (pq.ErrorCode, int) {
 		pgerrcode.CheckViolation:
 		return pgErr.Code, NonRetriable
 
-	// Класс 42 - Синтаксические ошибки
+	// Grade 42 - Erorrs about syntactic.
 	case pgerrcode.SyntaxErrorOrAccessRuleViolation,
 		pgerrcode.SyntaxError,
 		pgerrcode.UndefinedColumn,

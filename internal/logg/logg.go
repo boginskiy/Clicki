@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Logg - custom logger above logrus.
 type Logg struct {
 	Log      *logrus.Logger
 	Desc     *os.File
@@ -14,9 +15,9 @@ type Logg struct {
 }
 
 func NewLogg(nameFile, level string) *Logg {
-	// Create file
+	// Create file.
 	tmpDesc := createLogFile(nameFile)
-	// Settings Logrus
+	// Settings Logrus.
 	tmpLogrus := setupLogrus(tmpDesc, LEVEL[level])
 
 	return &Logg{

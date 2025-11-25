@@ -1,3 +1,8 @@
+/*
+Just a code for my soul.
+
+	:))
+*/
 package pkg
 
 import (

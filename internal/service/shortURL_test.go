@@ -142,7 +142,7 @@ func testCreateURL(t *testing.T, ctx context.Context, srv *service.ShortURL) {
 	}
 }
 
-func Init(logg logg.Logger, cfg conf.Config, db db.DBer) *service.ShortURL {
+func Init(logg logg.Logger, cfg conf.Config, db db.DataBase) *service.ShortURL {
 	var repo, _ = repository.NewRepositoryMapURL(cfg, db)
 
 	var sub1 = audit.NewFileReceiver(logg, cfg.GetAuditFile(), 1)
@@ -167,7 +167,7 @@ func InitLogg(name, mod string) logg.Logger {
 	return logg.NewLogg(name, mod)
 }
 
-func InitDB() db.DBer {
+func InitDB() db.DataBase {
 	// Map
 	row := model.NewURLTb(1, "H3HIkks3", "https://giga.chat/", "http://localhost:8081/H3HIkks3", 100)
 	return &db.StoreMap{Store: map[string]*model.URLTb{"H3HIkks3": row}}

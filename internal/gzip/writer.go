@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// CompressWriter - for compress data.
 type CompressWriter struct {
 	w  http.ResponseWriter
 	zw *gzip.Writer
@@ -32,7 +33,7 @@ func (c *CompressWriter) WriteHeader(statusCode int) {
 	c.w.WriteHeader(statusCode)
 }
 
-// Close закрывает gzip.Writer и досылает все данные из буфера.
+// Close - close gzip.Writer send all data from buff.
 func (c *CompressWriter) Close() error {
 	return c.zw.Close()
 }

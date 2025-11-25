@@ -5,6 +5,7 @@ import (
 	"io"
 )
 
+// CompressReader - for compress data.
 type CompressReader struct {
 	r  io.ReadCloser
 	zr *gzip.Reader

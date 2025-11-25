@@ -6,9 +6,7 @@ import (
 	"time"
 )
 
-// Query's *sql.DB
-
-// InsertRowToUrls - добавление строки в таблицу 'urls'
+// InsertRowToUrls - add row in table 'urls'.
 func InsertRowToUrls(db *sql.DB, ctx context.Context, id, origin, short string, tm time.Time, userID int) (sql.Result, error) {
 	return db.ExecContext(ctx,
 		`INSERT INTO urls (correlation_id, original_url, short_url, created_at, user_id)
@@ -16,7 +14,7 @@ func InsertRowToUrls(db *sql.DB, ctx context.Context, id, origin, short string, 
 		id, origin, short, convertTimeToStr(tm, time.RFC3339), userID)
 }
 
-// SelectRowByOriginalURL - выбор строки по полю 'original_url'
+// SelectRowByOriginalURL - choise row by field 'original_url'.
 func SelectRowByOriginalURL(db *sql.DB, ctx context.Context, origin string) *sql.Row {
 	return db.QueryRowContext(ctx,
 		`SELECT id, original_url, short_url, correlation_id, created_at, user_id
@@ -25,7 +23,7 @@ func SelectRowByOriginalURL(db *sql.DB, ctx context.Context, origin string) *sql
 		origin)
 }
 
-// SelectRowByCorrelID - выбор строки по полю 'correlation_id'
+// SelectRowByCorrelID - choise row by field 'correlation_id'.
 func SelectRowByCorrelID(db *sql.DB, ctx context.Context, correlID string) *sql.Row {
 	return db.QueryRowContext(ctx,
 		`SELECT id, original_url, short_url, correlation_id, created_at, user_id, deleted_flag
@@ -34,9 +32,7 @@ func SelectRowByCorrelID(db *sql.DB, ctx context.Context, correlID string) *sql.
 		correlID)
 }
 
-// Query's *sql.Tx
-
-// InsertRowToUrlsTX - добавление строки в таблицу 'urls' через транзакцию
+// InsertRowToUrlsTX - add row in table 'urls' through transaction.
 func InsertRowToUrlsTX(tx *sql.Tx, ctx context.Context, id, origin, short string, tm time.Time, userID int) (sql.Result, error) {
 	return tx.ExecContext(ctx,
 		`INSERT INTO urls (correlation_id, original_url, short_url, created_at, user_id)
@@ -44,14 +40,14 @@ func InsertRowToUrlsTX(tx *sql.Tx, ctx context.Context, id, origin, short string
 		id, origin, short, convertTimeToStr(tm, time.RFC3339), userID)
 }
 
-// SelectMaxCntByUser -
+// SelectMaxCntByUser - .
 func SelectMaxCntByUser(db *sql.DB, ctx context.Context) *sql.Row {
 	return db.QueryRowContext(ctx,
 		`SELECT MAX(user_id)
 		 FROM urls`)
 }
 
-// IsThereUser -
+// IsThereUser - .
 func IsThereUser(db *sql.DB, ctx context.Context, userID int) *sql.Row {
 	return db.QueryRowContext(ctx,
 		`SELECT EXISTS (
@@ -61,7 +57,7 @@ func IsThereUser(db *sql.DB, ctx context.Context, userID int) *sql.Row {
 		userID)
 }
 
-// SelectUserURLs
+// SelectUserURLs - .
 func SelectUserURLs(db *sql.DB, ctx context.Context, userID int) (*sql.Rows, error) {
 	return db.QueryContext(ctx,
 		`SELECT original_url, short_url 

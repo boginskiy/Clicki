@@ -1,6 +1,7 @@
 package db
 
-type DBer interface {
+// DataBase - .
+type DataBase interface {
 	CheckOpen() (bool, error)
 	GetDB() any
 	CloseDB()

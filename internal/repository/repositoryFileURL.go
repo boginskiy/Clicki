@@ -14,9 +14,10 @@ import (
 	"github.com/boginskiy/Clicki/internal/model"
 )
 
+// RepositoryFileURL - repository for file.
 type RepositoryFileURL struct {
 	Cfg conf.Config
-	DB  db.DBer // *os.File
+	DB  db.DataBase // *os.File .
 
 	Store        map[string]*model.URLTb
 	UniqueFields map[string]string
@@ -28,64 +29,65 @@ type RepositoryFileURL struct {
 	LastUser     int
 }
 
-func NewRepositoryFileURL(config conf.Config, dber db.DBer) (Repository, error) {
-	// Create Scanner
-	file, ok := dber.GetDB().(*os.File)
+func NewRepositoryFileURL(config conf.Config, dataBase db.DataBase) (Repository, error) {
+	// Create Scanner.
+	file, ok := dataBase.GetDB().(*os.File)
 	if !ok {
 		return nil, errs.NewErrPlace("database not valid", nil)
 	}
-	// Create
+	// Create.
 	tmpRepo := &RepositoryFileURL{
 		Cfg:     config,
-		DB:      dber,
+		DB:      dataBase,
 		Scanner: bufio.NewScanner(file),
 		File:    file,
 	}
-	// Restoring data from the last session
+	// Restoring data from the last session.
 	st, uf := tmpRepo.dataRecovery()
 	tmpRepo.Store = st
 	tmpRepo.UniqueFields = uf
 	return tmpRepo, nil
 }
 
-// PingDB - Для реализации interface
+// PingDB - for interface.
 func (rf *RepositoryFileURL) PingDB(ctx context.Context) (bool, error) {
 	return rf.DB.CheckOpen()
 }
 
-// MarkerRecords - Для реализации interface
+// MarkerRecords - for interface.
 func (rf *RepositoryFileURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
 	return nil
 }
 
-// DeleteRecords - Для реализации interface
+// DeleteRecords - for interface.
 func (rf *RepositoryFileURL) DeleteRecords(ctx context.Context) error {
 	return nil
 }
 
-// ReadLastRecord - Для реализации interface
+// ReadLastRecord - for interface.
 func (rf *RepositoryFileURL) ReadLastRecord(ctx context.Context) int {
 	return rf.LastUser
 }
 
+// dataRecovery - .
 func (rf *RepositoryFileURL) dataRecovery() (map[string]*model.URLTb, map[string]string) {
 	resultMap := make(map[string]*model.URLTb, db.SIZE)
 	resultSet := make(map[string]string, db.SIZE)
 
-	// Проход по строкам
+	// Проход по строкам.
 	for rf.Scanner.Scan() {
 		record := &model.URLTb{}
 		line := rf.Scanner.Text()
 
-		// Десериализация
+		// Deserialization.
 		err := json.Unmarshal([]byte(line), record)
 		if err != nil {
 			continue
 		}
-		resultMap[record.CorrelationID] = record             // Сохранение данных с map
-		resultSet[record.OriginalURL] = record.CorrelationID // Сохранение данных с set
-		rf.LastRec = max(rf.LastRec, record.ID)              // Счетчик для ID
-		rf.LastUser = max(rf.LastUser, record.UserID)        // Счетчик для User
+		resultMap[record.CorrelationID] = record             // Data save with Map.
+		resultSet[record.OriginalURL] = record.CorrelationID // Data save with Set.
+		rf.LastRec = max(rf.LastRec, record.ID)              // Counter ID.
+		rf.LastUser = max(rf.LastUser, record.UserID)        // Counter User.
 	}
 	return resultMap, resultSet
 }
@@ -112,14 +114,14 @@ func (rf *RepositoryFileURL) CreateRecord(ctx context.Context, preRecord any) (a
 		return nil, errs.NewErrPlace("type is not available", nil)
 	}
 
-	// Логика, если данные уже есть в Store
+	// Логика, если данные уже есть в Store.
 	rf.muR.RLock()
 	if correlID, ok := rf.UniqueFields[row.OriginalURL]; ok {
 		return rf.Store[correlID], errs.ErrUniqueData
 	}
 	rf.muR.RUnlock()
 
-	// Логика, если данные отсутствуют в Store
+	// Логика, если данные отсутствуют в Store.
 	rf.mu.Lock()
 	rf.LastRec += 1
 	row.ID = rf.LastRec
@@ -133,7 +135,7 @@ func (rf *RepositoryFileURL) CreateRecord(ctx context.Context, preRecord any) (a
 	}
 	jsonData = append(jsonData, byte('\n'))
 
-	// TODO! Может это вывести в интерфейс БД ? Может еще чего так же вывести и разгрузить репозиторий
+	// TODO: Может это вывести в интерфейс БД ? Может еще чего так же вывести и разгрузить репозиторий.
 	_, err = rf.File.Write(jsonData)
 	return row, err
 }
@@ -151,10 +153,10 @@ func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) err
 
 		row := model.NewURLTb(rf.LastRec, r.CorrelationID, r.OriginalURL, r.ShortURL, r.UserID)
 
-		// Добавляем данные в Map
+		// Добавляем данные в Map.
 		rf.Store[row.CorrelationID] = row
 
-		// Запись данных в файл
+		// Запись данных в файл.
 		jsonData, err := json.Marshal(row)
 		if err != nil {
 			return err
@@ -166,7 +168,6 @@ func (rf *RepositoryFileURL) CreateRecords(ctx context.Context, records any) err
 			return err
 		}
 	}
-
 	rf.mu.Unlock()
 	return nil
 }

@@ -2,6 +2,7 @@ package preparation
 
 import "net/http"
 
+// ExtraFuncer - .
 type ExtraFuncer interface {
 	TakeAllBodyFromReq(req *http.Request) (string, error)
 	Deserialization(req *http.Request, st any) error

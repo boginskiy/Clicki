@@ -8,13 +8,14 @@ import (
 	srv "github.com/boginskiy/Clicki/internal/service"
 )
 
+// HandlerURL - handler for two service. TODO: need refactoring.
 type HandlerURL struct {
 	CrudSrver srv.CrudSrver
 	DelSrver  srv.DelSrver
 }
 
 func (h *HandlerURL) ReadURL(res http.ResponseWriter, req *http.Request) {
-	// Запуск бизнес логики сервиса 'CrudSrver'
+	// Start of business logic 'CrudSrver'.
 	body, err := h.CrudSrver.ReadURL(req)
 
 	if err == srv.ErrReadRecord {
@@ -32,17 +33,16 @@ func (h *HandlerURL) ReadURL(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HandlerURL) CreateURL(res http.ResponseWriter, req *http.Request) {
-	// Start of 'CrudSrver'
 	body, err := h.CrudSrver.CreateURL(req)
 	status := http.StatusCreated
 
-	// Обработка критичных ошибок
+	// Processing critical errors.
 	if err != nil && len(body) == 0 {
 		http.Error(res, "message: not created", http.StatusBadRequest)
 		return
 	}
 
-	// Обработка не критичных ошибок
+	// Processing uncritical errors.
 	if err != nil && len(body) > 0 {
 		status = http.StatusConflict
 	}
@@ -84,7 +84,7 @@ func (h *HandlerURL) ReadSetUserURL(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	// У пользователя нет записей
+	// if user does't have record.
 	if len(body) == 0 {
 		res.WriteHeader(http.StatusNoContent)
 		return

@@ -17,45 +17,45 @@ import (
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
+// Run - initialization infrastructure of Appl.
 func Run(config conf.Config, baseLog logg.Logger, repo repo.Repository) {
-	// Loggers
+	// Loggers.
 	infraLogg := logg.NewLogg(config.GetLogFile(), "INFO")
 	authLogg := logg.NewLogg("reg.log", "ERROR")
 
-	// Audit
+	// Audit.
 	sub1 := audit.NewFileReceiver(infraLogg, config.GetAuditFile(), 1)
 	sub2 := audit.NewServerReceiver(infraLogg, config.GetAuditURL(), 2)
 	publisher := audit.NewPublish(sub1, sub2)
 
-	// Middleware & Registr
-	// audit := audit.NewAudit(config, baseLog, publisher)
+	// Middleware & Registr.
+	// audit := audit.NewAudit(config, baseLog, publisher).
 	auther := auth.NewAuth(config, authLogg, repo)
-	midWare := mv.NewMiddleware(infraLogg, auther)
+	midWare := mv.NewMdlwere(infraLogg, auther)
 
-	// Extra
-	extraFuncer := prep.NewExtraFunc()
+	// Extra function.
 	checker := validation.NewChecker()
+	exFunc := prep.NewExtraFunc()
 
-	// Ctx
+	// Ctx.
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Services
+	// Services.
 	CoreServ := service.NewCoreService(config, baseLog, repo, publisher)
-	APIShortURL := service.NewAPIShortURL(CoreServ, repo, checker, extraFuncer)
-	ShortURL := service.NewShortURL(CoreServ, repo, checker, extraFuncer)
+	APIShortURL := service.NewAPIShortURL(CoreServ, repo, checker, exFunc)
+	ShortURL := service.NewShortURL(CoreServ, repo, checker, exFunc)
 	APIDelMess := service.NewDelMess(ctx, CoreServ, repo)
 
-	// writing log...
+	// writing log.
 	baseLog.RaiseInfo(logg.StartedServInfo, logg.Fields{"port": config.GetSrvAddr()})
 
-	// Start server
+	// Start server.
 	err := http.ListenAndServe(
 		config.GetSrvAddr(), router.Router(midWare, APIShortURL, ShortURL, APIDelMess))
 
-	// writing log...
+	// writing log.
 	baseLog.RaiseFatal(err, logg.StartedServFatal, logg.Fields{"port": config.GetSrvAddr()})
 
-	// defer
 	defer infraLogg.Close()
 	defer authLogg.Close()
 	defer sub1.Clouse()

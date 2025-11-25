@@ -12,8 +12,10 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+// MigrationsDir - is a path to folder with migrations.
 const MigrationsDir = "./migrations"
 
+// ApplyMigrations - make Migrations.
 func ApplyMigrations(db *sql.DB) error {
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 
@@ -31,8 +33,6 @@ func ApplyMigrations(db *sql.DB) error {
 		return err
 	}
 	defer func(mgr *migrate.Migrate) { mgr.Close() }(migrator)
-
-	// ctx := context.Background()
 
 	if err := migrator.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatalf("Migration failed: %v\\n", err)

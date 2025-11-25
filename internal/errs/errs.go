@@ -6,14 +6,15 @@ import (
 	"runtime"
 )
 
+// Errors.
 var (
-	// ErrUniqueData - if try not unic data
+	// ErrUniqueData - if try not unic data.
 	ErrUniqueData = errors.New("attempt to overwrite unique data")
-	// ErrPingDataBase - if db not available
+	// ErrPingDataBase - if db not available.
 	ErrPingDataBase = errors.New("bad database ping")
 )
 
-// ErrPlace -
+// ErrPlace - error with place when raise err.
 type ErrPlace struct {
 	Message string
 	File    string
@@ -22,7 +23,7 @@ type ErrPlace struct {
 }
 
 func NewErrPlace(mess string, err error) *ErrPlace {
-	// Get info about place of call
+	// Get info about place of call.
 	_, file, line, _ := runtime.Caller(1)
 
 	return &ErrPlace{
@@ -42,7 +43,7 @@ func (p *ErrPlace) Unwrap() error {
 	return p.Err
 }
 
-// ErrWrap
+// ErrWrap - error with wrapp another err.
 type ErrWrap struct {
 	Message string
 	Err     error

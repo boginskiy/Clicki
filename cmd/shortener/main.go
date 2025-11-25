@@ -7,13 +7,14 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
+// main - start of Appl.
 func main() {
 	logger := logg.NewLogg("base.log", "FATAL")
 	config := config.NewVariables(logger)
 	layers := server.NewLayers(config, logger)
 
-	layers.NewLayerDB()
-	repo := layers.NewLayerRepo()
+	db := layers.NewLayerDB()
+	repo := layers.NewLayerRepo(db)
 
 	defer logger.Close()
 	defer layers.Close()

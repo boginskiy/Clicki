@@ -1,3 +1,7 @@
+/*
+Dead codes.
+*/
+
 package audit
 
 import (
@@ -11,6 +15,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
+// Audit - struct about listening comprehension.
 type Audit struct {
 	Publisher Publisher
 	Cfg       conf.Config
@@ -19,7 +24,7 @@ type Audit struct {
 }
 
 func NewAudit(config conf.Config, logger logg.Logger, publisher Publisher) *Audit {
-	// Компилируем регулярное выражение. Далее будет проверка URL
+	// Компилируем регулярное выражение. Далее будет проверка URL.
 	rx, err := regexp.Compile(pattern)
 	if err != nil {
 		logger.RaiseFatal(err, "Audit>NewAudit>Compile", nil)
@@ -85,8 +90,8 @@ func (a *Audit) isItRightURL(req *http.Request) bool {
 }
 
 func (a *Audit) NeedAudit(r *http.Request) bool {
-	// 1. Проверка входящего URL со списком, подлежащим аудированию
-	// 2. Проверка наличия подписчиков. Если их нет, аудирование не работает
+	// 1. Проверка входящего URL со списком, подлежащим аудированию.
+	// 2. Проверка наличия подписчиков. Если их нет, аудирование не работает.
 	return a.isItRightURL(r) && a.Publisher.CheckSubscribers()
 }
 
@@ -94,16 +99,16 @@ func (a *Audit) NoticeCreateLink(req *http.Request) {
 	if req.Method != "POST" {
 		return
 	}
-	// Берем оригинальный URL
+	// Берем оригинальный URL.
 	originURL, err := a.TakeOriginURL(req)
 	if err != nil {
 		a.Logg.RaiseError(err, "Audit>CreateLink>TakeOriginURL", nil)
 		return
 	}
-	// Собираем событие аудита
+	// Собираем событие аудита.
 	event := NewEvent("shorten", a.takeUserID(req), originURL)
 
-	// Отправка события подписчикам
+	// Отправка события подписчикам.
 	a.Publisher.Send(event)
 }
 

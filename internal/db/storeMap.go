@@ -7,13 +7,15 @@ import (
 	mod "github.com/boginskiy/Clicki/internal/model"
 )
 
+// SIZE is default size for Map.
 const SIZE = 1024
 
+// StoreMap - store is map database.
 type StoreMap struct {
 	Store map[string]*mod.URLTb
 }
 
-func NewStoreMap(_ conf.Config, _ logg.Logger) (DBer, error) {
+func NewStoreMap(_ conf.Config, _ logg.Logger) (DataBase, error) {
 	return &StoreMap{
 		Store: make(map[string]*mod.URLTb, SIZE),
 	}, nil

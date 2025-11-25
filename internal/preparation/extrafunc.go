@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// ExtraFunc - struct with some functions.
 type ExtraFunc struct {
 }
 

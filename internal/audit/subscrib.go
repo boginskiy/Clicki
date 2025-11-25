@@ -10,7 +10,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
-// FileReceiver
+// FileReceiver - is a file Subscriber.
 type FileReceiver struct {
 	Logger logg.Logger
 	F      *os.File
@@ -34,10 +34,12 @@ func (fR *FileReceiver) serialization(event any) ([]byte, error) {
 	return json.MarshalIndent(event, "", "\t")
 }
 
+// GetID - .
 func (fR *FileReceiver) GetID() int {
 	return fR.ID
 }
 
+// Clouse - .
 func (fR *FileReceiver) Clouse() {
 	fR.F.Close()
 }
@@ -59,7 +61,7 @@ func (fR *FileReceiver) Update(event any) {
 	}()
 }
 
-// ServerReceiver
+// ServerReceiver - is a server Subscriber.
 type ServerReceiver struct {
 	Logger logg.Logger
 	URL    string
@@ -91,14 +93,17 @@ func (sR *ServerReceiver) serialization(event any) ([]byte, error) {
 	return json.MarshalIndent(event, "", "\t")
 }
 
+// GetID - .
 func (sR *ServerReceiver) GetID() int {
 	return sR.ID
 }
 
+// Clouse - .
 func (sR *ServerReceiver) Clouse() {
 	sR.cancel()
 }
 
+// Update is a sender message to server for audition.
 func (sR *ServerReceiver) Update(event any) {
 
 	go func(ctx context.Context) {

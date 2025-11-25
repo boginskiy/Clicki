@@ -10,9 +10,10 @@ import (
 	"github.com/boginskiy/Clicki/internal/model"
 )
 
+// RepositoryMapURL - repository for Map.
 type RepositoryMapURL struct {
 	Cfg conf.Config
-	DB  db.DBer // map[string]*model.URLTb
+	DB  db.DataBase // map[string]*model.URLTb .
 
 	store        map[string]*model.URLTb
 	uniqueFields map[string]string
@@ -20,36 +21,36 @@ type RepositoryMapURL struct {
 	mu           sync.Mutex
 }
 
-func NewRepositoryMapURL(config conf.Config, dber db.DBer) (Repository, error) {
-	store, ok := dber.GetDB().(map[string]*model.URLTb)
+func NewRepositoryMapURL(config conf.Config, dataBase db.DataBase) (Repository, error) {
+	store, ok := dataBase.GetDB().(map[string]*model.URLTb)
 	if !ok {
 		return nil, errs.NewErrPlace("database not valid", nil)
 	}
 
 	return &RepositoryMapURL{
 		Cfg:          config,
-		DB:           dber,
+		DB:           dataBase,
 		uniqueFields: make(map[string]string, db.SIZE),
 		store:        store,
 	}, nil
 }
 
-// ReadLastRecord - Для реализации interface
+// ReadLastRecord - for interface.
 func (rm *RepositoryMapURL) ReadLastRecord(ctx context.Context) int {
 	return 0
 }
 
-// MarkerRecords - Для реализации interface
+// MarkerRecords - for interface.
 func (rm *RepositoryMapURL) MarkerRecords(ctx context.Context, messages ...DelMessage) error {
 	return nil
 }
 
-// DeleteRecords - Для реализации interface
+// DeleteRecords - for interface.
 func (rm *RepositoryMapURL) DeleteRecords(ctx context.Context) error {
 	return nil
 }
 
-// PingDB - Для реализации interface
+// PingDB - for interface.
 func (rm *RepositoryMapURL) PingDB(ctx context.Context) (bool, error) {
 	return rm.DB.CheckOpen()
 }
@@ -76,7 +77,7 @@ func (rm *RepositoryMapURL) CreateRecord(ctx context.Context, preRecord any) (an
 		return nil, errs.NewErrPlace("data not valid", nil)
 	}
 
-	// Логика, если данные уже есть в Store
+	// Логика, если данные уже есть в Store.
 	rm.muR.RLock()
 	defer rm.muR.RUnlock()
 
@@ -84,7 +85,7 @@ func (rm *RepositoryMapURL) CreateRecord(ctx context.Context, preRecord any) (an
 		return rm.store[correlID], errs.ErrUniqueData
 	}
 
-	// Добавление записи в map
+	// Добавление записи в map.
 	rm.mu.Lock()
 	defer rm.mu.Unlock()
 

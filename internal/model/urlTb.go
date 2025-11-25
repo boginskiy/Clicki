@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// URLTb - struct of data about URL.
 type URLTb struct {
 	ID            int       `json:"uuid"`
 	OriginalURL   string    `json:"original_url"`

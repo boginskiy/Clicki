@@ -11,31 +11,34 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
+// MvFunc - type func of HandlerFunc.
 type MvFunc func(http.HandlerFunc) http.HandlerFunc
 
-type Middleware struct {
+// Mdlwere - struct with function of Middleware.
+type Mdlwere struct {
 	Auth auth.Auther
 	Logg logg.Logger
 }
 
-func NewMiddleware(logger logg.Logger, auther auth.Auther) *Middleware {
-	return &Middleware{Logg: logger, Auth: auther}
+func NewMdlwere(logger logg.Logger, auther auth.Auther) *Mdlwere {
+	return &Mdlwere{Logg: logger, Auth: auther}
 }
 
-func (m *Middleware) Conveyor(next http.HandlerFunc) http.HandlerFunc {
-	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} { // m.WithAudit
+func (m *Mdlwere) Conveyor(next http.HandlerFunc) http.HandlerFunc {
+	// TODO: m.WithAudit .
+	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} {
 		next = middleware(next)
 	}
 	return next
 }
 
-func (m *Middleware) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
+func (m *Mdlwere) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		uri := r.RequestURI
 		method := r.Method
 
-		// Extension standart ResponseWriter
+		// Extension standart ResponseWriter.
 		extW := NewExResWriter(w)
 		next(extW, r)
 
@@ -53,11 +56,11 @@ func (m *Middleware) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
+func (m *Mdlwere) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tmpW := w
 
-		// Checking Encoding and Type
+		// Checking Encoding and Type.
 		acceptEncoding := r.Header.Get("Accept-Encoding")
 		acceptContent := r.Header.Get("Content-Type")
 
@@ -66,13 +69,13 @@ func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 		htmlGzip := strings.Contains(acceptContent, "text/html")
 
 		if supportsGzip && (jsonGzip || htmlGzip) {
-			// Оборачиваем http.ResponseWriter новым с gzip
+			// Wrapp http.ResponseWriter with new gzip.
 			compW := gzip.NewCompressWriter(w)
 			tmpW = compW
 			defer compW.Close()
 		}
 
-		// Проверка, что клиент отправил сжатые данные
+		// Check about user sent compressed data.
 		contentEncoding := r.Header.Get("Content-Encoding")
 		sendGzip := strings.Contains(contentEncoding, "gzip")
 
@@ -82,25 +85,25 @@ func (m *Middleware) WithGzip(next http.HandlerFunc) http.HandlerFunc {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			// Меняем тело запроса на новое
+			// Change body of request on new.
 			r.Body = decompR
 		}
-		// Передача управления
+		// Transfer of control.
 		next(tmpW, r)
 	}
 }
 
-func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
+func (m *Mdlwere) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, UserID, err := m.Auth.Authentication(r)
 
-		// Ошибки 'пользователь не найден' и 'создание токена'
+		// Errors with "user not found" and "create token".
 		if err == auth.ErrUserNotFound || err == auth.ErrCreateToken {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
-		// Ошибки валидации токена
+		// Erorrs validation token.
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -111,21 +114,3 @@ func (m *Middleware) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r.WithContext(ctx))
 	}
 }
-
-// func (m *Middleware) WithAudit(next http.HandlerFunc) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		// Проверка требований для прохождения аудита
-// 		if !m.Auditer.NeedAudit(r) {
-// 			next(w, r)
-// 		} else {
-
-// 			next(w, r)
-
-// 			// POST
-// 			m.Auditer.NoticeCreateLink(r)
-
-// 			// GET
-// 			m.Auditer.NoticeFollowLink(r)
-// 		}
-// 	}
-// }

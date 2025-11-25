@@ -10,6 +10,7 @@ import (
 	repo "github.com/boginskiy/Clicki/internal/repository"
 )
 
+// Auth - is authentication users.
 type Auth struct {
 	Cfg        conf.Config
 	Logg       logg.Logger
@@ -25,7 +26,7 @@ func NewAuth(config conf.Config, logger logg.Logger, repo repo.Repository) *Auth
 		Repo:       repo,
 		JWTService: NewJWTService(config),
 
-		// Louding last userID from last record
+		// Louding last userID from last record.
 		LastUser: repo.ReadLastRecord(context.TODO()),
 	}
 }
@@ -35,11 +36,11 @@ func (a *Auth) createCookie(token, name string) *http.Cookie {
 	return &http.Cookie{
 		Name:     name,
 		Value:    token,
-		Path:     "/",
-		HttpOnly: true,                    // Доступ только серверу, увеличивает безопасность
-		SameSite: http.SameSiteStrictMode, // Запрещает отправлять куки с другого домена
-		MaxAge:   cokiTime,                // Срок жизни куки
-		Secure:   false,                   // Поставьте true, если работаете через HTTPS
+		Path:     "/",                     // Info:
+		HttpOnly: true,                    // Доступ только серверу, увеличивает безопасность.
+		SameSite: http.SameSiteStrictMode, // Запрещает отправлять куки с другого домена.
+		MaxAge:   cokiTime,                // Срок жизни куки.
+		Secure:   false,                   // Поставьте true, если работаете через HTTPS.
 	}
 }
 
@@ -48,6 +49,7 @@ func (a *Auth) nextUser() int {
 	return a.LastUser
 }
 
+// Authorization - is a authorization users.
 func (a *Auth) Authorization(req *http.Request) (*http.Cookie, int, error) {
 	UserID := a.nextUser()
 	token, err := a.JWTService.CreateJWT(UserID)
@@ -58,25 +60,26 @@ func (a *Auth) Authorization(req *http.Request) (*http.Cookie, int, error) {
 	return a.createCookie(token, a.Cfg.GetNameCoki()), UserID, nil
 }
 
+// Authentication - is a authentication users.
 func (a *Auth) Authentication(req *http.Request) (*http.Cookie, int, error) {
-	// Достаем 'Cookie'
+	// Take a 'Cookie'.
 	cookie, err := req.Cookie(a.Cfg.GetNameCoki())
 
-	// Авторизация если отсутствуют 'Cookie'
+	// Authorization if without a 'Cookie'.
 	if err != nil {
 		return a.Authorization(req)
 	}
 
-	// Аутентификация если присутствуют 'Cookie'
+	// Authentication if there is a 'Cookie'.
 	UserID, err := a.JWTService.GetIDAndValidJWT(cookie.Value)
 
-	// Условие непрохождения аутентификации. Пользователь не найден
+	// Condition of non-passage authentication. User was not found.
 	if UserID <= 0 {
 		a.Logg.RaiseInfo(ErrUserNotFound.Error(), logg.Fields{"userID": UserID})
 		return nil, 0, ErrUserNotFound
 	}
 
-	// Условие для обновления токена
+	// Condition of update token.
 	if err != nil {
 
 		if errors.Is(err, ErrTokenIsExpired) || errors.Is(err, ErrTokenNotValid) {
@@ -85,7 +88,7 @@ func (a *Auth) Authentication(req *http.Request) (*http.Cookie, int, error) {
 				a.Logg.RaiseError(err, "Auth>Authentication>CreateJWT", nil)
 				return nil, 0, ErrCreateToken
 			}
-			// Выдаем свежий токен
+			// Give fresh token.
 			return a.createCookie(token, a.Cfg.GetNameCoki()), UserID, nil
 		}
 		a.Logg.RaiseError(err, "Auth>Authentication>CreateJWT", nil)

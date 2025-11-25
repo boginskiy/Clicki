@@ -21,12 +21,13 @@ func createUrls(db *sql.DB) error {
 	return err
 }
 
+// StoreDB - store is real database.
 type StoreDB struct {
 	Logg logg.Logger
 	DB   *sql.DB
 }
 
-func NewStoreDB(config conf.Config, logger logg.Logger) (DBer, error) {
+func NewStoreDB(config conf.Config, logger logg.Logger) (DataBase, error) {
 	db, err := sql.Open("postgres", config.GetDB())
 	if err != nil {
 		return nil, err

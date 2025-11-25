@@ -1,5 +1,6 @@
 package model
 
-type Tber interface {
+// Table - interface for table Database.
+type Table interface {
 	String() string
 }
