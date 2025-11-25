@@ -12,7 +12,7 @@ import (
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
 	repo "github.com/boginskiy/Clicki/internal/repository"
-	"github.com/boginskiy/Clicki/internal/router"
+
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
 )
@@ -51,7 +51,7 @@ func Run(config conf.Config, baseLog logg.Logger, repo repo.Repository) {
 
 	// Start server.
 	err := http.ListenAndServe(
-		config.GetSrvAddr(), router.Router(midWare, APIShortURL, ShortURL, APIDelMess))
+		config.GetSrvAddr(), Router(midWare, APIShortURL, ShortURL, APIDelMess))
 
 	// writing log.
 	baseLog.RaiseFatal(err, logg.StartedServFatal, logg.Fields{"port": config.GetSrvAddr()})

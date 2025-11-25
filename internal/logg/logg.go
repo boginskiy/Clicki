@@ -41,7 +41,7 @@ func (e *Logg) RaiseWarn(msg string, dataMap Fields) {
 
 func (e *Logg) RaiseError(err error, msg string, dataMap Fields) {
 	if err != nil {
-		fmt.Fprintln(os.Stdout, msg)
+		// fmt.Fprintln(os.Stdout, msg)
 
 		if dataMap != nil {
 			e.Log.WithFields(logrus.Fields(dataMap)).Error(msg)

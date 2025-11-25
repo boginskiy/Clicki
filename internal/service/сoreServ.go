@@ -59,5 +59,7 @@ func (c *CoreService) EventOfAudit(action string, userID int, url string) {
 	// Collection event audit.
 	event := audit.NewEvent(action, userID, url)
 	// Send event.
-	c.Publisher.Send(event)
+	if c.Publisher != nil {
+		c.Publisher.Send(event)
+	}
 }

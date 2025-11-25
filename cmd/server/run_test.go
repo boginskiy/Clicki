@@ -21,7 +21,6 @@ import (
 	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
 	repo "github.com/boginskiy/Clicki/internal/repository"
-	"github.com/boginskiy/Clicki/internal/router"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/go-chi/chi"
@@ -83,7 +82,7 @@ func RunRouter() *chi.Mux {
 	ShortURL := service.NewShortURL(core, repo, checker, extraFuncer)
 	APIDelMess := service.NewDelMess(ctx, core, repo)
 
-	return router.Router(midWare, APIShortURL, ShortURL, APIDelMess)
+	return Router(midWare, APIShortURL, ShortURL, APIDelMess)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {
