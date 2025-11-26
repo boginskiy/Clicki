@@ -9,7 +9,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-func InitApiShortURL() *service.APIShortURL {
+func InitAPIShortURL() *service.APIShortURL {
 	// Some part.
 	logg := logg.NewLogg("test.log", "ERROR")
 	config := config.NewVariables(logg)

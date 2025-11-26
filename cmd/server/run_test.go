@@ -1,4 +1,4 @@
-package server
+package server_test
 
 import (
 	"bufio"
@@ -12,7 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	conf "github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/cmd/server"
 	"github.com/boginskiy/Clicki/internal/audit"
 	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/db"
@@ -40,9 +41,9 @@ func TestMain(t *testing.T) {
 }
 
 func RunRouter() *chi.Mux {
-	logg := logg.NewLogg("Test.log", "INFO")
-	config := conf.NewVariables(logg) // agrs - атрибуты командной строки
-	config.PathToStore = "test"
+	logg := logg.NewLogg("test.log", "INFO")
+	config := config.NewVariables(logg)
+	config.PathToStore = "test_store"
 
 	db, _ := db.NewStoreFile(config, logg)
 
@@ -82,7 +83,7 @@ func RunRouter() *chi.Mux {
 	ShortURL := service.NewShortURL(core, repo, checker, extraFuncer)
 	APIDelMess := service.NewDelMess(ctx, core, repo)
 
-	return Router(midWare, APIShortURL, ShortURL, APIDelMess)
+	return server.Router(midWare, APIShortURL, ShortURL, APIDelMess)
 }
 
 func ExecuteRequest(t *testing.T, ts *httptest.Server, method, url, body string) (*http.Response, string) {
