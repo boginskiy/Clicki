@@ -1,7 +1,7 @@
 /*
 RepoDBRecords - struct also implements interface: MarkerRepo, HealthCheckRepo.
 */
-package repoDB
+package repodb
 
 import (
 	"context"
@@ -22,13 +22,13 @@ func NewRepoDBRecords(repo *RepoDB) *RepoDBRecords {
 }
 
 // CreateRecords - implements interface RecordsRepo.
-func (rr *RepoDBRecords) CreateRecords(ctx context.Context, records any) error {
+func (r *RepoDBRecords) CreateRecords(ctx context.Context, records any) error {
 	rows, ok := records.([]model.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return errs.NewErrPlace("records in CreateRecords not valid", nil)
 	}
 
-	tx, err := rr.Repo.Store.BeginTx(ctx, nil)
+	tx, err := r.Repo.Store.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -50,11 +50,11 @@ func (rr *RepoDBRecords) CreateRecords(ctx context.Context, records any) error {
 }
 
 // ReadRecords - implements interface RecordsRepo.
-func (rr *RepoDBRecords) ReadRecords(ctx context.Context, userID int) (any, error) {
+func (r *RepoDBRecords) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []model.ResUserURLSet{}
 	record := model.ResUserURLSet{}
 
-	rows, err := SelectUserURLs(rr.Repo.Store, ctx, userID)
+	rows, err := SelectUserURLs(r.Repo.Store, ctx, userID)
 	if err != nil {
 		return nil, errs.NewErrPlace("data reading error in ReadRecords", err)
 	}

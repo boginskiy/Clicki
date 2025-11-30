@@ -4,7 +4,7 @@ import (
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/database"
 	"github.com/boginskiy/Clicki/internal/logg"
-	"github.com/boginskiy/Clicki/internal/repository/repoFile"
+	"github.com/boginskiy/Clicki/internal/repository/repofile"
 )
 
 type MainRepoFile struct {
@@ -16,12 +16,12 @@ type MainRepoFile struct {
 
 func NewMainRepoFile(config config.Config, logger logg.Logger, db database.DataBase) Repository {
 	// Init.
-	RepoFile := repoFile.NewRepoFile(config, logger, db)
+	RepoFile := repofile.NewRepoFile(config, logger, db)
 
 	return &MainRepoFile{
-		RecordsRepo:     repoFile.NewFileRecordsRepo(RepoFile),
-		RecordRepo:      repoFile.NewFileRecordRepo(RepoFile),
-		HealthCheckRepo: repoFile.NewFileRecordsRepo(RepoFile),
+		RecordsRepo:     repofile.NewFileRecordsRepo(RepoFile),
+		RecordRepo:      repofile.NewFileRecordRepo(RepoFile),
+		HealthCheckRepo: repofile.NewFileRecordsRepo(RepoFile),
 		MarkerRepo:      nil, // repository is absent
 	}
 }

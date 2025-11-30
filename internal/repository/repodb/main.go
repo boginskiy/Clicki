@@ -1,4 +1,4 @@
-package repoDB
+package repodb
 
 import (
 	"database/sql"

@@ -4,7 +4,7 @@ import (
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/database"
 	"github.com/boginskiy/Clicki/internal/logg"
-	"github.com/boginskiy/Clicki/internal/repository/repoDB"
+	"github.com/boginskiy/Clicki/internal/repository/repodb"
 )
 
 type MainRepoDB struct {
@@ -16,12 +16,12 @@ type MainRepoDB struct {
 
 func NewMainRepoDB(config config.Config, logger logg.Logger, db database.DataBase) Repository {
 	// Init
-	RepoDB := repoDB.NewRepoDB(config, logger, db)
+	RepoDB := repodb.NewRepoDB(config, logger, db)
 
 	return &MainRepoDB{
-		HealthCheckRepo: repoDB.NewRepoDBHealthCheck(RepoDB),
-		RecordsRepo:     repoDB.NewRepoDBRecords(RepoDB),
-		MarkerRepo:      repoDB.NewRepoDBMarker(RepoDB),
-		RecordRepo:      repoDB.NewRepoDBRecord(RepoDB),
+		HealthCheckRepo: repodb.NewRepoDBHealthCheck(RepoDB),
+		RecordsRepo:     repodb.NewRepoDBRecords(RepoDB),
+		MarkerRepo:      repodb.NewRepoDBMarker(RepoDB),
+		RecordRepo:      repodb.NewRepoDBRecord(RepoDB),
 	}
 }

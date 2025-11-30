@@ -1,4 +1,4 @@
-package repoMap
+package repomap
 
 import (
 	"context"

@@ -4,7 +4,7 @@ import (
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/database"
 	"github.com/boginskiy/Clicki/internal/logg"
-	"github.com/boginskiy/Clicki/internal/repository/repoMap"
+	"github.com/boginskiy/Clicki/internal/repository/repomap"
 )
 
 type MainRepoMap struct {
@@ -16,12 +16,12 @@ type MainRepoMap struct {
 
 func NewMainRepoMap(config config.Config, logger logg.Logger, db database.DataBase) Repository {
 	// Init.
-	RepoMap := repoMap.NewRepoMap(config, logger, db)
+	RepoMap := repomap.NewRepoMap(config, logger, db)
 
 	return &MainRepoMap{
-		RecordsRepo:     repoMap.NewMapRecordsRepo(RepoMap),
-		RecordRepo:      repoMap.NewMapRecordRepo(RepoMap),
-		HealthCheckRepo: repoMap.NewMapRecordsRepo(RepoMap),
+		RecordsRepo:     repomap.NewMapRecordsRepo(RepoMap),
+		RecordRepo:      repomap.NewMapRecordRepo(RepoMap),
+		HealthCheckRepo: repomap.NewMapRecordsRepo(RepoMap),
 		MarkerRepo:      nil, // repository is absent
 	}
 }

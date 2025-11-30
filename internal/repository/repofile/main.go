@@ -1,4 +1,4 @@
-package repoFile
+package repofile
 
 import (
 	"bufio"
