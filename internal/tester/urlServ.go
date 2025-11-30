@@ -45,8 +45,8 @@ func InitURLServ(logger logg.Logger, cfg config.Config) *service.URLServ {
 	return service.NewURLServ(cfg, logger, repo, checker, fancer, publisher)
 }
 
-func InitConfig() *config.Conf {
-	return &config.Conf{
+func InitConfig() *config.Variables {
+	return &config.Variables{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080",
 		ArgsCLI:       &config.ArgsCLI{},

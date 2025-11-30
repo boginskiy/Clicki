@@ -6,8 +6,8 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
-// Conf - struct about config interface.
-type Conf struct {
+// Variables - struct about config interface.
+type Variables struct {
 	Logger        logg.Logger
 	ServerAddress string
 	PathToStore   string
@@ -19,8 +19,8 @@ type Conf struct {
 	ArgsENV       *ArgsENV
 }
 
-func NewVariables(logger logg.Logger) *Conf {
-	tmpVar := &Conf{
+func NewVariables(logger logg.Logger) *Variables {
+	tmpVar := &Variables{
 		Logger:  logger,
 		ArgsCLI: NewArgsCLI(),
 		ArgsENV: NewArgsENV(),
@@ -29,11 +29,11 @@ func NewVariables(logger logg.Logger) *Conf {
 	return tmpVar
 }
 
-func (v *Conf) argsTrim(arg string) string {
+func (v *Variables) argsTrim(arg string) string {
 	return strings.TrimSpace(arg)
 }
 
-func (v *Conf) argsPrioryty(envFunc, cliFunc func() string) string {
+func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
 	arg := v.argsTrim(envFunc())  // Clean arg
 	arg2 := v.argsTrim(cliFunc()) // Clean arg
 
@@ -44,7 +44,7 @@ func (v *Conf) argsPrioryty(envFunc, cliFunc func() string) string {
 	}
 }
 
-func (v *Conf) extSettingsArgs() {
+func (v *Variables) extSettingsArgs() {
 	v.PathToStore = v.argsPrioryty(v.ArgsENV.GetPathToStore, v.ArgsCLI.GetPathToStore)
 	v.ServerAddress = v.argsPrioryty(v.ArgsENV.GetSrvAddr, v.ArgsCLI.GetSrvAddr)
 	v.AuditFile = v.argsPrioryty(v.ArgsENV.GetAuditFile, v.ArgsCLI.GetAuditFile)
@@ -53,58 +53,58 @@ func (v *Conf) extSettingsArgs() {
 	v.DB = v.argsPrioryty(v.ArgsENV.GetDB, v.ArgsCLI.GetDB)
 }
 
-func (v *Conf) GetSrvAddr() (ServerAddress string) {
+func (v *Variables) GetSrvAddr() (ServerAddress string) {
 	return v.ServerAddress
 }
 
-func (v *Conf) GetBaseURL() (BaseURL string) {
+func (v *Variables) GetBaseURL() (BaseURL string) {
 	return v.BaseURL
 }
 
-func (v *Conf) GetPathToStore() (PathToStore string) {
+func (v *Variables) GetPathToStore() (PathToStore string) {
 	return v.PathToStore
 }
 
-func (v *Conf) GetDB() (DB string) {
+func (v *Variables) GetDB() (DB string) {
 	return v.DB
 }
 
-func (v *Conf) GetLogFile() (LogFile string) {
+func (v *Variables) GetLogFile() (LogFile string) {
 	return v.ArgsENV.LogFile
 }
 
-func (v *Conf) GetMaxRetries() (MaxRetries int) {
+func (v *Variables) GetMaxRetries() (MaxRetries int) {
 	return v.ArgsENV.MaxRetries
 }
 
-func (v *Conf) GetTokenLiveTime() (TokenLiveTime int) {
+func (v *Variables) GetTokenLiveTime() (TokenLiveTime int) {
 	return v.ArgsENV.TokenLiveTime
 }
 
-func (v *Conf) GetCokiLiveTime() (CokiLiveTime int) {
+func (v *Variables) GetCokiLiveTime() (CokiLiveTime int) {
 	return v.ArgsENV.CokiLiveTime
 }
 
-func (v *Conf) GetNameCoki() (NameCoki string) {
+func (v *Variables) GetNameCoki() (NameCoki string) {
 	return v.ArgsENV.NameCoki
 }
 
-func (v *Conf) GetSecretKey() (SecretKey string) {
+func (v *Variables) GetSecretKey() (SecretKey string) {
 	return v.ArgsENV.SecretKey
 }
 
-func (v *Conf) GetSoftDeleteTime() (SoftDeleteTime int) {
+func (v *Variables) GetSoftDeleteTime() (SoftDeleteTime int) {
 	return v.ArgsENV.SoftDeleteTime
 }
 
-func (v *Conf) GetHardDeleteTime() (HardDeleteTime int) {
+func (v *Variables) GetHardDeleteTime() (HardDeleteTime int) {
 	return v.ArgsENV.HardDeleteTime
 }
 
-func (v *Conf) GetAuditFile() (AuditFile string) {
+func (v *Variables) GetAuditFile() (AuditFile string) {
 	return v.AuditFile
 }
 
-func (v *Conf) GetAuditURL() (AuditURL string) {
+func (v *Variables) GetAuditURL() (AuditURL string) {
 	return v.AuditURL
 }
