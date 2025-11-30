@@ -21,5 +21,5 @@ type Publisher interface {
 type Subscriber interface {
 	Update(event any)
 	GetID() int
-	Clouse()
+	Close()
 }

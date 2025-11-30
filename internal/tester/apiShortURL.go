@@ -2,26 +2,27 @@ package tester
 
 import (
 	"github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/cmd/server"
+	"github.com/boginskiy/Clicki/internal/audit"
+	"github.com/boginskiy/Clicki/internal/layers"
 	"github.com/boginskiy/Clicki/internal/logg"
-	prep "github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
-func InitAPIShortURL() *service.APIShortURL {
-	// Some part.
-	logg := logg.NewLogg("test.log", "ERROR")
-	config := config.NewVariables(logg)
-	checker := validation.NewChecker()
-	exFunc := prep.NewExtraFunc()
-
-	// Db.
-	layers := server.NewLayers(config, logg)
+func InitAPIURLServ(logger logg.Logger, cfg config.Config) *service.APIURLServ {
+	layers := layers.NewLayers(cfg, logger)
 	db := layers.NewLayerDB()
 	repo := layers.NewLayerRepo(db)
 
-	// Service.
-	CoreServ := service.NewCoreService(config, logg, repo, nil)
-	return service.NewAPIShortURL(CoreServ, repo, checker, exFunc)
+	WriteRecord(repo)
+
+	var sub1 = audit.NewFileReceiver(logger, cfg.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
+	var publisher = audit.NewPublish(sub1, sub2)
+
+	var fancer = preparation.NewFunctions()
+	var checker = validation.NewChecker()
+
+	return service.NewAPIURLServ(cfg, logger, repo, checker, fancer, publisher)
 }

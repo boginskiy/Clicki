@@ -4,25 +4,35 @@ import (
 	"context"
 )
 
-// Structures for communication of channels channels.
-type DelMessage struct {
-	ListCorrelID []string
-	UserID       int64
-}
-
-func NewDelMessage(userID int64) *DelMessage {
-	return &DelMessage{UserID: userID}
-}
-
-// Repository - .
+// Repository.
 type Repository interface {
-	MarkerRecords(ctx context.Context, messages ...DelMessage) error
-	ReadRecord(ctx context.Context, recordID string) (any, error)
+	HealthCheckRepo
+	RecordsRepo
+	RecordRepo
+	MarkerRepo
+}
+
+// Record Storage.
+type RecordRepo interface {
 	CreateRecord(ctx context.Context, record any) (any, error)
-	CheckUnicRecord(ctx context.Context, recordID string) bool
-	ReadRecords(ctx context.Context, userID int) (any, error)
-	CreateRecords(ctx context.Context, records any) error
-	PingDB(ctx context.Context) (bool, error)
-	DeleteRecords(ctx context.Context) error
+	ReadRecord(ctx context.Context, recordID string) (any, error)
+	CheckUniqueRecord(ctx context.Context, recordID string) bool
 	ReadLastRecord(ctx context.Context) int
+}
+
+// Operations with groups of records.
+type RecordsRepo interface {
+	CreateRecords(ctx context.Context, records any) error
+	ReadRecords(ctx context.Context, userID int) (any, error)
+	DeleteRecords(ctx context.Context) error
+}
+
+// Marker entries.
+type MarkerRepo interface {
+	MarkRecords(ctx context.Context, messages any) error
+}
+
+// Diagnostic and monitoring methods.
+type HealthCheckRepo interface {
+	PingStore(ctx context.Context) (bool, error)
 }

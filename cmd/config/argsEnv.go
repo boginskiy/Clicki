@@ -41,7 +41,7 @@ func (e *ArgsENV) ParseFlags() {
 	// Default value.
 	valueStr := strings.TrimSpace(os.Getenv("LOG_FILE"))
 	if len(valueStr) == 0 {
-		e.LogFile = "LogInfo.log"
+		e.LogFile = "infra.log"
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("MAX_RETRIES"))

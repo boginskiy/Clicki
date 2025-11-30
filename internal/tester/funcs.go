@@ -5,7 +5,11 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"testing"
+
+	"github.com/boginskiy/Clicki/internal/model"
+	"github.com/boginskiy/Clicki/internal/repository"
 )
 
 // PprintErr - prity print about errors.
@@ -20,4 +24,26 @@ func PreparRequest(ctx context.Context, method, url string, body []byte) *http.R
 		log.Fatalf("Prepar Request: %v != %v\n", err, nil)
 	}
 	return req
+}
+
+// DeleteTestFiles is Exta function.
+func DeleteTestFiles(paths ...string) {
+	for _, path := range paths {
+		err := os.Remove(path)
+		if err != nil {
+			log.Fatalf("Error when deleting: %v", err)
+		}
+	}
+}
+
+// WriteRecord is Exta function for add record for tests.
+func WriteRecord(repo repository.Repository) {
+	record := model.NewURLTb(
+		1,
+		"wrs4db6j",
+		"https://practicum.yandex.ru/",
+		"http://localhost:8080/wrs4db6j",
+		100)
+
+	repo.CreateRecord(context.TODO(), record)
 }

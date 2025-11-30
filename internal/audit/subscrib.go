@@ -39,8 +39,8 @@ func (fR *FileReceiver) GetID() int {
 	return fR.ID
 }
 
-// Clouse - .
-func (fR *FileReceiver) Clouse() {
+// Close - .
+func (fR *FileReceiver) Close() {
 	fR.F.Close()
 }
 
@@ -73,7 +73,7 @@ type ServerReceiver struct {
 
 func NewServerReceiver(logger logg.Logger, url string, id int) *ServerReceiver {
 	if url == "" {
-		logger.RaiseError(ErrURLServerReceiver, "FileReceiver>NewFileReceiver>OpenFile", nil)
+		logger.RaiseError(ErrURLServerReceiver, "ServerReceiver>NewServerReceiver>OpenFile", nil)
 		id = 0
 	}
 	// Context
@@ -98,8 +98,8 @@ func (sR *ServerReceiver) GetID() int {
 	return sR.ID
 }
 
-// Clouse - .
-func (sR *ServerReceiver) Clouse() {
+// Close - .
+func (sR *ServerReceiver) Close() {
 	sR.cancel()
 }
 

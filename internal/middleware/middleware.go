@@ -26,13 +26,13 @@ func NewMdlwere(logger logg.Logger, auther auth.Auther) *Mdlwere {
 
 func (m *Mdlwere) Conveyor(next http.HandlerFunc) http.HandlerFunc {
 	// TODO: m.WithAudit .
-	for _, middleware := range []MvFunc{m.WithAuth, m.WithInfoLogger, m.WithGzip} {
+	for _, middleware := range []MvFunc{m.WithAuth, m.WithLogg, m.WithGzip} {
 		next = middleware(next)
 	}
 	return next
 }
 
-func (m *Mdlwere) WithInfoLogger(next http.HandlerFunc) http.HandlerFunc {
+func (m *Mdlwere) WithLogg(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		uri := r.RequestURI

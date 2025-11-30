@@ -4,8 +4,8 @@ type Argsmenter interface {
 	ParseFlags()
 }
 
-// IArgsCLI - interface about args comm line interface.
-type IArgsCLI interface {
+// ConfigCLI - interface about args comm line interface.
+type ConfigCLI interface {
 	GetPathToStore() (PathToStore string)
 	GetAuditFile() (AuditFile string)
 	GetAuditURL() (AuditURL string)
@@ -14,8 +14,8 @@ type IArgsCLI interface {
 	GetDB() (DB string)
 }
 
-// IArgsENV - interface about args environment.
-type IArgsENV interface {
+// ConfigENV - interface about args environment.
+type ConfigENV interface {
 	GetSoftDeleteTime() (SoftDeleteTime int)
 	GetHardDeleteTime() (HardDeleteTime int)
 	GetTokenLiveTime() (TokenLiveTime int)
@@ -28,6 +28,6 @@ type IArgsENV interface {
 
 // Config - interface.
 type Config interface {
-	IArgsENV
-	IArgsCLI
+	ConfigENV
+	ConfigCLI
 }

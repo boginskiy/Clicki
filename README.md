@@ -59,7 +59,7 @@ Showing nodes accounting for -8874.62kB, 81.08% of 10944.89kB total
 -1536.14kB 14.04% 67.22% -1536.14kB 14.04%  github.com/boginskiy/Clicki/internal/model.NewURLTb (inline)
    -1026kB  9.37% 76.59%    -1026kB  9.37%  runtime.allocm
   532.26kB  4.86% 71.73%   532.26kB  4.86%  github.com/boginskiy/Clicki/internal/repository.NewRepositoryMapURL
- -512.02kB  4.68% 76.41%  -512.02kB  4.68%  github.com/boginskiy/Clicki/internal/preparation.(*ExtraFunc).TakeAllBodyFromReq
- -512.02kB  4.68% 81.08% -8892.89kB 81.25%  github.com/boginskiy/Clicki/internal/service.(*ShortURL).CreateURL
+ -512.02kB  4.68% 76.41%  -512.02kB  4.68%  github.com/boginskiy/Clicki/internal/preparation.(*Functions).TakeAllBodyFromReq
+ -512.02kB  4.68% 81.08% -8892.89kB 81.25%  github.com/boginskiy/Clicki/internal/service.(*URLServ).CreateURL
  -512.01kB  4.68% 85.76%  -512.01kB  4.68%  github.com/boginskiy/Clicki/pkg.Scramble
      512kB  4.68% 81.08%      512kB  4.68%  sync.(*Pool).pinSlow

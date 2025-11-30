@@ -4,23 +4,16 @@ import (
 	"net/http"
 )
 
-// CrudSrver - interface for standart service.
-type CrudSrver interface {
-	ReadSetUserURL(*http.Request) ([]byte, error)
-	CreateSetURL(*http.Request) ([]byte, error)
-	CreateURL(*http.Request) ([]byte, error)
+// Servicer - interface for standart service.
+type Servicer interface {
+	ReadSet(*http.Request) ([]byte, error)
+	CreateSet(*http.Request) ([]byte, error)
+	Read(*http.Request) ([]byte, error)
+	Create(*http.Request) ([]byte, error)
 	CheckDB(*http.Request) ([]byte, error)
-	ReadURL(*http.Request) ([]byte, error)
-	GetHeader() string
 }
 
-// CrudSrver - interface for core service.
-type CoreSrver interface {
-	TakeUserIDFromCtx(*http.Request) int
-	EncrypOriginURL() string
-}
-
-// CrudSrver - interface for del service.
-type DelSrver interface {
-	DeleteSetUserURL(req *http.Request) ([]byte, error)
+// DelServicer - interface for del service.
+type DelServicer interface {
+	DeleteSet(req *http.Request) ([]byte, error)
 }

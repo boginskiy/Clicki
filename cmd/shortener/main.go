@@ -2,22 +2,14 @@ package main
 
 import (
 	"github.com/boginskiy/Clicki/cmd/config"
-
-	"github.com/boginskiy/Clicki/cmd/server"
+	"github.com/boginskiy/Clicki/internal/app"
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
 // main - start of Appl.
 func main() {
-	logger := logg.NewLogg("base.log", "FATAL")
-	config := config.NewVariables(logger)
-	layers := server.NewLayers(config, logger)
+	logger := logg.NewLogg("main.log", "FATAL")
+	cfg := config.NewVariables(logger)
 
-	db := layers.NewLayerDB()
-	repo := layers.NewLayerRepo(db)
-
-	defer logger.Close()
-	defer layers.Close()
-
-	server.Run(config, logger, repo)
+	app.NewApp(cfg, logger).Start()
 }
