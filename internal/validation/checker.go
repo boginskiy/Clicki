@@ -7,12 +7,13 @@ const (
 	CheckPath   = `^/[a-zA-Z0-9]+$`
 )
 
-// Interfaces
+// Checker - interface for validation.
 type Checker interface {
 	CheckUpPath(path string) bool
 	CheckUpURL(body string) bool
 }
 
+// Check - struct of validation.
 type Check struct {
 }
 

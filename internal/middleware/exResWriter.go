@@ -2,7 +2,7 @@ package middleware
 
 import "net/http"
 
-// Extension standart function of http.ResponseWriter
+// Extension standart function of http.ResponseWriter.
 type ExResWriter struct {
 	http.ResponseWriter
 	status int
@@ -16,14 +16,16 @@ func NewExResWriter(w http.ResponseWriter) *ExResWriter {
 }
 
 func (r *ExResWriter) Write(b []byte) (int, error) {
-	// записываем ответ, используя оригинальный http.ResponseWriter
+	// Write response with original http.ResponseWriter.
 	size, err := r.ResponseWriter.Write(b)
-	r.size += size // захватываем размер
+	// Take size.
+	r.size += size
 	return size, err
 }
 
 func (r *ExResWriter) WriteHeader(statusCode int) {
-	// записываем код статуса, используя оригинальный http.ResponseWriter
+	// Write code status with original http.ResponseWriter.
 	r.ResponseWriter.WriteHeader(statusCode)
-	r.status = statusCode // захватываем код статуса
+	// Take code status.
+	r.status = statusCode
 }

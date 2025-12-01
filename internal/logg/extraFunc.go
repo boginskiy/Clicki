@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// createLogFile - create file for write log.
 func createLogFile(name string) *os.File {
 	file, err := os.OpenFile(name, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
@@ -16,6 +17,7 @@ func createLogFile(name string) *os.File {
 	return file
 }
 
+// setupLogrus - create logrus log.
 func setupLogrus(w io.Writer, level logrus.Level) *logrus.Logger {
 	l := logrus.New() // Create Lorgus
 	l.SetOutput(w)    // Add io.Writer

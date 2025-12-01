@@ -1,0 +1,84 @@
+package app
+
+import (
+	"context"
+
+	"github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/cmd/server"
+	"github.com/boginskiy/Clicki/internal/audit"
+	"github.com/boginskiy/Clicki/internal/auth"
+	"github.com/boginskiy/Clicki/internal/handler"
+	"github.com/boginskiy/Clicki/internal/layers"
+	"github.com/boginskiy/Clicki/internal/logg"
+	mv "github.com/boginskiy/Clicki/internal/middleware"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/router"
+	"github.com/boginskiy/Clicki/internal/service"
+	"github.com/boginskiy/Clicki/internal/validation"
+)
+
+type App struct {
+	Cfg  config.Config
+	Logg logg.Logger
+}
+
+func NewApp(config config.Config, logger logg.Logger) *App {
+	return &App{
+		Cfg:  config,
+		Logg: logger,
+	}
+}
+
+func (a *App) close() {
+	a.Logg.Close()
+}
+
+func (a *App) Start() {
+	// DB & Repo.
+	setupLayers := layers.NewLayers(a.Cfg, a.Logg)
+	database := setupLayers.NewLayerDB()
+	repository := setupLayers.NewLayerRepo(database)
+
+	// Loggers.
+	infraLogg := logg.NewLogg(a.Cfg.GetLogFile(), "INFO")
+	authLogg := logg.NewLogg("auth.log", "ERROR")
+
+	// Audit.
+	sub1 := audit.NewFileReceiver(infraLogg, a.Cfg.GetAuditFile(), 1)
+	sub2 := audit.NewServerReceiver(infraLogg, a.Cfg.GetAuditURL(), 2)
+	publisher := audit.NewPublish(sub1, sub2)
+
+	// Middleware & Auth.
+	auth := auth.NewAuth(a.Cfg, authLogg, repository)
+	middleware := mv.NewMdlwere(infraLogg, auth)
+
+	checker := validation.NewChecker() // Checker for validation.
+	funcer := prep.NewFunctions()      // Funcer for extra main function.
+
+	// Context.
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Services.
+	APIURLServ := service.NewAPIURLServ(a.Cfg, a.Logg, repository, checker, funcer, publisher)
+	URLServ := service.NewURLServ(a.Cfg, a.Logg, repository, checker, funcer, publisher)
+	APIDelServ := service.NewAPIDelServ(ctx, a.Cfg, a.Logg, repository)
+
+	// Handlers.
+	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ)
+	URLHdler := handler.NewURLHandlers(URLServ)
+	PprofHdler := handler.NewPprofHandlers()
+
+	// Router.
+	router := router.NewRoute(URLHdler, APIURLHdler, PprofHdler)
+
+	// Server.
+	server.NewServ(a.Cfg, a.Logg).Run(router, middleware)
+
+	defer setupLayers.Close()
+	defer infraLogg.Close()
+	defer authLogg.Close()
+	defer sub1.Close()
+	defer sub2.Close()
+	defer a.close()
+	defer cancel()
+}

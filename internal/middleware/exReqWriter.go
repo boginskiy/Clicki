@@ -2,11 +2,8 @@ package middleware
 
 import "net/http"
 
+// ExReqWriter - extra http.Request.
 type ExReqWriter struct {
 	*http.Request
 	UserID int
 }
-
-type contextKey struct{}
-
-var CtxUserID = contextKey{}

@@ -4,14 +4,18 @@ type Argsmenter interface {
 	ParseFlags()
 }
 
-type ArgsCLIGetter interface {
+// ConfigCLI - interface about args comm line interface.
+type ConfigCLI interface {
 	GetPathToStore() (PathToStore string)
+	GetAuditFile() (AuditFile string)
+	GetAuditURL() (AuditURL string)
 	GetSrvAddr() (ServerAddress string)
 	GetBaseURL() (BaseURL string)
 	GetDB() (DB string)
 }
 
-type ArgsENVGetter interface {
+// ConfigENV - interface about args environment.
+type ConfigENV interface {
 	GetSoftDeleteTime() (SoftDeleteTime int)
 	GetHardDeleteTime() (HardDeleteTime int)
 	GetTokenLiveTime() (TokenLiveTime int)
@@ -22,17 +26,8 @@ type ArgsENVGetter interface {
 	GetLogFile() (LogFile string)
 }
 
-type VarGetter interface {
-	GetSoftDeleteTime() (SoftDeleteTime int)
-	GetHardDeleteTime() (HardDeleteTime int)
-	GetTokenLiveTime() (TokenLiveTime int)
-	GetPathToStore() (PathToStore string)
-	GetCokiLiveTime() (CokiLiveTime int)
-	GetSrvAddr() (ServerAddress string)
-	GetSecretKey() (SecretKey string)
-	GetMaxRetries() (MaxRetries int)
-	GetNameCoki() (NameCoki string)
-	GetLogFile() (LogFile string)
-	GetBaseURL() (BaseURL string)
-	GetDB() (DB string)
+// Config - interface.
+type Config interface {
+	ConfigENV
+	ConfigCLI
 }
