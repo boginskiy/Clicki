@@ -62,6 +62,8 @@ func (a *Auth) Authorization(req *http.Request) (*http.Cookie, int, error) {
 
 // Authentication - is a authentication users.
 func (a *Auth) Authentication(req *http.Request) (*http.Cookie, int, error) {
+	var token string
+
 	// Take a 'Cookie'.
 	cookie, err := req.Cookie(a.Cfg.GetNameCoki())
 
@@ -83,7 +85,7 @@ func (a *Auth) Authentication(req *http.Request) (*http.Cookie, int, error) {
 	if err != nil {
 
 		if errors.Is(err, ErrTokenIsExpired) || errors.Is(err, ErrTokenNotValid) {
-			token, err := a.JWTService.CreateJWT(UserID)
+			token, err = a.JWTService.CreateJWT(UserID)
 			if err != nil {
 				a.Logg.RaiseError(err, "Auth>Authentication>CreateJWT", nil)
 				return nil, 0, ErrCreateToken
