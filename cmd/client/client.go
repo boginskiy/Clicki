@@ -65,4 +65,18 @@ func main() {
 
 	// И печатаем его
 	fmt.Println(string(body))
+
+	// generate:reset
+	type MYNER struct {
+		Name  string
+		Age   int
+		Layer bool
+	}
+
+	type MYNER2 struct {
+		Name  string
+		Age   int
+		Layer bool
+	}
+
 }
