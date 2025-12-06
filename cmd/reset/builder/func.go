@@ -2,6 +2,9 @@ package builder
 
 import (
 	"errors"
+	"fmt"
+	"go/ast"
+	"go/token"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,7 +33,7 @@ func Scanner(startPath, ExtensionFile string) []string {
 	return result
 }
 
-func TakeCurrentPackage(path string) (string, error) {
+func TakePath(path string) (string, error) {
 	tmpPath := strings.Split(path, "/")
 
 	if len(tmpPath) < 2 {
@@ -39,4 +42,10 @@ func TakeCurrentPackage(path string) (string, error) {
 
 	tmpPath = tmpPath[:len(tmpPath)-1]
 	return strings.Join(tmpPath, "/"), nil
+}
+
+func Pprint(fieldType ast.Expr) {
+	buf := new(strings.Builder)
+	ast.Fprint(buf, token.NewFileSet(), fieldType, nil)
+	fmt.Println(buf.String())
 }

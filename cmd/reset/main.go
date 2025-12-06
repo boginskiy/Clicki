@@ -13,8 +13,6 @@ import (
 )
 
 func main() {
-	comment := "generate:reset"
-
 	// Definition working dir.
 	startDir, err := os.Getwd()
 	if err != nil {
@@ -24,19 +22,22 @@ func main() {
 	pathsToFiles := builder.Scanner(startDir, ".go") // Get all paths to files.go .
 	building := builder.NewBuilding("")              // Struct for building.
 
+	// Params
+	comment := "generate:reset"
+
 	// Iteration every files.
 	for _, path := range pathsToFiles {
 
-		// Take current package.
-		currentPackage, err := builder.TakeCurrentPackage(path)
+		// Take path to folder.
+		pathToFolder, err := builder.TakePath(path)
 		if err != nil {
 			continue
 		}
 
 		// New builder for new package.
-		if building.Package != currentPackage {
-			building.Execute()                             // Go to generation.
-			building = builder.NewBuilding(currentPackage) // Create new builder.
+		if building.Path != pathToFolder {
+			building.Execute()                           // Go to generation.
+			building = builder.NewBuilding(pathToFolder) // Create new builder.
 		}
 
 		// ASTree
@@ -49,6 +50,11 @@ func main() {
 		// Data for Building.
 		ast.Inspect(f, func(node ast.Node) bool {
 			switch x := node.(type) {
+
+			case *ast.File:
+				// Add package in Struct.
+				building.Package = x.Name.Name
+
 			case *ast.GenDecl:
 
 				// Search all struct with comment "generate:reset" in current file.
