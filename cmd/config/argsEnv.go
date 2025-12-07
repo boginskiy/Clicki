@@ -33,8 +33,8 @@ func NewArgsENV() *ArgsENV {
 	return args
 }
 
-func (e *ArgsENV) ParseFlags() {
-	err := env.Parse(e)
+func (ae *ArgsENV) ParseFlags() {
+	err := env.Parse(ae)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,66 +42,66 @@ func (e *ArgsENV) ParseFlags() {
 	// Default value.
 	valueStr := strings.TrimSpace(os.Getenv("LOG_FILE"))
 	if len(valueStr) == 0 {
-		e.LogFile = "infra.log"
+		ae.LogFile = "infra.log"
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("MAX_RETRIES"))
 	if len(valueStr) == 0 {
-		e.MaxRetries = 3
+		ae.MaxRetries = 3
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("TOKEN_LIVE_TIME"))
 	if len(valueStr) == 0 {
-		e.TokenLiveTime = 10
+		ae.TokenLiveTime = 10
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("COKI_LIVE_TIME"))
 	if len(valueStr) == 0 {
-		e.CokiLiveTime = 300
+		ae.CokiLiveTime = 300
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("NAME_COKI"))
 	if len(valueStr) == 0 {
-		e.NameCoki = "auth_token"
+		ae.NameCoki = "auth_token"
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("SECRET_KEY"))
 	if len(valueStr) == 0 {
-		e.SecretKey = "Ld5pS4Gw"
+		ae.SecretKey = "Ld5pS4Gw"
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("SOFT_DELETE_TIME"))
 	if len(valueStr) == 0 {
-		e.SoftDeleteTime = 10
+		ae.SoftDeleteTime = 10
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("HARD_DELETE_TIME"))
 	if len(valueStr) == 0 {
-		e.HardDeleteTime = 50
+		ae.HardDeleteTime = 50
 	}
 
 }
 
-func (e *ArgsENV) GetSrvAddr() (ServerAddress string) {
-	return e.ServerAddress
+func (ae *ArgsENV) GetSrvAddr() (ServerAddress string) {
+	return ae.ServerAddress
 }
 
-func (e *ArgsENV) GetBaseURL() (BaseURL string) {
-	return e.BaseURL
+func (ae *ArgsENV) GetBaseURL() (BaseURL string) {
+	return ae.BaseURL
 }
 
-func (e *ArgsENV) GetPathToStore() (PathToStore string) {
-	return e.PathToStore
+func (ae *ArgsENV) GetPathToStore() (PathToStore string) {
+	return ae.PathToStore
 }
 
-func (e *ArgsENV) GetDB() (DB string) {
-	return e.DB
+func (ae *ArgsENV) GetDB() (DB string) {
+	return ae.DB
 }
 
-func (e *ArgsENV) GetAuditFile() (AuditFile string) {
-	return e.AuditFile
+func (ae *ArgsENV) GetAuditFile() (AuditFile string) {
+	return ae.AuditFile
 }
 
-func (e *ArgsENV) GetAuditURL() (AuditURL string) {
-	return e.AuditURL
+func (ae *ArgsENV) GetAuditURL() (AuditURL string) {
+	return ae.AuditURL
 }
