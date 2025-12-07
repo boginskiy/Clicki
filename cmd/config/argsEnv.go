@@ -9,6 +9,7 @@ import (
 )
 
 // ArgsENV - struct for args environment.
+// generate:reset
 type ArgsENV struct {
 	ServerAddress  string `env:"SERVER_ADDRESS"`
 	PathToStore    string `env:"FILE_STORAGE_PATH"`

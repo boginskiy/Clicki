@@ -8,8 +8,10 @@ import (
 	"github.com/boginskiy/Clicki/internal/model"
 )
 
+// generate:reset
 type FileRecordsRepo struct {
-	Repo *RepoFile
+	Repo      *RepoFile
+	resetTest int
 }
 
 func NewFileRecordsRepo(repo *RepoFile) *FileRecordsRepo {

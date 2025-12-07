@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -9,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/boginskiy/Clicki/cmd/reset/builder"
+	"github.com/boginskiy/Clicki/cmd/reset/generator"
 )
 
 func main() {
@@ -19,8 +18,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pathsToFiles := builder.Scanner(startDir, ".go") // Get all paths to files.go .
-	building := builder.NewBuilding("")              // Struct for building.
+	pathsToFiles := generator.Scanner(startDir, ".go", "_test.go") // Get all paths to files.go .
+	gen := generator.NewGenerator("")                              // Struct for codeGen.
 
 	// Params
 	comment := "generate:reset"
@@ -29,31 +28,31 @@ func main() {
 	for _, path := range pathsToFiles {
 
 		// Take path to folder.
-		pathToFolder, err := builder.TakePath(path)
+		pathToFolder, err := generator.TakePath(path)
 		if err != nil {
 			continue
 		}
 
-		// New builder for new package.
-		if building.Path != pathToFolder {
-			building.Execute()                           // Go to generation.
-			building = builder.NewBuilding(pathToFolder) // Create new builder.
+		// New generator for new package.
+		if gen.Path != pathToFolder {
+			gen.Execute()                              // Go to generation.
+			gen = generator.NewGenerator(pathToFolder) // Create new generator.
 		}
 
 		// ASTree
 		fset := token.NewFileSet()
 		f, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
 		if err != nil {
-			fmt.Println(err)
+			log.Fatal(err)
 		}
 
-		// Data for Building.
+		// Data for CodeGen.
 		ast.Inspect(f, func(node ast.Node) bool {
 			switch x := node.(type) {
 
 			case *ast.File:
 				// Add package in Struct.
-				building.Package = x.Name.Name
+				gen.Package = x.Name.Name
 
 			case *ast.GenDecl:
 
@@ -64,7 +63,7 @@ func main() {
 						structType, ok := tspec.Type.(*ast.StructType)
 						if ok && structType != nil && strings.Contains(x.Doc.Text(), comment) {
 
-							building.PutResetStruct(tspec.Name.String(), structType)
+							gen.UpdateReset(tspec.Name.String(), structType)
 
 						}
 					}
@@ -74,7 +73,7 @@ func main() {
 		})
 
 		// TODO:убрать
-		building.Execute()
-		break
+		// gen.Execute()
+		// break
 	}
 }

@@ -1,4 +1,4 @@
-package builder
+package generator
 
 import (
 	"errors"
@@ -10,7 +10,11 @@ import (
 	"strings"
 )
 
-func Scanner(startPath, ExtensionFile string) []string {
+func scannerTestFile(file, substr string) bool {
+	return strings.Contains(file, substr)
+}
+
+func Scanner(startPath, extensionFile, exclude string) []string {
 	result := make([]string, 0, 10)
 	arrayFile, err := os.ReadDir(startPath)
 	if err != nil || len(arrayFile) == 0 {
@@ -21,13 +25,18 @@ func Scanner(startPath, ExtensionFile string) []string {
 	for _, f := range arrayFile {
 		// Check folder.
 		if f.IsDir() {
-			result = append(result, Scanner(filepath.Join(startPath, f.Name()), ExtensionFile)...)
+			result = append(result, Scanner(filepath.Join(startPath, f.Name()), extensionFile, exclude)...)
 			// File is not '.go' .
-		} else if filepath.Ext(f.Name()) != ExtensionFile {
+		} else if filepath.Ext(f.Name()) != extensionFile {
 			continue
 			// File is '.go' .
+
 		} else {
-			result = append(result, filepath.Join(startPath, f.Name()))
+			// if file.go, adding it.
+			if !scannerTestFile(f.Name(), exclude) {
+				result = append(result, filepath.Join(startPath, f.Name()))
+			}
+			// if file_test.go, passing it.
 		}
 	}
 	return result

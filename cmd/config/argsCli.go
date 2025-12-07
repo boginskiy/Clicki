@@ -3,6 +3,7 @@ package config
 import "flag"
 
 // ArgsCLI - struct for args comm line interface.
+// generate:reset
 type ArgsCLI struct {
 	ServerAddress string // StartPort is the port for start application.
 	PathToStore   string // PathToStore is the path to store URL.

@@ -15,6 +15,7 @@ var (
 )
 
 // ErrPlace - error with place when raise err.
+// generate:reset
 type ErrPlace struct {
 	Message string
 	File    string
