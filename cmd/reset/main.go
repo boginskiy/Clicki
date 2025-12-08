@@ -71,9 +71,5 @@ func main() {
 			}
 			return true
 		})
-
-		// TODO:убрать
-		// gen.Execute()
-		// break
 	}
 }
