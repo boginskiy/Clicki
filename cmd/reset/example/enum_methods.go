@@ -17,7 +17,7 @@ type BadRequestError struct {
 }
 
 func (v BadRequestError) Error() string {
-	return fmt.Sprintf("HTTP 429 %s", v.Description)
+	return fmt.Sprintf("HTTP %s", v.Description)
 }
 
 func (v BadRequestError) Alert() string {
@@ -30,7 +30,7 @@ type UnauthorizedError struct {
 }
 
 func (v UnauthorizedError) Error() string {
-	return fmt.Sprintf("HTTP 429 %s", v.Description)
+	return fmt.Sprintf("HTTP %s", v.Description)
 }
 
 func (v UnauthorizedError) Alert() string {
@@ -43,7 +43,7 @@ type ForbiddenError struct {
 }
 
 func (v ForbiddenError) Error() string {
-	return fmt.Sprintf("HTTP 429 %s", v.Description)
+	return fmt.Sprintf("HTTP %s", v.Description)
 }
 
 func (v ForbiddenError) Alert() string {
@@ -56,7 +56,7 @@ type NotFoundError struct {
 }
 
 func (v NotFoundError) Error() string {
-	return fmt.Sprintf("HTTP 429 %s", v.Description)
+	return fmt.Sprintf("HTTP %s", v.Description)
 }
 
 func (v NotFoundError) Alert() string {
@@ -69,7 +69,7 @@ type TooManyRequestsError struct {
 }
 
 func (v TooManyRequestsError) Error() string {
-	return fmt.Sprintf("HTTP 429 %s", v.Description)
+	return fmt.Sprintf("HTTP %s", v.Description)
 }
 
 func (v TooManyRequestsError) Alert() string {
@@ -82,7 +82,7 @@ type InternalError struct {
 }
 
 func (v InternalError) Error() string {
-	return fmt.Sprintf("HTTP 429 %s", v.Description)
+	return fmt.Sprintf("HTTP %s", v.Description)
 }
 
 func (v InternalError) Alert() string {

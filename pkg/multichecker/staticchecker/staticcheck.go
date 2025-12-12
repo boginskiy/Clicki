@@ -74,10 +74,6 @@ func (s *Staticcheck) SetChecks(checks ...*analysis.Analyzer) []*analysis.Analyz
 	return s.Checks
 }
 
-func (s *Staticcheck) GetChecks() []*analysis.Analyzer {
-	return s.Checks
-}
-
 func (s *Staticcheck) DeleteCheck(name string) []*analysis.Analyzer {
 	return nil
 }
