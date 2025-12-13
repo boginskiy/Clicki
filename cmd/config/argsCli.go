@@ -3,6 +3,7 @@ package config
 import "flag"
 
 // ArgsCLI - struct for args comm line interface.
+// generate:reset
 type ArgsCLI struct {
 	ServerAddress string // StartPort is the port for start application.
 	PathToStore   string // PathToStore is the path to store URL.
@@ -18,41 +19,41 @@ func NewArgsCLI() *ArgsCLI {
 	return args
 }
 
-func (c *ArgsCLI) ParseFlags() {
+func (ac *ArgsCLI) ParseFlags() {
 	// defaultStoreDB := "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable"
 	// AuditFile - "./audit.json"
 	// AuditURL -  "http://localhost:8081/"
 
-	flag.StringVar(&c.BaseURL, "b", "http://localhost:8080", "Result adress for application")
-	flag.StringVar(&c.ServerAddress, "a", "localhost:8080", "Start adress for application")
-	flag.StringVar(&c.AuditFile, "audit-file", "", "Path to the audit file")
-	flag.StringVar(&c.AuditURL, "audit-url", "", "URL to the audit server")
-	flag.StringVar(&c.PathToStore, "f", "", "Path to file of store URL")
-	flag.StringVar(&c.DB, "d", "", "Data of connected DB")
+	flag.StringVar(&ac.BaseURL, "b", "http://localhost:8080", "Result adress for application")
+	flag.StringVar(&ac.ServerAddress, "a", "localhost:8080", "Start adress for application")
+	flag.StringVar(&ac.AuditFile, "audit-file", "", "Path to the audit file")
+	flag.StringVar(&ac.AuditURL, "audit-url", "", "URL to the audit server")
+	flag.StringVar(&ac.PathToStore, "f", "", "Path to file of store URL")
+	flag.StringVar(&ac.DB, "d", "", "Data of connected DB")
 
 	flag.Parse()
 }
 
-func (c *ArgsCLI) GetSrvAddr() (ServerAddress string) {
-	return c.ServerAddress
+func (ac *ArgsCLI) GetSrvAddr() (ServerAddress string) {
+	return ac.ServerAddress
 }
 
-func (c *ArgsCLI) GetBaseURL() (BaseURL string) {
-	return c.BaseURL
+func (ac *ArgsCLI) GetBaseURL() (BaseURL string) {
+	return ac.BaseURL
 }
 
-func (c *ArgsCLI) GetPathToStore() (PathToStore string) {
-	return c.PathToStore
+func (ac *ArgsCLI) GetPathToStore() (PathToStore string) {
+	return ac.PathToStore
 }
 
-func (c *ArgsCLI) GetDB() (DB string) {
-	return c.DB
+func (ac *ArgsCLI) GetDB() (DB string) {
+	return ac.DB
 }
 
-func (c *ArgsCLI) GetAuditFile() (AuditFile string) {
-	return c.AuditFile
+func (ac *ArgsCLI) GetAuditFile() (AuditFile string) {
+	return ac.AuditFile
 }
 
-func (c *ArgsCLI) GetAuditURL() (AuditURL string) {
-	return c.AuditURL
+func (ac *ArgsCLI) GetAuditURL() (AuditURL string) {
+	return ac.AuditURL
 }

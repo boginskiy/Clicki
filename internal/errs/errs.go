@@ -15,6 +15,7 @@ var (
 )
 
 // ErrPlace - error with place when raise err.
+// generate:reset
 type ErrPlace struct {
 	Message string
 	File    string
@@ -34,13 +35,13 @@ func NewErrPlace(mess string, err error) *ErrPlace {
 	}
 }
 
-func (p *ErrPlace) Error() string {
+func (ep *ErrPlace) Error() string {
 	return fmt.Sprintf("[ERROR]:%s>%v|%s %d",
-		p.Message, p.Err, p.File, p.Line)
+		ep.Message, ep.Err, ep.File, ep.Line)
 }
 
-func (p *ErrPlace) Unwrap() error {
-	return p.Err
+func (ep *ErrPlace) Unwrap() error {
+	return ep.Err
 }
 
 // ErrWrap - error with wrapp another err.

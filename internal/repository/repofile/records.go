@@ -8,8 +8,10 @@ import (
 	"github.com/boginskiy/Clicki/internal/model"
 )
 
+// generate:reset
 type FileRecordsRepo struct {
-	Repo *RepoFile
+	Repo      *RepoFile
+	resetTest int
 }
 
 func NewFileRecordsRepo(repo *RepoFile) *FileRecordsRepo {
@@ -18,21 +20,21 @@ func NewFileRecordsRepo(repo *RepoFile) *FileRecordsRepo {
 	}
 }
 
-func (r *FileRecordsRepo) CreateRecords(ctx context.Context, records any) error {
+func (fr *FileRecordsRepo) CreateRecords(ctx context.Context, records any) error {
 	rows, ok := records.([]model.ResURLSet)
 	if !ok || len(rows) == 0 {
 		return errs.NewErrPlace("records in CreateRecords not valid", nil)
 	}
 
-	r.Repo.mu.Lock()
+	fr.Repo.mu.Lock()
 
 	for _, row := range rows {
-		r.Repo.lastRecord += 1
+		fr.Repo.lastRecord += 1
 
-		record := model.NewURLTb(r.Repo.lastRecord, row.CorrelationID, row.OriginalURL, row.ShortURL, row.UserID)
+		record := model.NewURLTb(fr.Repo.lastRecord, row.CorrelationID, row.OriginalURL, row.ShortURL, row.UserID)
 
 		// Add data in Map.
-		r.Repo.tmpStore[record.CorrelationID] = record
+		fr.Repo.tmpStore[record.CorrelationID] = record
 
 		// Write data in file.
 		jsonData, err := json.Marshal(record)
@@ -41,22 +43,22 @@ func (r *FileRecordsRepo) CreateRecords(ctx context.Context, records any) error 
 		}
 
 		jsonData = append(jsonData, byte('\n'))
-		_, err = r.Repo.Store.Write(jsonData)
+		_, err = fr.Repo.Store.Write(jsonData)
 		if err != nil {
 			return err
 		}
 	}
-	r.Repo.mu.Unlock()
+	fr.Repo.mu.Unlock()
 	return nil
 }
 
-func (r *FileRecordsRepo) ReadRecords(ctx context.Context, userID int) (any, error) {
+func (fr *FileRecordsRepo) ReadRecords(ctx context.Context, userID int) (any, error) {
 	records := []model.ResUserURLSet{}
 
-	r.Repo.muR.RLock()
-	defer r.Repo.muR.RUnlock()
+	fr.Repo.muR.RLock()
+	defer fr.Repo.muR.RUnlock()
 
-	for _, v := range r.Repo.tmpStore {
+	for _, v := range fr.Repo.tmpStore {
 		if v.UserID == userID {
 			records = append(records, model.ResUserURLSet{
 				OriginalURL: v.OriginalURL,
@@ -67,11 +69,11 @@ func (r *FileRecordsRepo) ReadRecords(ctx context.Context, userID int) (any, err
 }
 
 // DeleteRecords - for interface.
-func (r *FileRecordsRepo) DeleteRecords(ctx context.Context) error {
+func (fr *FileRecordsRepo) DeleteRecords(ctx context.Context) error {
 	return nil
 }
 
 // PingStore - for interface HealthCheckRepo.
-func (r *FileRecordsRepo) PingStore(ctx context.Context) (bool, error) {
-	return r.Repo.DB.CheckOpen()
+func (fr *FileRecordsRepo) PingStore(ctx context.Context) (bool, error) {
+	return fr.Repo.DB.CheckOpen()
 }

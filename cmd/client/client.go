@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -24,8 +25,7 @@ func main() {
 	// Читаем строку из консоли
 	long, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		log.Fatal(err.Error())
 	}
 
 	long = strings.TrimSuffix(long, "\n")
@@ -41,8 +41,7 @@ func main() {
 
 	request, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(data.Encode()))
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		log.Fatal(err.Error())
 	}
 
 	// в заголовках запроса указываем кодировку
@@ -51,8 +50,7 @@ func main() {
 	// отправляем запрос и получаем ответ
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		log.Fatal(err.Error())
 	}
 
 	// Выводим код ответа
@@ -62,10 +60,10 @@ func main() {
 	// читаем поток из тела ответа
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		log.Fatal(err.Error())
 	}
 
 	// И печатаем его
 	fmt.Println(string(body))
+
 }
