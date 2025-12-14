@@ -10,6 +10,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/testinit"
 )
 
 // Services
@@ -25,9 +26,9 @@ func ExampleURLServRead() {
 	// Init.
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "ERROR")
-	config := tester.InitConfig()
+	config := testinit.InitConfig()
 
-	URLServ := tester.InitURLServ(logg, config)
+	URLServ := testinit.InitURLServ(logg, config)
 
 	// Request.'
 	ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
@@ -49,9 +50,9 @@ func ExampleURLServCreate() {
 	pathToLogg := "test.log"
 
 	logg := logg.NewLogg(pathToLogg, "ERROR")
-	config := tester.InitConfig()
+	config := testinit.InitConfig()
 
-	URLServ := tester.InitURLServ(logg, config)
+	URLServ := testinit.InitURLServ(logg, config)
 
 	// Request.
 	request := tester.PreparRequest(context.TODO(), "POST", "/", []byte("https://practicum.yandex.ru"))
@@ -74,9 +75,9 @@ func ExampleAPIURLServCreate() {
 	// Init.
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "ERROR")
-	config := tester.InitConfig()
+	config := testinit.InitConfig()
 
-	TestAPIURLServ := tester.InitAPIURLServ(logg, config)
+	TestAPIURLServ := testinit.InitAPIURLServ(logg, config)
 
 	// Request.
 	body := []byte(`{"url": "https://leetcode.com/"}`)

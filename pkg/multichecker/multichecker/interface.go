@@ -19,7 +19,5 @@ type Louder interface {
 }
 
 type Multichecker interface {
-	Deleter
 	Starter
-	Setter
 }

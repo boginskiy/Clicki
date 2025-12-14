@@ -1,15 +1,26 @@
-package service_test
+package service
 
 import (
 	"context"
 	"fmt"
 	"testing"
 
+	"github.com/boginskiy/Clicki/cmd/config"
+	"github.com/boginskiy/Clicki/internal/audit"
 	"github.com/boginskiy/Clicki/internal/auth"
+	"github.com/boginskiy/Clicki/internal/database"
 	"github.com/boginskiy/Clicki/internal/logg"
-	"github.com/boginskiy/Clicki/internal/service"
+	"github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/validation"
+
+	"github.com/boginskiy/Clicki/internal/tester/testinit"
+	"github.com/stretchr/testify/assert"
 )
+
+// Проверить ,что нет цикленности когда мы не юзаем в уровне tester сущности
+// Надо тестировать сервисы далее.
 
 const (
 	USERS = 1000
@@ -21,10 +32,10 @@ func BenchmarkRead(b *testing.B) {
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "INFO")
 
-	config := tester.InitConfig()
+	config := testinit.InitConfig()
 
 	// Service
-	servShortURL := tester.InitURLServ(logg, config)
+	servShortURL := InitURLServ(logg, config)
 
 	// Request
 	UserID := 100
@@ -48,10 +59,10 @@ func BenchmarkCreateURL(b *testing.B) {
 	// Init
 	pathToFile := "test.log"
 	logg := logg.NewLogg(pathToFile, "INFO")
-	cfg := tester.InitConfig()
+	cfg := testinit.InitConfig()
 
 	// Service
-	URLServ := tester.InitURLServ(logg, cfg)
+	URLServ := InitURLServ(logg, cfg)
 
 	// Request
 	body := []byte(fmt.Sprintf("%s%d%s", "https://practicum.yandex-", 0, ".ru"))
@@ -90,30 +101,71 @@ func BenchmarkCreateURL(b *testing.B) {
 }
 
 func TestURLServ(t *testing.T) {
-
 	// Init
 	pathToFile := "test.log"
 	logg := logg.NewLogg(pathToFile, "INFO")
-	cfg := tester.InitConfig()
+	cfg := testinit.InitConfig()
 
 	// Service
-	URLServ := tester.InitURLServ(logg, cfg)
+	URLServ := InitURLServ(logg, cfg)
 
 	// Ctx
 	userID := 100
 	ctx := context.WithValue(context.Background(), auth.CtxUserID, userID)
 
+	// Public method
+	testCreateSet(t, ctx, URLServ)
+	testReadSet(t, ctx, URLServ)
+	testCheckDB(t, ctx, URLServ)
 	testCreate(t, ctx, URLServ)
 	testRead(t, ctx, URLServ)
+
+	// Private method
+	testtakeUserIDFromCtx(t, ctx, URLServ)
 
 	defer tester.DeleteTestFiles(pathToFile)
 }
 
-func testRead(t *testing.T, ctx context.Context, srv *service.URLServ) {
+// func (s *URLServ) takeUserIDFromCtx(req *http.Request) int {
+// 	UserID, ok := req.Context().Value(auth.CtxUserID).(int)
+// 	if !ok || UserID <= 0 {
+// 		s.Logg.RaiseError(ErrUserIDNotValid, "URLServ.takeUserIDFromCtx>CtxUserID", nil)
+// 	}
+// 	return UserID
+// }
+
+func testtakeUserIDFromCtx(t *testing.T, ctx context.Context, srv *URLServ) {
+
+}
+
+func testReadSet(t *testing.T, ctx context.Context, srv *URLServ) {
+	request := tester.PreparRequest(ctx, "GET", "/", nil)
+	dataByte, err := srv.ReadSet(request)
+	assert.NoError(t, err)
+	assert.Greater(t, len(dataByte), 0)
+}
+
+func testCreateSet(t *testing.T, ctx context.Context, srv *URLServ) {
+	request := tester.PreparRequest(ctx, "GET", "/", nil)
+	dataByte, err := srv.CreateSet(request)
+	assert.NoError(t, err)
+	assert.Greater(t, len(dataByte), 0)
+}
+
+func testCheckDB(t *testing.T, ctx context.Context, srv *URLServ) {
+	Method := "GET"
+	URL := "/ping"
+	request := tester.PreparRequest(ctx, Method, URL, nil)
+	dataByte, err := srv.CheckDB(request)
+	assert.NoError(t, err)
+	assert.Greater(t, len(dataByte), 0)
+}
+
+func testRead(t *testing.T, ctx context.Context, srv *URLServ) {
 	Method := "GET"
 	URL := "/wrs4db6j"
 
-	msg := "check ReadURL in service.URLServ"
+	msg := "check ReadURL in URLServ"
 	request := tester.PreparRequest(ctx, Method, URL, nil)
 
 	dataByte, err := srv.Read(request)
@@ -125,12 +177,12 @@ func testRead(t *testing.T, ctx context.Context, srv *service.URLServ) {
 	}
 }
 
-func testCreate(t *testing.T, ctx context.Context, srv *service.URLServ) {
+func testCreate(t *testing.T, ctx context.Context, srv *URLServ) {
 	Body := []byte("https://www.google.com/chrome/")
 	Method := "POST"
 	URL := "/"
 
-	msg := "check CreateURL in service.URLServ"
+	msg := "check CreateURL in URLServ"
 	request := tester.PreparRequest(ctx, Method, URL, Body)
 
 	dataByte, err := srv.Create(request)
@@ -140,4 +192,21 @@ func testCreate(t *testing.T, ctx context.Context, srv *service.URLServ) {
 	if len(dataByte) == 0 {
 		tester.PprintErr(t, msg, len(dataByte), "Must be > 0")
 	}
+}
+
+// InitURLServ init serv.
+func InitURLServ(logger logg.Logger, cfg config.Config) *URLServ {
+	db, _ := database.NewStoreMap(cfg, logger)
+	repo := repository.NewMainRepoMap(cfg, logger, db)
+
+	tester.WriteRecord(repo)
+
+	var sub1 = audit.NewFileReceiver(logger, cfg.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
+	var publisher = audit.NewPublish(sub1, sub2)
+
+	var fancer = preparation.NewFunctions()
+	var checker = validation.NewChecker()
+
+	return NewURLServ(cfg, logger, repo, checker, fancer, publisher)
 }

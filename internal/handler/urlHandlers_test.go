@@ -13,6 +13,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/testinit"
 )
 
 func TestHandlerURL(t *testing.T) {
@@ -20,9 +21,9 @@ func TestHandlerURL(t *testing.T) {
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "INFO")
 
-	config := tester.InitConfig()
+	config := testinit.InitConfig()
 
-	URLServ := tester.InitURLServ(logg, config)
+	URLServ := testinit.InitURLServ(logg, config)
 
 	// Testing
 	testCreateRecord(t, URLServ)

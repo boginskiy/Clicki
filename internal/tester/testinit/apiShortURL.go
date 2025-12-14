@@ -1,4 +1,4 @@
-package tester
+package testinit
 
 import (
 	"github.com/boginskiy/Clicki/cmd/config"
@@ -7,6 +7,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/service"
+	"github.com/boginskiy/Clicki/internal/tester"
 	"github.com/boginskiy/Clicki/internal/validation"
 )
 
@@ -15,7 +16,7 @@ func InitAPIURLServ(logger logg.Logger, cfg config.Config) *service.APIURLServ {
 	db := layers.NewLayerDB()
 	repo := layers.NewLayerRepo(db)
 
-	WriteRecord(repo)
+	tester.WriteRecord(repo)
 
 	var sub1 = audit.NewFileReceiver(logger, cfg.GetAuditFile(), 1)
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)

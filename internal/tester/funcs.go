@@ -3,6 +3,7 @@ package tester
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -56,4 +57,12 @@ func CreateAnalyzer() *analysis.Analyzer {
 		Doc:  "check for test",
 		Run:  nil,
 	}
+}
+
+func Serialization(obj any) []byte {
+	res, err := json.Marshal(obj)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res
 }

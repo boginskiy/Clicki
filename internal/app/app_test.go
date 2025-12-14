@@ -22,6 +22,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/router"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/testinit"
 	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestMain(t *testing.T) {
 	pathToLogg := "test.log"
 
 	logg := logg.NewLogg(pathToLogg, "INFO")
-	config := tester.InitConfig()
+	config := testinit.InitConfig()
 	config.PathToStore = pathToStore
 
 	server := httptest.NewServer(RunRouter(config, logg))
