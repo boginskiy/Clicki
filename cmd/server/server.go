@@ -53,8 +53,8 @@ func (s *Serv) SettingsServerTLS(manager *autocert.Manager, handler http.Handler
 	}
 }
 
-// RunS. Cервер запускать с правами администратора и на хосте, имеющем «белый» IP-адрес.
-func (s *Serv) RunS(handler http.Handler) {
+// StartWithCustomAutocert. Cервер запускать с правами администратора и на хосте, имеющем «белый» IP-адрес.
+func (s *Serv) StartWithCustomAutocert(handler http.Handler) {
 	autocertManager := s.SettingsManager(DIRCACHE, HOST)
 	server := s.SettingsServerTLS(autocertManager, handler)
 
@@ -63,14 +63,21 @@ func (s *Serv) RunS(handler http.Handler) {
 		"server has not started", nil)
 }
 
+func (s *Serv) StartServeTLS(handler http.Handler) {
+	s.Logg.RaiseFatal(
+		http.ListenAndServeTLS(s.Cfg.GetSrvAddr(), handler),
+		"server has not started", nil)
+}
+
 func (s *Serv) Run(router router.Router, mdlwere mv.Middleware) {
 	if s.Cfg.GetEnableHTTPS() == "1" {
-		s.RunS(router.Run(mdlwere))
+		// s.StartWithAutocert(HOST, router.Run(mdlwere))
+		// s.StartWithCustomAutocert(router.Run(mdlwere))
+		s.StartServeTLS(router.Run(mdlwere))
 
 	} else {
 		s.Logg.RaiseFatal(
 			http.ListenAndServe(s.Cfg.GetSrvAddr(), router.Run(mdlwere)),
 			"server has not started", nil)
 	}
-
 }
