@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/boginskiy/Clicki/pkg/multichecker/staticchecker"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/tools/go/analysis"
@@ -22,6 +22,6 @@ func testLoadConfig(t *testing.T, staticcheck *staticchecker.Staticcheck) {
 }
 
 func TestMain(t *testing.T) {
-	analyzer := tester.CreateAnalyzer()
+	analyzer := tfunc.CreateAnalyzer()
 	testNewStaticcheck(t, analyzer)
 }

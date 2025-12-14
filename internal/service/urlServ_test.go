@@ -12,15 +12,10 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/repository"
-	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/boginskiy/Clicki/internal/validation"
-
-	"github.com/boginskiy/Clicki/internal/tester/testinit"
 	"github.com/stretchr/testify/assert"
 )
-
-// Проверить ,что нет цикленности когда мы не юзаем в уровне tester сущности
-// Надо тестировать сервисы далее.
 
 const (
 	USERS = 1000
@@ -32,7 +27,7 @@ func BenchmarkRead(b *testing.B) {
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "INFO")
 
-	config := testinit.InitConfig()
+	config := InitConfig()
 
 	// Service
 	servShortURL := InitURLServ(logg, config)
@@ -43,7 +38,7 @@ func BenchmarkRead(b *testing.B) {
 	Method := "GET"
 	URL := "/wrs4db6j"
 
-	request := tester.PreparRequest(ctx, Method, URL, nil)
+	request := tfunc.PreparRequest(ctx, Method, URL, nil)
 
 	b.ResetTimer() // Обнуление счетчика
 
@@ -52,14 +47,14 @@ func BenchmarkRead(b *testing.B) {
 		_ = dataByte
 	}
 
-	defer tester.DeleteTestFiles(pathToLogg)
+	defer tfunc.DeleteTestFiles(pathToLogg)
 }
 
 func BenchmarkCreateURL(b *testing.B) {
 	// Init
 	pathToFile := "test.log"
 	logg := logg.NewLogg(pathToFile, "INFO")
-	cfg := testinit.InitConfig()
+	cfg := InitConfig()
 
 	// Service
 	URLServ := InitURLServ(logg, cfg)
@@ -75,7 +70,7 @@ func BenchmarkCreateURL(b *testing.B) {
 
 	for i := 1; i < b.N; i++ {
 		ctx := context.WithValue(context.Background(), auth.CtxUserID, UserID)
-		request := tester.PreparRequest(ctx, Method, URL, body)
+		request := tfunc.PreparRequest(ctx, Method, URL, body)
 
 		dataByte, _ := URLServ.Create(request)
 		_ = dataByte
@@ -97,14 +92,14 @@ func BenchmarkCreateURL(b *testing.B) {
 		b.StartTimer()
 	}
 
-	defer tester.DeleteTestFiles(pathToFile)
+	defer tfunc.DeleteTestFiles(pathToFile)
 }
 
 func TestURLServ(t *testing.T) {
 	// Init
 	pathToFile := "test.log"
 	logg := logg.NewLogg(pathToFile, "INFO")
-	cfg := testinit.InitConfig()
+	cfg := InitConfig()
 
 	// Service
 	URLServ := InitURLServ(logg, cfg)
@@ -121,32 +116,40 @@ func TestURLServ(t *testing.T) {
 	testRead(t, ctx, URLServ)
 
 	// Private method
-	testtakeUserIDFromCtx(t, ctx, URLServ)
+	testTakeUserIDFromCtx(t, ctx, URLServ)
+	testEncrypOriginURL(t, URLServ)
 
-	defer tester.DeleteTestFiles(pathToFile)
+	defer tfunc.DeleteTestFiles(pathToFile)
 }
 
-// func (s *URLServ) takeUserIDFromCtx(req *http.Request) int {
-// 	UserID, ok := req.Context().Value(auth.CtxUserID).(int)
-// 	if !ok || UserID <= 0 {
-// 		s.Logg.RaiseError(ErrUserIDNotValid, "URLServ.takeUserIDFromCtx>CtxUserID", nil)
-// 	}
-// 	return UserID
-// }
+func testEncrypOriginURL(t *testing.T, srv *URLServ) {
+	res := srv.encrypOriginURL()
+	assert.Equal(t, len(res), 8)
+}
 
-func testtakeUserIDFromCtx(t *testing.T, ctx context.Context, srv *URLServ) {
+func testTakeUserIDFromCtx(t *testing.T, ctx context.Context, srv *URLServ) {
+	Method := "POST"
+	URL := "/"
+
+	// request with userID := 100
+	request := tfunc.PreparRequest(ctx, Method, URL, nil)
+	assert.Equal(t, srv.takeUserIDFromCtx(request), 100)
+
+	// request without userID
+	request2 := tfunc.PreparRequest(context.TODO(), Method, URL, nil)
+	assert.NotEqual(t, srv.takeUserIDFromCtx(request2), 100)
 
 }
 
 func testReadSet(t *testing.T, ctx context.Context, srv *URLServ) {
-	request := tester.PreparRequest(ctx, "GET", "/", nil)
+	request := tfunc.PreparRequest(ctx, "GET", "/", nil)
 	dataByte, err := srv.ReadSet(request)
 	assert.NoError(t, err)
 	assert.Greater(t, len(dataByte), 0)
 }
 
 func testCreateSet(t *testing.T, ctx context.Context, srv *URLServ) {
-	request := tester.PreparRequest(ctx, "GET", "/", nil)
+	request := tfunc.PreparRequest(ctx, "GET", "/", nil)
 	dataByte, err := srv.CreateSet(request)
 	assert.NoError(t, err)
 	assert.Greater(t, len(dataByte), 0)
@@ -155,7 +158,7 @@ func testCreateSet(t *testing.T, ctx context.Context, srv *URLServ) {
 func testCheckDB(t *testing.T, ctx context.Context, srv *URLServ) {
 	Method := "GET"
 	URL := "/ping"
-	request := tester.PreparRequest(ctx, Method, URL, nil)
+	request := tfunc.PreparRequest(ctx, Method, URL, nil)
 	dataByte, err := srv.CheckDB(request)
 	assert.NoError(t, err)
 	assert.Greater(t, len(dataByte), 0)
@@ -166,14 +169,14 @@ func testRead(t *testing.T, ctx context.Context, srv *URLServ) {
 	URL := "/wrs4db6j"
 
 	msg := "check ReadURL in URLServ"
-	request := tester.PreparRequest(ctx, Method, URL, nil)
+	request := tfunc.PreparRequest(ctx, Method, URL, nil)
 
 	dataByte, err := srv.Read(request)
 	if err != nil {
-		tester.PprintErr(t, msg, err, nil)
+		tfunc.PprintErr(t, msg, err, nil)
 	}
 	if string(dataByte) != "https://practicum.yandex.ru/" {
-		tester.PprintErr(t, msg, string(dataByte), "https://practicum.yandex.ru/")
+		tfunc.PprintErr(t, msg, string(dataByte), "https://practicum.yandex.ru/")
 	}
 }
 
@@ -183,23 +186,23 @@ func testCreate(t *testing.T, ctx context.Context, srv *URLServ) {
 	URL := "/"
 
 	msg := "check CreateURL in URLServ"
-	request := tester.PreparRequest(ctx, Method, URL, Body)
+	request := tfunc.PreparRequest(ctx, Method, URL, Body)
 
 	dataByte, err := srv.Create(request)
 	if err != nil {
-		tester.PprintErr(t, msg, err, nil)
+		tfunc.PprintErr(t, msg, err, nil)
 	}
 	if len(dataByte) == 0 {
-		tester.PprintErr(t, msg, len(dataByte), "Must be > 0")
+		tfunc.PprintErr(t, msg, len(dataByte), "Must be > 0")
 	}
 }
 
-// InitURLServ init serv.
+// InitURLServ.
 func InitURLServ(logger logg.Logger, cfg config.Config) *URLServ {
 	db, _ := database.NewStoreMap(cfg, logger)
 	repo := repository.NewMainRepoMap(cfg, logger, db)
 
-	tester.WriteRecord(repo)
+	tfunc.WriteRecord(repo)
 
 	var sub1 = audit.NewFileReceiver(logger, cfg.GetAuditFile(), 1)
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
@@ -209,4 +212,17 @@ func InitURLServ(logger logg.Logger, cfg config.Config) *URLServ {
 	var checker = validation.NewChecker()
 
 	return NewURLServ(cfg, logger, repo, checker, fancer, publisher)
+}
+
+// InitConfig.
+func InitConfig() *config.Variables {
+	return &config.Variables{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080",
+		ArgsCLI:       &config.ArgsCLI{},
+		ArgsENV: &config.ArgsENV{
+			SoftDeleteTime: 10,
+			HardDeleteTime: 20,
+		},
+	}
 }

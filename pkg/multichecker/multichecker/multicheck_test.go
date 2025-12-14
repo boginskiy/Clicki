@@ -3,7 +3,7 @@ package multichecker
 import (
 	"testing"
 
-	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +15,7 @@ func TestMulticheck(t *testing.T) {
 }
 
 func testSetChecks(t *testing.T, multicheck *Multicheck) {
-	analyzer := tester.CreateAnalyzer()
+	analyzer := tfunc.CreateAnalyzer()
 	multicheck.SetChecks(analyzer)
 	assert.NotEmpty(t, multicheck.Checks)
 }

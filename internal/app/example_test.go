@@ -9,8 +9,8 @@ import (
 	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/service"
-	"github.com/boginskiy/Clicki/internal/tester"
-	"github.com/boginskiy/Clicki/internal/tester/testinit"
+	"github.com/boginskiy/Clicki/internal/tester/tfunc"
+	"github.com/boginskiy/Clicki/internal/tester/tserv"
 )
 
 // Services
@@ -26,13 +26,13 @@ func ExampleURLServRead() {
 	// Init.
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "ERROR")
-	config := testinit.InitConfig()
+	config := tserv.InitConfig()
 
-	URLServ := testinit.InitURLServ(logg, config)
+	URLServ := tserv.InitURLServ(logg, config)
 
 	// Request.'
 	ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
-	request := tester.PreparRequest(ctx, "GET", "/wrs4db6j", nil)
+	request := tfunc.PreparRequest(ctx, "GET", "/wrs4db6j", nil)
 	// Handler.
 	body, err := URLServ.Read(request)
 	if err != nil {
@@ -43,19 +43,19 @@ func ExampleURLServRead() {
 	// Output:
 	// https://practicum.yandex.ru/
 
-	defer tester.DeleteTestFiles(pathToLogg)
+	defer tfunc.DeleteTestFiles(pathToLogg)
 }
 
 func ExampleURLServCreate() {
 	pathToLogg := "test.log"
 
 	logg := logg.NewLogg(pathToLogg, "ERROR")
-	config := testinit.InitConfig()
+	config := tserv.InitConfig()
 
-	URLServ := testinit.InitURLServ(logg, config)
+	URLServ := tserv.InitURLServ(logg, config)
 
 	// Request.
-	request := tester.PreparRequest(context.TODO(), "POST", "/", []byte("https://practicum.yandex.ru"))
+	request := tfunc.PreparRequest(context.TODO(), "POST", "/", []byte("https://practicum.yandex.ru"))
 	// Handler.
 	body, err := URLServ.Create(request)
 	if err != nil {
@@ -68,20 +68,20 @@ func ExampleURLServCreate() {
 	// Output:
 	// http://localhost:8080
 
-	defer tester.DeleteTestFiles(pathToLogg)
+	defer tfunc.DeleteTestFiles(pathToLogg)
 }
 
 func ExampleAPIURLServCreate() {
 	// Init.
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "ERROR")
-	config := testinit.InitConfig()
+	config := tserv.InitConfig()
 
-	TestAPIURLServ := testinit.InitAPIURLServ(logg, config)
+	TestAPIURLServ := tserv.InitAPIURLServ(logg, config)
 
 	// Request.
 	body := []byte(`{"url": "https://leetcode.com/"}`)
-	request := tester.PreparRequest(context.TODO(), "POST", "/shorten", body)
+	request := tfunc.PreparRequest(context.TODO(), "POST", "/shorten", body)
 
 	// Handler.
 	body, err := TestAPIURLServ.Create(request)
@@ -98,5 +98,5 @@ func ExampleAPIURLServCreate() {
 	// Output:
 	// http://localhost:8080
 
-	defer tester.DeleteTestFiles(pathToLogg)
+	defer tfunc.DeleteTestFiles(pathToLogg)
 }

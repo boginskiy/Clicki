@@ -3,7 +3,7 @@ package staticchecker
 import (
 	"testing"
 
-	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +41,7 @@ func testLoadConfig(t *testing.T, staticcheck *Staticcheck) {
 }
 
 func testSetChecks(t *testing.T, staticcheck *Staticcheck) {
-	analyzer := tester.CreateAnalyzer()
+	analyzer := tfunc.CreateAnalyzer()
 	staticcheck.SetChecks(analyzer)
 	assert.NotEmpty(t, staticcheck.Checks)
 }
