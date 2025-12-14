@@ -6,6 +6,7 @@ type Argsmenter interface {
 
 // ConfigCLI - interface about args comm line interface.
 type ConfigCLI interface {
+	GetEnableHTTPS() (EnableHTTPS string)
 	GetPathToStore() (PathToStore string)
 	GetAuditFile() (AuditFile string)
 	GetAuditURL() (AuditURL string)

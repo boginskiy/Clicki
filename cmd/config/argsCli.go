@@ -7,6 +7,7 @@ import "flag"
 type ArgsCLI struct {
 	ServerAddress string // StartPort is the port for start application.
 	PathToStore   string // PathToStore is the path to store URL.
+	EnableHTTPS   string // Turn of/on HTTPS
 	AuditFile     string // AuditFile is for turn on a file.
 	AuditURL      string // AuditURL is for turn on a server.
 	BaseURL       string // BaseURL is result port is the port after changing.
@@ -29,6 +30,7 @@ func (ac *ArgsCLI) ParseFlags() {
 	flag.StringVar(&ac.AuditFile, "audit-file", "", "Path to the audit file")
 	flag.StringVar(&ac.AuditURL, "audit-url", "", "URL to the audit server")
 	flag.StringVar(&ac.PathToStore, "f", "", "Path to file of store URL")
+	flag.StringVar(&ac.EnableHTTPS, "s", "", "Turn of/on HTTPS protocol")
 	flag.StringVar(&ac.DB, "d", "", "Data of connected DB")
 
 	flag.Parse()
@@ -56,4 +58,8 @@ func (ac *ArgsCLI) GetAuditFile() (AuditFile string) {
 
 func (ac *ArgsCLI) GetAuditURL() (AuditURL string) {
 	return ac.AuditURL
+}
+
+func (ac *ArgsCLI) GetEnableHTTPS() (EnableHTTPS string) {
+	return ac.EnableHTTPS
 }

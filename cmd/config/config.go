@@ -10,6 +10,7 @@ import (
 type Variables struct {
 	Logger        logg.Logger
 	ServerAddress string
+	EnableHTTPS   string
 	PathToStore   string
 	AuditFile     string
 	AuditURL      string
@@ -46,6 +47,7 @@ func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
 
 func (v *Variables) extSettingsArgs() {
 	v.PathToStore = v.argsPrioryty(v.ArgsENV.GetPathToStore, v.ArgsCLI.GetPathToStore)
+	v.EnableHTTPS = v.argsPrioryty(v.ArgsENV.GetEnableHTTPS, v.ArgsCLI.GetEnableHTTPS)
 	v.ServerAddress = v.argsPrioryty(v.ArgsENV.GetSrvAddr, v.ArgsCLI.GetSrvAddr)
 	v.AuditFile = v.argsPrioryty(v.ArgsENV.GetAuditFile, v.ArgsCLI.GetAuditFile)
 	v.AuditURL = v.argsPrioryty(v.ArgsENV.GetAuditURL, v.ArgsCLI.GetAuditURL)
@@ -107,4 +109,8 @@ func (v *Variables) GetAuditFile() (AuditFile string) {
 
 func (v *Variables) GetAuditURL() (AuditURL string) {
 	return v.AuditURL
+}
+
+func (v *Variables) GetEnableHTTPS() (EnableHTTPS string) {
+	return v.EnableHTTPS
 }

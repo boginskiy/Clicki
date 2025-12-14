@@ -25,6 +25,7 @@ type ArgsENV struct {
 	SecretKey      string `env:"SECRET_KEY"`
 	SoftDeleteTime int    `env:"SOFT_DELETE_TIME"`
 	HardDeleteTime int    `env:"HARD_DELETE_TIME"`
+	EnableHTTPS    string `env:"ENABLE_HTTPS"`
 }
 
 func NewArgsENV() *ArgsENV {
@@ -104,4 +105,8 @@ func (ae *ArgsENV) GetAuditFile() (AuditFile string) {
 
 func (ae *ArgsENV) GetAuditURL() (AuditURL string) {
 	return ae.AuditURL
+}
+
+func (ae *ArgsENV) GetEnableHTTPS() (EnableHTTPS string) {
+	return ae.EnableHTTPS
 }
