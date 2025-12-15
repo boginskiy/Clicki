@@ -46,7 +46,7 @@ func (s *Serv) SettingsManager(dirCache string, hosts ...string) *autocert.Manag
 // SettingsServerTLS конструируем сервер с поддержкой TLS
 func (s *Serv) SettingsServerTLS(manager *autocert.Manager, handler http.Handler) *http.Server {
 	return &http.Server{
-		Addr:    ":443",
+		Addr:    s.Cfg.GetSrvAddr(), // ":443"
 		Handler: handler,
 		// для TLS-конфигурации используем менеджер сертификатов
 		TLSConfig: manager.TLSConfig(),
@@ -63,21 +63,14 @@ func (s *Serv) StartWithCustomAutocert(handler http.Handler) {
 		"server has not started", nil)
 }
 
-func (s *Serv) StartServeTLS(handler http.Handler) {
-	s.Logg.RaiseFatal(
-		http.ListenAndServeTLS(s.Cfg.GetSrvAddr(), handler),
-		"server has not started", nil)
-}
-
 func (s *Serv) Run(router router.Router, mdlwere mv.Middleware) {
-	if s.Cfg.GetEnableHTTPS() == "1" {
-		// s.StartWithAutocert(HOST, router.Run(mdlwere))
-		// s.StartWithCustomAutocert(router.Run(mdlwere))
-		s.StartServeTLS(router.Run(mdlwere))
+	// if s.Cfg.GetEnableHTTPS() == "1" {
+	// 	// s.StartWithAutocert(HOST, router.Run(mdlwere))
+	// 	// s.StartWithCustomAutocert(router.Run(mdlwere))
+	// } else {}
 
-	} else {
-		s.Logg.RaiseFatal(
-			http.ListenAndServe(s.Cfg.GetSrvAddr(), router.Run(mdlwere)),
-			"server has not started", nil)
-	}
+	s.Logg.RaiseFatal(
+		http.ListenAndServe(s.Cfg.GetSrvAddr(), router.Run(mdlwere)),
+		"server has not started", nil)
+
 }

@@ -2,7 +2,6 @@ package server
 
 import (
 	"bytes"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -10,12 +9,21 @@ import (
 	"log"
 	"math/big"
 	"net"
+	"os"
+	"path/filepath"
 	"time"
 )
 
-type CertX509 struct {
-	Cert       *x509.Certificate
-	PrivateKey *rsa.PrivateKey
+func SaveFilePem(fileName string, data []byte) string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fullPath := filepath.Join(homeDir, fileName)
+	if err = os.WriteFile(fullPath, data, 0644); err != nil {
+		log.Fatal(err)
+	}
+	return fullPath
 }
 
 func NewX509C() *x509.Certificate {
@@ -42,45 +50,26 @@ func NewX509C() *x509.Certificate {
 	}
 }
 
-func NewPrivateKey(longKey int) *rsa.PrivateKey {
-	privateKey, err := rsa.GenerateKey(rand.Reader, longKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return privateKey
-}
-
-func NewCertX509() *CertX509 {
-	cert := NewX509C()                // создаём шаблон сертификата
-	privateKey := NewPrivateKey(4096) // приватный RSA-ключ длиной 4096 бит
-
-	certBytes, err := x509.CreateCertificate(rand.Reader, cert, cert, privateKey.PublicKey, privateKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// кодируем сертификат и ключ в формате PEM, который
-	// используется для хранения и обмена криптографическими ключами
+func NewEncodeCertPEM(cert []byte) bytes.Buffer {
 	var certPEM bytes.Buffer
-	err = pem.Encode(&certPEM, &pem.Block{
+	err := pem.Encode(&certPEM, &pem.Block{
 		Type:  "CERTIFICATE",
-		Bytes: certBytes,
+		Bytes: cert,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
+	return certPEM
+}
 
+func NewEncodePrivateKeyPEM(privateKey *rsa.PrivateKey) bytes.Buffer {
 	var privateKeyPEM bytes.Buffer
-	err = pem.Encode(&privateKeyPEM, &pem.Block{
+	err := pem.Encode(&privateKeyPEM, &pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// return &CertX509{
-	// 	Cert:       cert,
-	// 	PrivateKey: pKey,
-	// }
+	return privateKeyPEM
 }

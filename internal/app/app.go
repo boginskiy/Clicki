@@ -72,7 +72,7 @@ func (a *App) Start() {
 	router := router.NewRoute(URLHdler, APIURLHdler, PprofHdler)
 
 	// Server.
-	server.NewServ(a.Cfg, a.Logg).Run(router, middleware)
+	server.Run(a.Cfg, a.Logg, router, middleware)
 
 	defer setupLayers.Close()
 	defer infraLogg.Close()
