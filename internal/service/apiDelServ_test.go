@@ -97,7 +97,7 @@ func testTakeUserIDFromCtx2(t *testing.T, ctx context.Context, srv *APIDelServ) 
 }
 
 func testSendHardDeletion(t *testing.T, serv *APIDelServ) {
-	var isTrue bool = true
+	isTrue := true
 	assert.Equal(t, serv.sendHardDeletion(&isTrue), false)
 }
 
