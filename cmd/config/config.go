@@ -112,6 +112,5 @@ func (v *Variables) GetAuditURL() (AuditURL string) {
 }
 
 func (v *Variables) GetEnableHTTPS() (EnableHTTPS string) {
-	// return v.EnableHTTPS
-	return "1"
+	return v.EnableHTTPS
 }
