@@ -26,6 +26,7 @@ type ArgsENV struct {
 	SoftDeleteTime int    `env:"SOFT_DELETE_TIME"`
 	HardDeleteTime int    `env:"HARD_DELETE_TIME"`
 	EnableHTTPS    string `env:"ENABLE_HTTPS"`
+	ConfigFile     string `env:"CONFIG"`
 }
 
 func NewArgsENV() *ArgsENV {
@@ -40,7 +41,6 @@ func (ae *ArgsENV) ParseFlags() {
 		log.Fatal(err)
 	}
 
-	// Default value.
 	valueStr := strings.TrimSpace(os.Getenv("LOG_FILE"))
 	if len(valueStr) == 0 {
 		ae.LogFile = "infra.log"
@@ -109,4 +109,8 @@ func (ae *ArgsENV) GetAuditURL() (AuditURL string) {
 
 func (ae *ArgsENV) GetEnableHTTPS() (EnableHTTPS string) {
 	return ae.EnableHTTPS
+}
+
+func (ae *ArgsENV) GetConfigFile() (ConfigFile string) {
+	return ae.ConfigFile
 }

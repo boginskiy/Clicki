@@ -1,0 +1,9 @@
+{
+    "server_address": "localhost:8085",
+    "file_storage_path": "",
+    "enable_https": "0",
+    "audit_file": "audit.json",
+    "audit_url": "",
+    "base_url": "http://localhost:8080",
+    "database_dsn": ""
+}

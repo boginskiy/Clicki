@@ -11,6 +11,7 @@ type ArgsCLI struct {
 	AuditFile     string // AuditFile is for turn on a file.
 	AuditURL      string // AuditURL is for turn on a server.
 	BaseURL       string // BaseURL is result port is the port after changing.
+	ConfigFile    string // Loag config from file.json.
 	DB            string // DB is data of connected.
 }
 
@@ -25,12 +26,13 @@ func (ac *ArgsCLI) ParseFlags() {
 	// AuditFile - "./audit.json"
 	// AuditURL -  "http://localhost:8081/"
 
-	flag.StringVar(&ac.BaseURL, "b", "http://localhost:8080", "Result adress for application")
-	flag.StringVar(&ac.ServerAddress, "a", "localhost:8080", "Start adress for application")
+	flag.StringVar(&ac.BaseURL, "b", "", "Result adress for application")      // http://localhost:8080
+	flag.StringVar(&ac.ServerAddress, "a", "", "Start adress for application") // localhost:8080
 	flag.StringVar(&ac.AuditFile, "audit-file", "", "Path to the audit file")
-	flag.StringVar(&ac.AuditURL, "audit-url", "", "URL to the audit server")
+	flag.StringVar(&ac.AuditURL, "", "", "URL to the audit server") // audit-url
 	flag.StringVar(&ac.PathToStore, "f", "", "Path to file of store URL")
 	flag.StringVar(&ac.EnableHTTPS, "s", "", "Turn of/on HTTPS protocol")
+	flag.StringVar(&ac.ConfigFile, "c", "config.json", "Loag config from file.json") // config.json
 	flag.StringVar(&ac.DB, "d", "", "Data of connected DB")
 
 	flag.Parse()
@@ -62,4 +64,8 @@ func (ac *ArgsCLI) GetAuditURL() (AuditURL string) {
 
 func (ac *ArgsCLI) GetEnableHTTPS() (EnableHTTPS string) {
 	return ac.EnableHTTPS
+}
+
+func (ac *ArgsCLI) GetConfigFile() (ConfigFile string) {
+	return ac.ConfigFile
 }

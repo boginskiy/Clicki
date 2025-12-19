@@ -1,0 +1,46 @@
+package config
+
+type ArgsJSON struct {
+	ServerAddress string `json:"server_address"`
+	PathToStore   string `json:"file_storage_path"`
+	EnableHTTPS   string `json:"enable_https"`
+	AuditFile     string `json:"audit_file"`
+	AuditURL      string `json:"audit_url"`
+	BaseURL       string `json:"base_url"`
+	DB            string `json:"database_dsn"`
+}
+
+func NewArgsJSON(config string) *ArgsJSON {
+	if config == "" {
+		return nil
+	}
+	return ReadConfigFile(config, &ArgsJSON{})
+}
+
+func (aj *ArgsJSON) GetSrvAddr() (ServerAddress string) {
+	return aj.ServerAddress
+}
+
+func (aj *ArgsJSON) GetBaseURL() (BaseURL string) {
+	return aj.BaseURL
+}
+
+func (aj *ArgsJSON) GetPathToStore() (PathToStore string) {
+	return aj.PathToStore
+}
+
+func (aj *ArgsJSON) GetDB() (DB string) {
+	return aj.DB
+}
+
+func (aj *ArgsJSON) GetAuditFile() (AuditFile string) {
+	return aj.AuditFile
+}
+
+func (aj *ArgsJSON) GetAuditURL() (AuditURL string) {
+	return aj.AuditURL
+}
+
+func (aj *ArgsJSON) GetEnableHTTPS() (EnableHTTPS string) {
+	return aj.EnableHTTPS
+}
