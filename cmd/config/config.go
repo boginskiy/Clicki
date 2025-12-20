@@ -24,13 +24,17 @@ type Variables struct {
 
 func NewVariables(logger logg.Logger) *Variables {
 	vr := &Variables{
-		Logger:  logger,
-		ArgsCLI: NewArgsCLI(),
-		ArgsENV: NewArgsENV(),
+		Logger: logger,
 	}
-	// ArgsJSON
+
+	vr.ArgsCLI = NewArgsCLI() // ArgsCLI
+	vr.ArgsENV = NewArgsENV() // ArgsENV
+
 	configFile := vr.argsPrioryty(
-		vr.ArgsENV.GetConfigFile, vr.ArgsCLI.GetConfigFile)
+		vr.ArgsENV.GetConfigFile,
+		vr.ArgsCLI.GetConfigFile)
+
+	// ArgsJSON
 	vr.ArgsJSON = NewArgsJSON(configFile)
 
 	vr.settingsPrioryty(vr.ArgsENV, vr.ArgsCLI)

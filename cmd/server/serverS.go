@@ -1,16 +1,20 @@
 package server
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/logg"
-	mv "github.com/boginskiy/Clicki/internal/middleware"
-	"github.com/boginskiy/Clicki/internal/router"
 )
 
 var SERT = "private.pem"
@@ -18,20 +22,30 @@ var PRIVATE = "cert.pem"
 var LONG = 4096
 
 type ServS struct {
-	Cfg         config.Config
-	Logg        logg.Logger
+	Cfg  config.Config
+	Logg logg.Logger
+	S    *http.Server
+	done chan struct{}
+
 	PrivateKey  *rsa.PrivateKey
 	CertName    string
 	PrivateName string
 }
 
-func NewServS(config config.Config, logger logg.Logger) *ServS {
-	tmp := &ServS{
+func NewServS(config config.Config, logger logg.Logger, handler http.Handler) *ServS {
+	tmpServ := &ServS{
 		Cfg:  config,
 		Logg: logger,
+		S: &http.Server{
+			Addr:    config.GetSrvAddr(),
+			Handler: handler,
+		},
+		done: make(chan struct{}),
 	}
-	tmp.Settings(SERT, PRIVATE)
-	return tmp
+
+	tmpServ.WorkingWithShutdown()
+	tmpServ.Settings(SERT, PRIVATE)
+	return tmpServ
 }
 
 func (h *ServS) Settings(sertName, privateName string) {
@@ -54,8 +68,30 @@ func (h *ServS) Settings(sertName, privateName string) {
 	h.CertName = SaveFilePem(sertName, certPEM.Bytes())
 }
 
-func (h *ServS) Run(router router.Router, mdlwere mv.Middleware) {
-	h.Logg.RaiseFatal(
-		http.ListenAndServeTLS(h.Cfg.GetSrvAddr(), h.CertName, h.PrivateName, router.Run(mdlwere)),
-		"server has not started", nil)
+func (s *ServS) WorkingWithShutdown() {
+	//  Registration interruption.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+
+	go func() {
+		<-ctx.Done() // Recive signal
+		shdownCtx, cancel := context.WithTimeout(context.Background(), SHDWTIME*time.Second)
+		defer cancel()
+
+		if err := s.S.Shutdown(shdownCtx); err != nil {
+			s.Logg.RaiseFatal(err, "https server has bad Shutdown:", nil)
+		}
+		close(s.done)
+		defer stop()
+	}()
+}
+
+func (s *ServS) Run() {
+	// Start server.
+	if err := s.S.ListenAndServeTLS(s.CertName, s.PrivateName); err != http.ErrServerClosed {
+		s.Logg.RaiseFatal(err, "https server has not started", nil)
+	}
+
+	// Waiting the end of Shutdown.
+	<-s.done
+	fmt.Fprint(os.Stdout, "\nServer has been successfully stopped\n")
 }

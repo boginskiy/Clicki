@@ -1,32 +1,48 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/logg"
-	mv "github.com/boginskiy/Clicki/internal/middleware"
-	"github.com/boginskiy/Clicki/internal/router"
 	"golang.org/x/crypto/acme/autocert"
 )
 
+var SHDWTIME = time.Duration(10)
 var DIRCACHE = "cache-dir"
 var HOST = "mysite.ru"
 
 type Server interface {
-	Run(router router.Router, middleware mv.Middleware)
+	Run()
 }
 
 type Serv struct {
 	Cfg  config.Config
 	Logg logg.Logger
+	S    *http.Server
+	done chan struct{}
 }
 
-func NewServ(config config.Config, logger logg.Logger) *Serv {
-	return &Serv{
+func NewServ(config config.Config, logger logg.Logger, handler http.Handler) *Serv {
+	tmpServ := &Serv{
 		Cfg:  config,
 		Logg: logger,
+		S: &http.Server{
+			Addr:    config.GetSrvAddr(),
+			Handler: handler,
+		},
+		done: make(chan struct{}),
 	}
+
+	tmpServ.WorkingWithShutdown()
+
+	return tmpServ
 }
 
 func (s *Serv) StartWithAutocert(nameSite string, handler http.Handler) {
@@ -63,14 +79,36 @@ func (s *Serv) StartWithCustomAutocert(handler http.Handler) {
 		"server has not started", nil)
 }
 
-func (s *Serv) Run(router router.Router, mdlwere mv.Middleware) {
+func (s *Serv) WorkingWithShutdown() {
+	//  Registration interruption.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+
+	go func() {
+		<-ctx.Done() // Recive signal
+		shdownCtx, cancel := context.WithTimeout(context.Background(), SHDWTIME*time.Second)
+		defer cancel()
+
+		if err := s.S.Shutdown(shdownCtx); err != nil {
+			s.Logg.RaiseFatal(err, "http server has bad Shutdown:", nil)
+		}
+		close(s.done)
+		defer stop()
+	}()
+}
+
+func (s *Serv) Run() {
+	// if need turn on HTTPS.
 	// if s.Cfg.GetEnableHTTPS() == "1" {
-	// 	// s.StartWithAutocert(HOST, router.Run(mdlwere))
-	// 	// s.StartWithCustomAutocert(router.Run(mdlwere))
+	// 	s.StartWithAutocert(HOST, s.S.Handler)
+	// 	s.StartWithCustomAutocert(s.S.Handler)
 	// } else {}
 
-	s.Logg.RaiseFatal(
-		http.ListenAndServe(s.Cfg.GetSrvAddr(), router.Run(mdlwere)),
-		"server has not started", nil)
+	// Start server.
+	if err := s.S.ListenAndServe(); err != http.ErrServerClosed {
+		s.Logg.RaiseFatal(err, "http server has not started", nil)
+	}
 
+	// Waiting the end of Shutdown.
+	<-s.done
+	fmt.Fprint(os.Stdout, "\nServer has been successfully stopped\n")
 }

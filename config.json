@@ -1,5 +1,5 @@
 {
-    "server_address": "localhost:8085",
+    "server_address": "localhost:8080",
     "file_storage_path": "",
     "enable_https": "0",
     "audit_file": "audit.json",

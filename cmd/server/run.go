@@ -13,10 +13,10 @@ import (
 func Run(cfg config.Config, logg logg.Logger, router router.Router, mdlwere mv.Middleware) {
 	if cfg.GetEnableHTTPS() != "1" {
 		fmt.Fprintf(os.Stdout, "Protocol:      %s\n", "HTTP")
-		NewServ(cfg, logg).Run(router, mdlwere)
+		NewServ(cfg, logg, router.Run(mdlwere)).Run()
 
 	} else {
 		fmt.Fprintf(os.Stdout, "Protocol:      %s\n", "HTTPS")
-		NewServS(cfg, logg).Run(router, mdlwere)
+		NewServS(cfg, logg, router.Run(mdlwere)).Run()
 	}
 }
