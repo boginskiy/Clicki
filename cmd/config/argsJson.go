@@ -1,5 +1,7 @@
 package config
 
+import "log"
+
 type ArgsJSON struct {
 	ServerAddress string `json:"server_address"`
 	PathToStore   string `json:"file_storage_path"`
@@ -14,7 +16,11 @@ func NewArgsJSON(config string) *ArgsJSON {
 	if config == "" {
 		return nil
 	}
-	return ReadConfigFile(config, &ArgsJSON{})
+	args, err := ReadConfigFile(config, &ArgsJSON{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return args
 }
 
 func (aj *ArgsJSON) GetSrvAddr() (ServerAddress string) {

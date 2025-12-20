@@ -23,16 +23,18 @@ func NewArgsCLI() *ArgsCLI {
 
 func (ac *ArgsCLI) ParseFlags() {
 	// defaultStoreDB := "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable"
-	// AuditFile - "./audit.json"
-	// AuditURL -  "http://localhost:8081/"
+	// AuditFile     - "./audit.json"
+	// AuditURL      - "http://localhost:8081/"
+	// BaseURL       - http://localhost:8080
+	// ServerAddress - localhost:8080
 
-	flag.StringVar(&ac.BaseURL, "b", "", "Result adress for application")      // http://localhost:8080
-	flag.StringVar(&ac.ServerAddress, "a", "", "Start adress for application") // localhost:8080
+	flag.StringVar(&ac.ConfigFile, "c", "config.json", "Loag config from file.json")
+	flag.StringVar(&ac.ServerAddress, "a", "", "Start adress for application")
 	flag.StringVar(&ac.AuditFile, "audit-file", "", "Path to the audit file")
-	flag.StringVar(&ac.AuditURL, "", "", "URL to the audit server") // audit-url
+	flag.StringVar(&ac.AuditURL, "", "audit-url", "URL to the audit server")
+	flag.StringVar(&ac.BaseURL, "b", "", "Result adress for application")
 	flag.StringVar(&ac.PathToStore, "f", "", "Path to file of store URL")
 	flag.StringVar(&ac.EnableHTTPS, "s", "", "Turn of/on HTTPS protocol")
-	flag.StringVar(&ac.ConfigFile, "c", "config.json", "Loag config from file.json") // config.json
 	flag.StringVar(&ac.DB, "d", "", "Data of connected DB")
 
 	flag.Parse()

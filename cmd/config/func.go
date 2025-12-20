@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 )
 
@@ -16,25 +15,29 @@ var ArgsJSONDefault = &ArgsJSON{
 	DB:            "",
 }
 
-func ReadConfigFile(name string, args *ArgsJSON) *ArgsJSON {
+func ReadConfigFile(name string, args *ArgsJSON) (*ArgsJSON, error) {
 	dataByte, err := os.ReadFile(name)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	json.Unmarshal(dataByte, &args)
-	return args
+	err = json.Unmarshal(dataByte, &args)
+	if err != nil {
+		return nil, err
+	}
+	return args, nil
 }
 
-func CreateConfigFile(name string, args *ArgsJSON) {
+func CreateConfigFile(name string, args *ArgsJSON) error {
 	dataByte, err := json.MarshalIndent(args, "", "    ")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	f.Write(dataByte)
+	return nil
 }

@@ -17,10 +17,6 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 )
 
-var SERT = "private.pem"
-var PRIVATE = "cert.pem"
-var LONG = 4096
-
 type ServS struct {
 	Cfg  config.Config
 	Logg logg.Logger
@@ -49,8 +45,8 @@ func NewServS(config config.Config, logger logg.Logger, handler http.Handler) *S
 }
 
 func (s *ServS) Settings(sertName, privateName string) {
-	cert := NewX509C()                                    // создаём шаблон сертификата
-	privateKey, err := rsa.GenerateKey(rand.Reader, LONG) // privateKey приватный RSA-ключ длиной 4096 бит
+	cert := NewX509C()                                       // создаём шаблон сертификата
+	privateKey, err := rsa.GenerateKey(rand.Reader, LONGKEY) // privateKey приватный RSA-ключ длиной 4096 бит
 	if err != nil {
 		log.Fatal(err)
 	}

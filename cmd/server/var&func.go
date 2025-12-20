@@ -14,6 +14,15 @@ import (
 	"time"
 )
 
+const (
+	SERT     = "cert.pem"        // Name of certificate file.
+	PRIVATE  = "private.pem"     // Name of private file.
+	LONGKEY  = 4096              // Key length for genarate private RSA key 4096 bit.
+	SHDWTIME = time.Duration(10) // Number of seconds for soft stop server.
+	DIRCACHE = "cache-dir"       // Cache for settings manager for https.
+	HOST     = "mysite.ru"       // HOST for resource.
+)
+
 func SaveFilePem(fileName string, data []byte) string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

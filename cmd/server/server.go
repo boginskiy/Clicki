@@ -14,10 +14,6 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-var SHDWTIME = time.Duration(10)
-var DIRCACHE = "cache-dir"
-var HOST = "mysite.ru"
-
 type Server interface {
 	Run()
 }
