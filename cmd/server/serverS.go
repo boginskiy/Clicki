@@ -48,7 +48,7 @@ func NewServS(config config.Config, logger logg.Logger, handler http.Handler) *S
 	return tmpServ
 }
 
-func (h *ServS) Settings(sertName, privateName string) {
+func (s *ServS) Settings(sertName, privateName string) {
 	cert := NewX509C()                                    // создаём шаблон сертификата
 	privateKey, err := rsa.GenerateKey(rand.Reader, LONG) // privateKey приватный RSA-ключ длиной 4096 бит
 	if err != nil {
@@ -64,8 +64,8 @@ func (h *ServS) Settings(sertName, privateName string) {
 	privateKeyPEM := NewEncodePrivateKeyPEM(privateKey) // кодируем ключ в формате PEM
 
 	// Сохраняем сертификат и приватный ключ в файлы ~/cert.pem и ~/private.pem
-	h.PrivateName = SaveFilePem(privateName, privateKeyPEM.Bytes())
-	h.CertName = SaveFilePem(sertName, certPEM.Bytes())
+	s.PrivateName = SaveFilePem(privateName, privateKeyPEM.Bytes())
+	s.CertName = SaveFilePem(sertName, certPEM.Bytes())
 }
 
 func (s *ServS) WorkingWithShutdown() {
