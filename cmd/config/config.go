@@ -10,47 +10,64 @@ import (
 type Variables struct {
 	Logger        logg.Logger
 	ServerAddress string
+	EnableHTTPS   string
 	PathToStore   string
+	ConfigFile    string
 	AuditFile     string
 	AuditURL      string
 	BaseURL       string
 	DB            string
 	ArgsCLI       *ArgsCLI
 	ArgsENV       *ArgsENV
+	ArgsJSON      *ArgsJSON
 }
 
 func NewVariables(logger logg.Logger) *Variables {
-	tmpVar := &Variables{
-		Logger:  logger,
-		ArgsCLI: NewArgsCLI(),
-		ArgsENV: NewArgsENV(),
+	vr := &Variables{
+		Logger: logger,
 	}
-	tmpVar.extSettingsArgs()
-	return tmpVar
+
+	vr.ArgsCLI = NewArgsCLI() // ArgsCLI
+	vr.ArgsENV = NewArgsENV() // ArgsENV
+
+	configFile := vr.argsPrioryty(
+		vr.ArgsENV.GetConfigFile,
+		vr.ArgsCLI.GetConfigFile)
+
+	// ArgsJSON
+	vr.ArgsJSON = NewArgsJSON(configFile)
+
+	vr.settingsPrioryty(vr.ArgsENV, vr.ArgsCLI)
+	return vr
 }
 
-func (v *Variables) argsTrim(arg string) string {
-	return strings.TrimSpace(arg)
+func (v *Variables) settingsPrioryty(obj1, obj2 ConfigPrioryty) {
+	v.PathToStore = v.argsPrioryty(obj1.GetPathToStore, obj2.GetPathToStore)
+	v.EnableHTTPS = v.argsPrioryty(obj1.GetEnableHTTPS, obj2.GetEnableHTTPS)
+	v.ServerAddress = v.argsPrioryty(obj1.GetSrvAddr, obj2.GetSrvAddr)
+	v.AuditFile = v.argsPrioryty(obj1.GetAuditFile, obj2.GetAuditFile)
+	v.AuditURL = v.argsPrioryty(obj1.GetAuditURL, obj2.GetAuditURL)
+	v.BaseURL = v.argsPrioryty(obj1.GetBaseURL, obj2.GetBaseURL)
+	v.DB = v.argsPrioryty(obj1.GetDB, obj2.GetDB)
+
+	if _, ok := obj2.(*ArgsJSON); ok {
+		return
+	}
+
+	if v.ArgsJSON != nil {
+		v.settingsPrioryty(v, v.ArgsJSON)
+	}
 }
 
-func (v *Variables) argsPrioryty(envFunc, cliFunc func() string) string {
-	arg := v.argsTrim(envFunc())  // Clean arg
-	arg2 := v.argsTrim(cliFunc()) // Clean arg
+func (v *Variables) argsPrioryty(func1, func2 func() string) string {
+	arg := strings.TrimSpace(func1())  // Clean arg
+	arg2 := strings.TrimSpace(func2()) // Clean arg
 
 	if len(arg) > 0 {
 		return arg
 	} else {
 		return arg2
 	}
-}
-
-func (v *Variables) extSettingsArgs() {
-	v.PathToStore = v.argsPrioryty(v.ArgsENV.GetPathToStore, v.ArgsCLI.GetPathToStore)
-	v.ServerAddress = v.argsPrioryty(v.ArgsENV.GetSrvAddr, v.ArgsCLI.GetSrvAddr)
-	v.AuditFile = v.argsPrioryty(v.ArgsENV.GetAuditFile, v.ArgsCLI.GetAuditFile)
-	v.AuditURL = v.argsPrioryty(v.ArgsENV.GetAuditURL, v.ArgsCLI.GetAuditURL)
-	v.BaseURL = v.argsPrioryty(v.ArgsENV.GetBaseURL, v.ArgsCLI.GetBaseURL)
-	v.DB = v.argsPrioryty(v.ArgsENV.GetDB, v.ArgsCLI.GetDB)
 }
 
 func (v *Variables) GetSrvAddr() (ServerAddress string) {
@@ -107,4 +124,8 @@ func (v *Variables) GetAuditFile() (AuditFile string) {
 
 func (v *Variables) GetAuditURL() (AuditURL string) {
 	return v.AuditURL
+}
+
+func (v *Variables) GetEnableHTTPS() (EnableHTTPS string) {
+	return v.EnableHTTPS
 }

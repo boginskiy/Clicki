@@ -12,7 +12,8 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/service"
-	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/tfunc"
+	"github.com/boginskiy/Clicki/internal/tester/tserv"
 )
 
 func TestHandlerURL(t *testing.T) {
@@ -20,15 +21,15 @@ func TestHandlerURL(t *testing.T) {
 	pathToLogg := "test.log"
 	logg := logg.NewLogg(pathToLogg, "INFO")
 
-	config := tester.InitConfig()
+	config := tserv.InitConfig()
 
-	URLServ := tester.InitURLServ(logg, config)
+	URLServ := tserv.InitURLServ(logg, config)
 
 	// Testing
 	testCreateRecord(t, URLServ)
 	testReadRecord(t, URLServ)
 
-	defer tester.DeleteTestFiles(pathToLogg)
+	defer tfunc.DeleteTestFiles(pathToLogg)
 }
 
 func testCreateRecord(t *testing.T, URLServ *service.URLServ) {
@@ -78,7 +79,7 @@ func testCreateRecord(t *testing.T, URLServ *service.URLServ) {
 			// Request
 			ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
 			body := []byte(tt.req.body)
-			request := tester.PreparRequest(ctx, http.MethodPost, tt.req.url, body)
+			request := tfunc.PreparRequest(ctx, http.MethodPost, tt.req.url, body)
 
 			// Recorder
 			response := httptest.NewRecorder()
@@ -152,7 +153,7 @@ func testReadRecord(t *testing.T, URLServ *service.URLServ) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Request
 			ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
-			request := tester.PreparRequest(ctx, http.MethodGet, tt.req.url, nil)
+			request := tfunc.PreparRequest(ctx, http.MethodGet, tt.req.url, nil)
 
 			// Recorder
 			response := httptest.NewRecorder()

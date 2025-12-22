@@ -71,5 +71,7 @@ func main() {
 			}
 			return true
 		})
+		gen.Execute()
+		break
 	}
 }

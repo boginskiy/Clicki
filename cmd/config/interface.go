@@ -4,8 +4,9 @@ type Argsmenter interface {
 	ParseFlags()
 }
 
-// ConfigCLI - interface about args comm line interface.
-type ConfigCLI interface {
+// ConfigPrioryty - interface about args comm line interface.
+type ConfigPrioryty interface {
+	GetEnableHTTPS() (EnableHTTPS string)
 	GetPathToStore() (PathToStore string)
 	GetAuditFile() (AuditFile string)
 	GetAuditURL() (AuditURL string)
@@ -29,5 +30,5 @@ type ConfigENV interface {
 // Config - interface.
 type Config interface {
 	ConfigENV
-	ConfigCLI
+	ConfigPrioryty
 }

@@ -1,8 +1,9 @@
-package tester
+package tfunc
 
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/repository"
+	"golang.org/x/tools/go/analysis"
 )
 
 // PprintErr - prity print about errors.
@@ -46,4 +48,21 @@ func WriteRecord(repo repository.Repository) {
 		100)
 
 	repo.CreateRecord(context.TODO(), record)
+}
+
+// CreateAnalyzer
+func CreateAnalyzer() *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Name: "Test",
+		Doc:  "check for test",
+		Run:  nil,
+	}
+}
+
+func Serialization(obj any) []byte {
+	res, err := json.Marshal(obj)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res
 }

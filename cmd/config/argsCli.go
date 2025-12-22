@@ -7,9 +7,11 @@ import "flag"
 type ArgsCLI struct {
 	ServerAddress string // StartPort is the port for start application.
 	PathToStore   string // PathToStore is the path to store URL.
+	EnableHTTPS   string // Turn of/on HTTPS
 	AuditFile     string // AuditFile is for turn on a file.
 	AuditURL      string // AuditURL is for turn on a server.
 	BaseURL       string // BaseURL is result port is the port after changing.
+	ConfigFile    string // Loag config from file.json.
 	DB            string // DB is data of connected.
 }
 
@@ -21,14 +23,18 @@ func NewArgsCLI() *ArgsCLI {
 
 func (ac *ArgsCLI) ParseFlags() {
 	// defaultStoreDB := "postgres://username:userpassword@localhost:5432/clickidb?sslmode=disable"
-	// AuditFile - "./audit.json"
-	// AuditURL -  "http://localhost:8081/"
+	// AuditFile     - "./audit.json"
+	// AuditURL      - "http://localhost:8081/"
+	// BaseURL       - http://localhost:8080
+	// ServerAddress - localhost:8080
 
-	flag.StringVar(&ac.BaseURL, "b", "http://localhost:8080", "Result adress for application")
-	flag.StringVar(&ac.ServerAddress, "a", "localhost:8080", "Start adress for application")
+	flag.StringVar(&ac.ConfigFile, "c", "config.json", "Loag config from file.json")
+	flag.StringVar(&ac.ServerAddress, "a", "", "Start adress for application")
 	flag.StringVar(&ac.AuditFile, "audit-file", "", "Path to the audit file")
-	flag.StringVar(&ac.AuditURL, "audit-url", "", "URL to the audit server")
+	flag.StringVar(&ac.AuditURL, "", "audit-url", "URL to the audit server")
+	flag.StringVar(&ac.BaseURL, "b", "", "Result adress for application")
 	flag.StringVar(&ac.PathToStore, "f", "", "Path to file of store URL")
+	flag.StringVar(&ac.EnableHTTPS, "s", "", "Turn of/on HTTPS protocol")
 	flag.StringVar(&ac.DB, "d", "", "Data of connected DB")
 
 	flag.Parse()
@@ -56,4 +62,12 @@ func (ac *ArgsCLI) GetAuditFile() (AuditFile string) {
 
 func (ac *ArgsCLI) GetAuditURL() (AuditURL string) {
 	return ac.AuditURL
+}
+
+func (ac *ArgsCLI) GetEnableHTTPS() (EnableHTTPS string) {
+	return ac.EnableHTTPS
+}
+
+func (ac *ArgsCLI) GetConfigFile() (ConfigFile string) {
+	return ac.ConfigFile
 }

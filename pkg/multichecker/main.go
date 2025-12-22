@@ -41,7 +41,7 @@ func main() {
 	multchecker := mult.NewMulticheck(mult.StandartStaticChecker...)
 
 	// Add statchecker.
-	multchecker.SetChecks(statchecker.GetChecks()...)
+	multchecker.SetChecks(statchecker.Checks...)
 
 	// Add custom checks.
 	multchecker.SetChecks(custom.ErrUsingOsExit)

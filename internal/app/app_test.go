@@ -21,7 +21,8 @@ import (
 	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/router"
 	"github.com/boginskiy/Clicki/internal/service"
-	"github.com/boginskiy/Clicki/internal/tester"
+	"github.com/boginskiy/Clicki/internal/tester/tfunc"
+	"github.com/boginskiy/Clicki/internal/tester/tserv"
 	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestMain(t *testing.T) {
 	pathToLogg := "test.log"
 
 	logg := logg.NewLogg(pathToLogg, "INFO")
-	config := tester.InitConfig()
+	config := tserv.InitConfig()
 	config.PathToStore = pathToStore
 
 	server := httptest.NewServer(RunRouter(config, logg))
@@ -44,7 +45,7 @@ func TestMain(t *testing.T) {
 	// Test Compress
 	testCompress(t, server)
 
-	defer tester.DeleteTestFiles(pathToStore, pathToLogg)
+	defer tfunc.DeleteTestFiles(pathToStore, pathToLogg)
 	defer server.Close()
 
 }
@@ -67,7 +68,7 @@ func RunRouter(config config.Config, logg logg.Logger) http.Handler {
 	defer cancel()
 
 	// Обогощение репозитория данными.
-	tester.WriteRecord(repo)
+	tfunc.WriteRecord(repo)
 
 	// Publisher
 	var sub1 = audit.NewFileReceiver(logg, config.GetAuditFile(), 1)

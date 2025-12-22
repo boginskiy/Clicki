@@ -10,10 +10,6 @@ type Setter interface {
 	SetChecks(checks ...*analysis.Analyzer) []*analysis.Analyzer
 }
 
-type Getter interface {
-	GetChecks() []*analysis.Analyzer
-}
-
 type Deleter interface {
 	DeleteCheck(name string) []*analysis.Analyzer
 }
@@ -23,8 +19,5 @@ type Louder interface {
 }
 
 type Multichecker interface {
-	Deleter
 	Starter
-	Getter
-	Setter
 }

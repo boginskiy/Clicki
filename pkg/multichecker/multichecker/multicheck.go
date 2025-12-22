@@ -27,16 +27,13 @@ func (m *Multicheck) SetChecks(checks ...*analysis.Analyzer) []*analysis.Analyze
 	return m.Checks
 }
 
-// GetChecks.
-func (m *Multicheck) GetChecks() []*analysis.Analyzer {
-	return m.Checks
-}
-
 // DeleteCheck.
 func (m *Multicheck) DeleteCheck(name string) []*analysis.Analyzer {
 	for i, ch := range m.Checks {
+
 		if ch.Name == name {
-			m.Checks = append(m.Checks[:i], m.Checks[i+1:]...)
+			copy(m.Checks[i:], m.Checks[i+1:])
+			return m.Checks[:len(m.Checks)-1]
 		}
 	}
 	return m.Checks

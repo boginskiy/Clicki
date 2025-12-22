@@ -1,5 +1,10 @@
 package generator
 
+/*
+   Remember about import "text/template", if you don't want problems with format string.
+
+*/
+
 import "html/template"
 
 var tmpl = template.Must(template.New("reset").Parse(templateStr))
@@ -7,7 +12,7 @@ var tmpl = template.Must(template.New("reset").Parse(templateStr))
 const templateStr = `
 package {{.Package}}
 
-{{range .Resets}} 
+{{range .Resets}}
 
 func ({{.Nickname}} *{{.Name}}) Reset() {
     if {{.Nickname}} == nil {
@@ -24,7 +29,7 @@ func ({{.Nickname}} *{{.Name}}) Reset() {
             if {{.Nickname}}.{{.Name}} != nil {*{{.Nickname}}.{{.Name}} = ""}
         {{else if eq .PatternType "VarP"}}
             if {{.Nickname}}.{{.Name}} != nil {*{{.Nickname}}.{{.Name}} = {{.Value}}}
-        
+
         {{else if eq .PatternType "StructP"}}
             if resetter, ok := any({{.Nickname}}.{{.Name}}).(interface{ Reset() }); ok && {{.Nickname}}.{{.Name}} != nil {resetter.Reset()}
 
