@@ -39,7 +39,7 @@ func NewAPIDelServ(
 	return item
 }
 
-func (s *APIDelServ) GetStats(req *http.Request) ([]byte, error) {
+func (d *APIDelServ) GetStats(req *http.Request) ([]byte, error) {
 	return StoreDBIsSucces, nil
 }
 
