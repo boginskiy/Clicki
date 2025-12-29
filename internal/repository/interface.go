@@ -6,6 +6,7 @@ import (
 
 // Repository.
 type Repository interface {
+	StatisticianRepo
 	HealthCheckRepo
 	RecordsRepo
 	RecordRepo
@@ -35,4 +36,10 @@ type MarkerRepo interface {
 // Diagnostic and monitoring methods.
 type HealthCheckRepo interface {
 	PingStore(ctx context.Context) (bool, error)
+}
+
+// Collection stats.
+type StatisticianRepo interface {
+	ReadQuantityShortURLs(ctx context.Context) int
+	ReadQuantityUsers(ctx context.Context) int
 }

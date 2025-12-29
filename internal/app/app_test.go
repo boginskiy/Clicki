@@ -57,7 +57,7 @@ func RunRouter(config config.Config, logg logg.Logger) http.Handler {
 
 	// Auth & middleware.
 	auther := auth.NewAuth(config, logg, repo)
-	midWare := mv.NewMdlwere(logg, auther)
+	midWare := mv.NewMdlwere(config, logg, auther)
 
 	// Some function.
 	fancer := prep.NewFunctions()

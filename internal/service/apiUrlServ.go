@@ -44,6 +44,15 @@ func NewAPIURLServ(
 	}
 }
 
+func (s *APIURLServ) GetStats(req *http.Request) ([]byte, error) {
+	// In this place we know about who need stats
+	tmpMap := map[string]int{
+		"urls":  s.Repo.ReadQuantityShortURLs(context.TODO()), // quantityURLs
+		"users": s.Repo.ReadQuantityUsers(context.TODO()),     // quantityUsers
+	}
+	return s.Funcer.Serialization(tmpMap)
+}
+
 func (s *APIURLServ) Read(req *http.Request) ([]byte, error) {
 	return EmptyByteSlice, nil
 }

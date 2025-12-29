@@ -27,6 +27,7 @@ type ArgsENV struct {
 	HardDeleteTime int    `env:"HARD_DELETE_TIME"`
 	EnableHTTPS    string `env:"ENABLE_HTTPS"`
 	ConfigFile     string `env:"CONFIG"`
+	TrustedSubnet  string `env:"TRUSTED_SUBNET"`
 }
 
 func NewArgsENV() *ArgsENV {
@@ -113,4 +114,8 @@ func (ae *ArgsENV) GetEnableHTTPS() (EnableHTTPS string) {
 
 func (ae *ArgsENV) GetConfigFile() (ConfigFile string) {
 	return ae.ConfigFile
+}
+
+func (ae *ArgsENV) GetTrustedSubnet() (TrustedSubnet string) {
+	return ae.TrustedSubnet
 }

@@ -52,6 +52,10 @@ func (s *URLServ) ReadSet(req *http.Request) ([]byte, error) {
 	return StoreDBIsSucces, nil
 }
 
+func (s *URLServ) GetStats(req *http.Request) ([]byte, error) {
+	return StoreDBIsSucces, nil
+}
+
 func (s *URLServ) CheckDB(req *http.Request) ([]byte, error) {
 	_, err := s.Repo.PingStore(context.TODO())
 	if err != nil {

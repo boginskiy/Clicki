@@ -6,6 +6,7 @@ type Argsmenter interface {
 
 // ConfigPrioryty - interface about args comm line interface.
 type ConfigPrioryty interface {
+	GetTrustedSubnet() (TrustedSubnet string)
 	GetEnableHTTPS() (EnableHTTPS string)
 	GetPathToStore() (PathToStore string)
 	GetAuditFile() (AuditFile string)

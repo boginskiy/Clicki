@@ -10,6 +10,7 @@ import (
 type Variables struct {
 	Logger        logg.Logger
 	ServerAddress string
+	TrustedSubnet string
 	EnableHTTPS   string
 	PathToStore   string
 	ConfigFile    string
@@ -42,6 +43,7 @@ func NewVariables(logger logg.Logger) *Variables {
 }
 
 func (v *Variables) settingsPrioryty(obj1, obj2 ConfigPrioryty) {
+	v.TrustedSubnet = v.argsPrioryty(obj1.GetTrustedSubnet, obj2.GetTrustedSubnet)
 	v.PathToStore = v.argsPrioryty(obj1.GetPathToStore, obj2.GetPathToStore)
 	v.EnableHTTPS = v.argsPrioryty(obj1.GetEnableHTTPS, obj2.GetEnableHTTPS)
 	v.ServerAddress = v.argsPrioryty(obj1.GetSrvAddr, obj2.GetSrvAddr)
@@ -128,4 +130,8 @@ func (v *Variables) GetAuditURL() (AuditURL string) {
 
 func (v *Variables) GetEnableHTTPS() (EnableHTTPS string) {
 	return v.EnableHTTPS
+}
+
+func (v *Variables) GetTrustedSubnet() (TrustedSubnet string) {
+	return v.TrustedSubnet
 }

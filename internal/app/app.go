@@ -50,7 +50,7 @@ func (a *App) Start() {
 
 	// Middleware & Auth.
 	auth := auth.NewAuth(a.Cfg, authLogg, repository)
-	middleware := mv.NewMdlwere(infraLogg, auth)
+	middleware := mv.NewMdlwere(a.Cfg, infraLogg, auth)
 
 	checker := validation.NewChecker() // Checker for validation.
 	funcer := prep.NewFunctions()      // Funcer for extra main function.

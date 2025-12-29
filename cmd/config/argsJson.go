@@ -4,6 +4,7 @@ import "log"
 
 type ArgsJSON struct {
 	ServerAddress string `json:"server_address"`
+	TrustedSubnet string `json:"trusted_subnet"`
 	PathToStore   string `json:"file_storage_path"`
 	EnableHTTPS   string `json:"enable_https"`
 	AuditFile     string `json:"audit_file"`
@@ -49,4 +50,8 @@ func (aj *ArgsJSON) GetAuditURL() (AuditURL string) {
 
 func (aj *ArgsJSON) GetEnableHTTPS() (EnableHTTPS string) {
 	return aj.EnableHTTPS
+}
+
+func (aj *ArgsJSON) GetTrustedSubnet() (TrustedSubnet string) {
+	return aj.TrustedSubnet
 }

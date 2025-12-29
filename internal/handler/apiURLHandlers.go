@@ -23,8 +23,20 @@ func NewAPIURLHandlers(apiURLServ service.Servicer, apiDelServ service.DelServic
 func (a *APIURLHandlers) RegisterRoutes(r chi.Router, mdlwere mv.Middleware) {
 	r.Post("/shorten", mdlwere.Conveyor(http.HandlerFunc(a.Create)))
 	r.Post("/shorten/batch", mdlwere.Conveyor(http.HandlerFunc(a.CreateSet)))
-	r.Get("/user/urls", mdlwere.Conveyor(http.HandlerFunc(a.ReadSet)))
 	r.Delete("/user/urls", mdlwere.Conveyor(http.HandlerFunc(a.DeleteSet)))
+	r.Get("/user/urls", mdlwere.Conveyor(http.HandlerFunc(a.ReadSet)))
+	r.Get("/internal/stats", mdlwere.WithTrustedSubnet(http.HandlerFunc(a.ShowStats)))
+}
+
+func (a *APIURLHandlers) ShowStats(w http.ResponseWriter, r *http.Request) {
+	dataByte, err := a.APIURLServ.GetStats(r)
+	if err != nil {
+		http.Error(w, "message: not created", http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(dataByte)
 }
 
 func (a *APIURLHandlers) Create(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,7 @@ import (
 )
 
 type MainRepoMap struct {
+	StatisticianRepo
 	HealthCheckRepo
 	RecordsRepo
 	RecordRepo
@@ -19,9 +20,10 @@ func NewMainRepoMap(config config.Config, logger logg.Logger, db database.DataBa
 	RepoMap := repomap.NewRepoMap(config, logger, db)
 
 	return &MainRepoMap{
-		RecordsRepo:     repomap.NewMapRecordsRepo(RepoMap),
-		RecordRepo:      repomap.NewMapRecordRepo(RepoMap),
-		HealthCheckRepo: repomap.NewMapRecordsRepo(RepoMap),
-		MarkerRepo:      nil, // repository is absent
+		RecordsRepo:      repomap.NewMapRecordsRepo(RepoMap),
+		RecordRepo:       repomap.NewMapRecordRepo(RepoMap),
+		HealthCheckRepo:  repomap.NewMapRecordsRepo(RepoMap),
+		StatisticianRepo: repomap.NewMapStatistician(RepoMap),
+		MarkerRepo:       nil, // repository is absent
 	}
 }

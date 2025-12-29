@@ -2,10 +2,13 @@ package middleware
 
 import (
 	"context"
+	"errors"
+	"net"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/gzip"
 	"github.com/boginskiy/Clicki/internal/logg"
@@ -14,14 +17,18 @@ import (
 // MvFunc - type func of HandlerFunc.
 type MvFunc func(http.HandlerFunc) http.HandlerFunc
 
+// ErrTrustedSubnet -.
+var ErrTrustedSubnet error = errors.New(`{"error":"ip is not trusted"}`)
+
 // Mdlwere - struct with function of Middleware.
 type Mdlwere struct {
+	Cfg  config.Config
 	Auth auth.Auther
 	Logg logg.Logger
 }
 
-func NewMdlwere(logger logg.Logger, auther auth.Auther) *Mdlwere {
-	return &Mdlwere{Logg: logger, Auth: auther}
+func NewMdlwere(config config.Config, logger logg.Logger, auther auth.Auther) *Mdlwere {
+	return &Mdlwere{Cfg: config, Logg: logger, Auth: auther}
 }
 
 func (m *Mdlwere) Conveyor(next http.HandlerFunc) http.HandlerFunc {
@@ -112,5 +119,21 @@ func (m *Mdlwere) WithAuth(next http.HandlerFunc) http.HandlerFunc {
 		http.SetCookie(w, cookie)
 		ctx := context.WithValue(r.Context(), auth.CtxUserID, UserID)
 		next(w, r.WithContext(ctx))
+	}
+}
+
+func (m *Mdlwere) WithTrustedSubnet(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		_, cidr, _ := net.ParseCIDR(m.Cfg.GetTrustedSubnet()) // TrustedSubnet.
+		userIP := net.ParseIP(r.Header.Get("X-Real-IP"))      // userIP.
+
+		// Check of IP belonging to a subnet.
+		if userIP != nil && cidr != nil && cidr.Contains(userIP) {
+			next(w, r)
+		} else {
+			http.Error(w, ErrTrustedSubnet.Error(), http.StatusForbidden)
+			return
+		}
 	}
 }

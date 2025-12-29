@@ -8,6 +8,7 @@ import (
 )
 
 type MainRepoDB struct {
+	StatisticianRepo
 	HealthCheckRepo
 	RecordsRepo
 	RecordRepo
@@ -19,9 +20,10 @@ func NewMainRepoDB(config config.Config, logger logg.Logger, db database.DataBas
 	RepoDB := repodb.NewRepoDB(config, logger, db)
 
 	return &MainRepoDB{
-		HealthCheckRepo: repodb.NewRepoDBHealthCheck(RepoDB),
-		RecordsRepo:     repodb.NewRepoDBRecords(RepoDB),
-		MarkerRepo:      repodb.NewRepoDBMarker(RepoDB),
-		RecordRepo:      repodb.NewRepoDBRecord(RepoDB),
+		HealthCheckRepo:  repodb.NewRepoDBHealthCheck(RepoDB),
+		RecordsRepo:      repodb.NewRepoDBRecords(RepoDB),
+		MarkerRepo:       repodb.NewRepoDBMarker(RepoDB),
+		RecordRepo:       repodb.NewRepoDBRecord(RepoDB),
+		StatisticianRepo: repodb.NewDBStatistician(RepoDB),
 	}
 }
