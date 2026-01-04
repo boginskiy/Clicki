@@ -41,7 +41,7 @@ func (r *MapRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, e
 }
 
 // CreateRecord - for interface.
-func (r *MapRecordRepo) CreateRecord(ctx context.Context, record *model.URLTb) (any, error) {
+func (r *MapRecordRepo) CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error) {
 	// If data in a Store.
 	r.Repo.muR.RLock()
 	defer r.Repo.muR.RUnlock()

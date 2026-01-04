@@ -17,7 +17,7 @@ type Repository interface {
 
 // Record Storage.
 type RecordRepo interface {
-	CreateRecord(ctx context.Context, record *model.URLTb) (any, error)
+	CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error)
 	ReadRecord(ctx context.Context, recordID string) (any, error)
 	CheckUniqueRecord(ctx context.Context, recordID string) bool
 	ReadLastRecord(ctx context.Context) int

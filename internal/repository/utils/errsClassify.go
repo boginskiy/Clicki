@@ -13,8 +13,8 @@ const (
 
 )
 
-type ClassifierErrDB interface {
-	
+type DBErrClassifier interface {
+	Classify(err error) (pq.ErrorCode, int)
 }
 
 // PGErrorClass - struct abount classification errors Database.
@@ -33,14 +33,14 @@ func (p *PGErrorClass) Classify(err error) (pq.ErrorCode, int) {
 	// Check and convertation in pgconn.PgError, if it possible.
 	var pgErr *pq.Error
 	if errors.As(err, &pgErr) {
-		return ClassifyPgError(pgErr)
+		return p.classifyPgError(pgErr)
 	}
 
 	// Default think that error doesn't repeate.
 	return pgerrcode.Warning, NonRetriable
 }
 
-func ClassifyPgError(pgErr *pq.Error) (pq.ErrorCode, int) {
+func (p *PGErrorClass) classifyPgError(pgErr *pq.Error) (pq.ErrorCode, int) {
 	switch pgErr.Code {
 
 	// Grade 08 - Erorrs about connection.

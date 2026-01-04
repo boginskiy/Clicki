@@ -11,24 +11,45 @@ import (
 )
 
 type RepoDBRecord struct {
-	Repo *RepoDB
+	Repo          *RepoDB
+	errClassifier utils.DBErrClassifier
 }
 
-func NewRepoDBRecord(repoDB *RepoDB) *RepoDBRecord {
+func NewRepoDBRecord(repoDB *RepoDB, errCl utils.DBErrClassifier) *RepoDBRecord {
 	return &RepoDBRecord{
-		Repo: repoDB,
+		Repo:          repoDB,
+		errClassifier: errCl,
 	}
 }
 
-func (r *RepoDBRecord) checkErrFromDB() {
+func (r *RepoDBRecord) checkErrFromDB(ctx context.Context, record *model.URLTb, err error) (*model.URLTb, int, error) {
+	code, needRetry := r.errClassifier.Classify(err)
 
+	// Adding record not unique in DB.
+	if code == pgerrcode.UniqueViolation {
+		// Do repeated recording in DB.
+		row := SelectRowByOriginalURL(r.Repo.Store, ctx,
+			record.OriginalURL)
+
+		// Ошибок нет, возвращаем запись.
+		errScan := row.Scan(
+			&record.ID,
+			&record.OriginalURL,
+			&record.ShortURL,
+			&record.CorrelationID,
+			&record.CreatedAt,
+			&record.UserID)
+
+		if errScan != nil {
+			r.Repo.Logg.RaiseError(err, "error in repeated sending record from DB.", nil)
+		}
+		return record, needRetry, errScan
+	}
+	return record, needRetry, err
 }
 
 // CreateRecord.
-func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (any, error) {
-	errClassifier := utils.NewPGErrorClass()
-
-	// Strategy №2. SQl-Query-error.
+func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error) {
 	for attempt := 0; attempt <= r.Repo.Cfg.GetMaxRetries(); attempt++ {
 		row, errDB := InsertRowToUrls(ctx, r.Repo.Store, record)
 
@@ -40,38 +61,18 @@ func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (a
 		}
 
 		// There are errors.
-		code, needRetry := errClassifier.Classify(errDB)
+		record, needRetry, err := r.checkErrFromDB(ctx, record, errDB)
+		if err == nil {
+			// В ответ отдаю именно errDB для установки статуса ответа.
+			return record, errDB
+		}
 
-		// Логика, если добавляемая запись не уникальна в БД.
-		if code == pgerrcode.UniqueViolation {
-
-			// Делаем повторный запрос в БД.
-			row := SelectRowByOriginalURL(r.Repo.Store, ctx,
-				record.OriginalURL)
-
-			// Ошибок нет, возвращаем запись.
-			errScan := row.Scan(
-				&record.ID,
-				&record.OriginalURL,
-				&record.ShortURL,
-				&record.CorrelationID,
-				&record.CreatedAt,
-				&record.UserID)
-
-			// Ошибок нет, возвращаем запись.
-			if errScan == nil {
-				// В ответ отдаю именно errDB для установки статуса ответа.
-				return record, errDB
-			} else {
-				break
-			}
-
-			// Логика, если запрос к БД не надо повторять.
-		} else if needRetry == utils.NonRetriable {
+		if needRetry == utils.NonRetriable {
+			// Logic, if query doesn't need to repeate for DB.
 			break
-			// Логика, если запрос к БД необходимо повторить.
 		} else {
-			time.Sleep(3 * time.Millisecond)
+			// Logic, if query needs to repeate for DB.
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 	return nil, errs.NewErrPlace("insert into is bad", nil)

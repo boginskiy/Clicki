@@ -42,7 +42,7 @@ func (r *FileRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, 
 }
 
 // CreateRecord.
-func (r *FileRecordRepo) CreateRecord(ctx context.Context, record *model.URLTb) (any, error) {
+func (r *FileRecordRepo) CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error) {
 	// Logic, if data in a Store.
 	r.Repo.muR.RLock()
 	if correlID, ok := r.Repo.uniqueFields[record.OriginalURL]; ok {
