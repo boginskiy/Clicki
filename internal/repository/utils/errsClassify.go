@@ -13,6 +13,10 @@ const (
 
 )
 
+type ClassifierErrDB interface {
+	
+}
+
 // PGErrorClass - struct abount classification errors Database.
 type PGErrorClass struct{}
 

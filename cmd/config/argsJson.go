@@ -7,6 +7,7 @@ type ArgsJSON struct {
 	TrustedSubnet string `json:"trusted_subnet"`
 	PathToStore   string `json:"file_storage_path"`
 	EnableHTTPS   string `json:"enable_https"`
+	EnableGRps    string `json:"enable_grps"`
 	AuditFile     string `json:"audit_file"`
 	AuditURL      string `json:"audit_url"`
 	BaseURL       string `json:"base_url"`
@@ -54,4 +55,8 @@ func (aj *ArgsJSON) GetEnableHTTPS() (EnableHTTPS string) {
 
 func (aj *ArgsJSON) GetTrustedSubnet() (TrustedSubnet string) {
 	return aj.TrustedSubnet
+}
+
+func (aj *ArgsJSON) GetEnableGRps() (EnableGRps string) {
+	return aj.EnableGRps
 }

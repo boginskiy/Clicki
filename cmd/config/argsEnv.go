@@ -26,6 +26,7 @@ type ArgsENV struct {
 	SoftDeleteTime int    `env:"SOFT_DELETE_TIME"`
 	HardDeleteTime int    `env:"HARD_DELETE_TIME"`
 	EnableHTTPS    string `env:"ENABLE_HTTPS"`
+	EnableGRps     string `env:"ENABLE_GRPS"`
 	ConfigFile     string `env:"CONFIG"`
 	TrustedSubnet  string `env:"TRUSTED_SUBNET"`
 }
@@ -118,4 +119,8 @@ func (ae *ArgsENV) GetConfigFile() (ConfigFile string) {
 
 func (ae *ArgsENV) GetTrustedSubnet() (TrustedSubnet string) {
 	return ae.TrustedSubnet
+}
+
+func (ae *ArgsENV) GetEnableGRps() (EnableGRps string) {
+	return ae.EnableGRps
 }

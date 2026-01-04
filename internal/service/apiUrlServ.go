@@ -73,10 +73,11 @@ func (s *APIURLServ) Create(req *http.Request) ([]byte, error) {
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта.
 	if !s.Checker.CheckUpURL(bodyJSON.URL) || bodyJSON.URL == "" {
-		s.Logg.RaiseInfo("APIURLServ.Create>CheckUpURL",
-			logg.Fields{"error": ErrDataNotValid.Error()})
+		s.Logg.RaiseError(ErrDataNotValid, "CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
+
+	// <<
 
 	userID := s.takeUserIDFromCtx(req)                   // Take id user.
 	correlationID := s.encrypOriginURL()                 // Create unic id.
@@ -94,12 +95,14 @@ func (s *APIURLServ) Create(req *http.Request) ([]byte, error) {
 	s.eventOfAudit("shorten", userID, bodyJSON.URL)
 
 	// Definition type.
-	var resJSON *model.ResultJSON
+	// var resJSON *model.ResultJSON
 	switch r := record.(type) {
+
 	case *model.URLTb:
-		resJSON = model.NewResultJSON(bodyJSON, r.ShortURL)
+		resJSON := model.NewResultJSON(bodyJSON, r.ShortURL)
 	case string:
-		resJSON = model.NewResultJSON(bodyJSON, r)
+		resJSON := model.NewResultJSON(bodyJSON, r)
+
 	default:
 		s.Logg.RaiseError(err, "APIURLServ.Create>switch", nil)
 		return EmptyByteSlice, err

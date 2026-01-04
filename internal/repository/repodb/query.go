@@ -5,15 +5,21 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/boginskiy/Clicki/internal/model"
 	"github.com/boginskiy/Clicki/internal/repository/utils"
 )
 
 // InsertRowToUrls - add row in table 'urls'.
-func InsertRowToUrls(db *sql.DB, ctx context.Context, id, origin, short string, tm time.Time, userID int) (sql.Result, error) {
+func InsertRowToUrls(ctx context.Context, db *sql.DB, rec *model.URLTb) (sql.Result, error) {
 	return db.ExecContext(ctx,
 		`INSERT INTO urls (correlation_id, original_url, short_url, created_at, user_id)
 		 VALUES ($1, $2, $3, $4, $5);`,
-		id, origin, short, utils.ConvertTimeToStr(tm, time.RFC3339), userID)
+		rec.CorrelationID,
+		rec.OriginalURL,
+		rec.ShortURL,
+		utils.ConvertTimeToStr(rec.CreatedAt, time.RFC3339),
+		rec.UserID,
+	)
 }
 
 // SelectRowByOriginalURL - choise row by field 'original_url'.

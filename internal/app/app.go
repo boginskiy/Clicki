@@ -7,6 +7,7 @@ import (
 	"github.com/boginskiy/Clicki/cmd/server"
 	"github.com/boginskiy/Clicki/internal/audit"
 	"github.com/boginskiy/Clicki/internal/auth"
+	"github.com/boginskiy/Clicki/internal/grpc/shortener"
 	"github.com/boginskiy/Clicki/internal/handler"
 	"github.com/boginskiy/Clicki/internal/layers"
 	"github.com/boginskiy/Clicki/internal/logg"
@@ -49,8 +50,8 @@ func (a *App) Start() {
 	publisher := audit.NewPublish(sub1, sub2)
 
 	// Middleware & Auth.
-	auth := auth.NewAuth(a.Cfg, authLogg, repository)
-	middleware := mv.NewMdlwere(a.Cfg, infraLogg, auth)
+	auther := auth.NewAuth(a.Cfg, authLogg, repository)
+	middleware := mv.NewMdlwere(a.Cfg, infraLogg, auther)
 
 	checker := validation.NewChecker() // Checker for validation.
 	funcer := prep.NewFunctions()      // Funcer for extra main function.
@@ -71,8 +72,15 @@ func (a *App) Start() {
 	// Router.
 	router := router.NewRoute(URLHdler, APIURLHdler, PprofHdler)
 
-	// Server.
-	server.Run(a.Cfg, a.Logg, router, middleware)
+	// gRPC.
+	autherGRPC := auth.NewAuthGRPC(a.Cfg, authLogg, repository)
+	interceptor := mv.NewIntercept(a.Cfg, infraLogg, autherGRPC)
+
+	shortenerService := shortener.NewShortenerService(APIURLServ)
+	server.RunGRPC(a.Cfg, a.Logg, shortenerService, interceptor)
+
+	// HTTP ~ HTTPS
+	server.RunHTTP(a.Cfg, a.Logg, router, middleware)
 
 	defer setupLayers.Close()
 	defer infraLogg.Close()

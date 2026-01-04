@@ -21,4 +21,5 @@ func main() {
 	cfg := config.NewVariables(logger)
 
 	app.NewApp(cfg, logger).Start()
+
 }

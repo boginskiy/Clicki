@@ -20,24 +20,17 @@ func NewRepoDBRecord(repoDB *RepoDB) *RepoDBRecord {
 	}
 }
 
-// CreateRecord.
-func (r *RepoDBRecord) CreateRecord(ctx context.Context, preRecord any) (any, error) {
-	record, ok := preRecord.(*model.URLTb)
-	if !ok {
-		return nil, errs.NewErrPlace("data not valid", nil)
-	}
+func (r *RepoDBRecord) checkErrFromDB() {
 
+}
+
+// CreateRecord.
+func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (any, error) {
 	errClassifier := utils.NewPGErrorClass()
 
 	// Strategy №2. SQl-Query-error.
 	for attempt := 0; attempt <= r.Repo.Cfg.GetMaxRetries(); attempt++ {
-
-		row, errDB := InsertRowToUrls(r.Repo.Store, ctx,
-			record.CorrelationID,
-			record.OriginalURL,
-			record.ShortURL,
-			record.CreatedAt,
-			record.UserID)
+		row, errDB := InsertRowToUrls(ctx, r.Repo.Store, record)
 
 		// There are not errors. Data is recorded.
 		if errDB == nil {
@@ -46,7 +39,7 @@ func (r *RepoDBRecord) CreateRecord(ctx context.Context, preRecord any) (any, er
 			return record, nil
 		}
 
-		// Behaviour with gotting errors.
+		// There are errors.
 		code, needRetry := errClassifier.Classify(errDB)
 
 		// Логика, если добавляемая запись не уникальна в БД.

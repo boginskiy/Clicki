@@ -22,7 +22,7 @@ type Statistician interface {
 	GetStats(*http.Request) ([]byte, error)
 }
 
-// Servicer - interface for standart service.
+// Servicer is interface for standart service.
 type Servicer interface {
 	Statistician
 	Checker
@@ -30,7 +30,7 @@ type Servicer interface {
 	Reader
 }
 
-// DelServicer - interface for del service.
+// DelServicer is interface for del service.
 type DelServicer interface {
 	DeleteSet(req *http.Request) ([]byte, error)
 }
