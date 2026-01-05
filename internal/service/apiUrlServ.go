@@ -11,7 +11,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
-	"github.com/boginskiy/Clicki/internal/protocol"
+	p "github.com/boginskiy/Clicki/internal/protocol"
 	repo "github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
@@ -51,7 +51,7 @@ func (s *APIURLServ) GetStats(req *http.Request) ([]byte, error) {
 		"urls":  s.Repo.ReadQuantityShortURLs(context.TODO()), // quantityURLs
 		"users": s.Repo.ReadQuantityUsers(context.TODO()),     // quantityUsers
 	}
-	return s.Funcer.Serialization(tmpMap)
+	return s.Funcer.Serialization(tmpMap), nil
 }
 
 func (s *APIURLServ) Read(req *http.Request) ([]byte, error) {
@@ -62,31 +62,25 @@ func (s *APIURLServ) CheckDB(req *http.Request) ([]byte, error) {
 	return EmptyByteSlice, nil
 }
 
-func (s *APIURLServ) Create(ctx context.Context, obj protocol.Protocol, request any) ([]byte, error) {
-	// Deserialization Body.
-	urlJSON := model.NewURLJson()
-	err := s.Funcer.Deserialization(req, urlJSON)
-
+func (s *APIURLServ) Create(ctx context.Context, protocol p.Protocol, request any) ([]byte, error) {
+	// Take URL from request.
+	urlJSON, err := protocol.GetURLFromRequest(request)
 	if err != nil {
-		s.Logg.RaiseError(err, "deserialization was bad", nil)
 		return EmptyByteSlice, err
 	}
 
-	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта.
+	// Validation URL.
 	if !s.Checker.CheckUpURL(urlJSON.URL) || urlJSON.URL == "" {
 		s.Logg.RaiseError(ErrDataNotValid, "CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	// >>
-	urlJSON, err := obj.GetURLFromRequest()
+	// Take userID from context.
+	userID, err := protocol.GetUserIDFromCtx(ctx)
 	if err != nil {
 		return EmptyByteSlice, err
 	}
 
-	// <<
-
-	userID := s.takeUserIDFromCtx(req)                   // Take id user.
 	correlationID := s.encrypOriginURL()                 // Create unic id.
 	shortURL := s.Cfg.GetBaseURL() + "/" + correlationID // Create new short URL.
 
@@ -100,16 +94,11 @@ func (s *APIURLServ) Create(ctx context.Context, obj protocol.Protocol, request 
 
 	// Audition.
 	s.eventOfAudit("shorten", userID, urlJSON.URL)
+
 	// Result.
 	resJSON := model.NewResultJSON(urlJSON, record.ShortURL)
 
-	// Serialization.
-	result, err2 := s.Funcer.Serialization(resJSON)
-	if err2 != nil {
-		s.Logg.RaiseError(err2, "APIURLServ.Create>NewResultJSON", nil)
-		return EmptyByteSlice, err2
-	}
-	return result, errDB
+	return s.Funcer.Serialization(resJSON), errDB
 }
 
 func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {
@@ -152,10 +141,7 @@ func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, err
 	}
 
-	// Serialization.
-	result, err := json.Marshal(respURLSet)
-	s.Logg.RaiseFatal(err, "ShortURL>SetBatch>Marshal", nil)
-	return result, nil
+	return s.Funcer.Serialization(respURLSet), nil
 }
 
 func (s *APIURLServ) ReadSet(req *http.Request) ([]byte, error) {
@@ -178,13 +164,7 @@ func (s *APIURLServ) ReadSet(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, nil
 	}
 
-	// Serialization.
-	result, err := s.Funcer.Serialization(records)
-	if err != nil {
-		s.Logg.RaiseError(err, "APIURLServ.ReadSetUserURL>Serialization", nil)
-		return EmptyByteSlice, err
-	}
-	return result, err
+	return s.Funcer.Serialization(records), nil
 }
 
 func (s *APIURLServ) takeUserIDFromCtx(req *http.Request) int {

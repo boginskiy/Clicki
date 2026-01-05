@@ -53,8 +53,8 @@ func (a *App) Start() {
 	auther := auth.NewAuth(a.Cfg, authLogg, repository)
 	middleware := mv.NewMdlwere(a.Cfg, infraLogg, auther)
 
-	checker := validation.NewChecker() // Checker for validation.
-	funcer := prep.NewFunctions()      // Funcer for extra main function.
+	checker := validation.NewChecker()  // Checker for validation.
+	funcer := prep.NewFunctions(a.Logg) // Funcer for extra main function.
 
 	// Context.
 	ctx, cancel := context.WithCancel(context.Background())

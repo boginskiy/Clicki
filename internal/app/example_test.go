@@ -8,6 +8,7 @@ import (
 
 	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/logg"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/boginskiy/Clicki/internal/tester/tserv"
@@ -83,8 +84,11 @@ func ExampleAPIURLServCreate() {
 	body := []byte(`{"url": "https://leetcode.com/"}`)
 	request := tfunc.PreparRequest(context.TODO(), "POST", "/shorten", body)
 
+	// Protocol
+	protHTTP := protocol.NewProtocolHTTP()
+
 	// Handler.
-	body, err := TestAPIURLServ.Create(request)
+	body, err := TestAPIURLServ.Create(request.Context(), protHTTP, request)
 	if err != nil {
 		log.Fatalln(err)
 	}

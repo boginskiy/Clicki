@@ -6,14 +6,17 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/boginskiy/Clicki/internal/logg"
 )
 
 // Functions - struct with some functions.
 type Functions struct {
+	Logg logg.Logger
 }
 
-func NewFunctions() *Functions {
-	return &Functions{}
+func NewFunctions(logger logg.Logger) *Functions {
+	return &Functions{Logg: logger}
 }
 
 func (p *Functions) ChangePort(host, newPort string) string {
@@ -42,6 +45,11 @@ func (p *Functions) Deserialization(req *http.Request, st any) error {
 	return dec.Decode(st)
 }
 
-func (p *Functions) Serialization(st any) ([]byte, error) {
-	return json.Marshal(st)
+func (p *Functions) Serialization(st any) []byte {
+	dataByte, err := json.Marshal(st)
+	if err != nil {
+		p.Logg.RaiseError(err, "error in serialization obj", logg.Fields{"obj": st})
+		return []byte{}
+	}
+	return dataByte
 }

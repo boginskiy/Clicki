@@ -1,7 +1,12 @@
 package protocol
 
-import "github.com/boginskiy/Clicki/internal/model"
+import (
+	"context"
+
+	"github.com/boginskiy/Clicki/internal/model"
+)
 
 type Protocol interface {
 	GetURLFromRequest(req any) (*model.URLJson, error)
+	GetUserIDFromCtx(ctx context.Context) (int, error)
 }

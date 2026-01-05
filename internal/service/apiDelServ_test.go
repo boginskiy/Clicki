@@ -131,7 +131,7 @@ func InitAPIURLServ(logger logg.Logger, cfg config.Config) *APIURLServ {
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
-	var fancer = preparation.NewFunctions()
+	var fancer = preparation.NewFunctions(logger)
 	var checker = validation.NewChecker()
 
 	return NewAPIURLServ(cfg, logger, repo, checker, fancer, publisher)

@@ -2,7 +2,7 @@
     "server_address": "localhost:8080",
     "file_storage_path": "",
     "enable_https": "0",
-    "enable_grps": "1",
+    "enable_grps": "0",
     "audit_file": "audit.json",
     "audit_url": "",
     "base_url": "http://localhost:8080",

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 
 	mv "github.com/boginskiy/Clicki/internal/middleware"
@@ -49,7 +48,7 @@ func (a *APIURLHandlers) ShowStats(w http.ResponseWriter, r *http.Request) {
 
 func (a *APIURLHandlers) Create(w http.ResponseWriter, r *http.Request) {
 	// Put in "Create" obj "Protocol" for processing "request" in "APIURLServ".
-	dataByte, err := a.APIURLServ.Create(context.TODO(), a.Protocol, r)
+	dataByte, err := a.APIURLServ.Create(r.Context(), a.Protocol, r)
 
 	status := http.StatusCreated
 

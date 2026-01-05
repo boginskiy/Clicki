@@ -128,4 +128,34 @@
 	"action": "shorten",
 	"user_id": 1,
 	"url": "https://practicum.yandex.ru3"
+}{
+	"ts": 1767648163,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://github.com/go-resty/resty"
+}{
+	"ts": 1767648287,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1767648315,
+	"action": "shorten",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1767648352,
+	"action": "follow",
+	"user_id": 1,
+	"url": "https://practicum.yandex.r"
+}{
+	"ts": 1767648689,
+	"action": "shorten",
+	"user_id": 2,
+	"url": "https://practicum.yandex.ru"
+}{
+	"ts": 1767648693,
+	"action": "shorten",
+	"user_id": 2,
+	"url": "https://practicum.yandex.ru"
 }

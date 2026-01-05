@@ -25,7 +25,7 @@ func InitAPIURLServ(logger logg.Logger, cfg config.Config) *service.APIURLServ {
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
-	var fancer = preparation.NewFunctions()
+	var fancer = preparation.NewFunctions(logger)
 	var checker = validation.NewChecker()
 
 	return service.NewAPIURLServ(cfg, logger, repo, checker, fancer, publisher)
@@ -42,7 +42,7 @@ func InitURLServ(logger logg.Logger, cfg config.Config) *service.URLServ {
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
-	var fancer = preparation.NewFunctions()
+	var fancer = preparation.NewFunctions(logger)
 	var checker = validation.NewChecker()
 
 	return service.NewURLServ(cfg, logger, repo, checker, fancer, publisher)

@@ -18,6 +18,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/router"
 	"github.com/boginskiy/Clicki/internal/service"
@@ -39,15 +40,11 @@ func TestMain(t *testing.T) {
 
 	server := httptest.NewServer(RunRouter(config, logg))
 
-	// Test Router
-	testRouter(t, server)
-
-	// Test Compress
-	testCompress(t, server)
+	testRouter(t, server)   // Test Router
+	testCompress(t, server) // Test Compress
 
 	defer tfunc.DeleteTestFiles(pathToStore, pathToLogg)
 	defer server.Close()
-
 }
 
 func RunRouter(config config.Config, logg logg.Logger) http.Handler {
@@ -60,7 +57,7 @@ func RunRouter(config config.Config, logg logg.Logger) http.Handler {
 	midWare := mv.NewMdlwere(config, logg, auther)
 
 	// Some function.
-	fancer := prep.NewFunctions()
+	fancer := prep.NewFunctions(logg)
 	checker := validation.NewChecker()
 
 	// Ctx.
@@ -80,8 +77,11 @@ func RunRouter(config config.Config, logg logg.Logger) http.Handler {
 	URLServ := service.NewURLServ(config, logg, repo, checker, fancer, publisher)
 	APIDelServ := service.NewAPIDelServ(ctx, config, logg, repo)
 
+	// Protocol
+	protHTTP := protocol.NewProtocolHTTP()
+
 	// Handler
-	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ)
+	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ, protHTTP)
 	URLHdler := handler.NewURLHandlers(URLServ)
 	PprofHdler := handler.NewPprofHandlers()
 
