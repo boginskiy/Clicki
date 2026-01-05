@@ -1,22 +1,30 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	mv "github.com/boginskiy/Clicki/internal/middleware"
+	p "github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/go-chi/chi"
 )
 
 type APIURLHandlers struct {
-	APIURLServ service.Servicer
+	APIURLServ service.ServicerTest
 	APIDelServ service.DelServicer
+	Protocol   p.Protocol
 }
 
-func NewAPIURLHandlers(apiURLServ service.Servicer, apiDelServ service.DelServicer) *APIURLHandlers {
+func NewAPIURLHandlers(
+	apiURLServ service.ServicerTest,
+	apiDelServ service.DelServicer,
+	prot p.Protocol) *APIURLHandlers {
+
 	return &APIURLHandlers{
 		APIURLServ: apiURLServ,
 		APIDelServ: apiDelServ,
+		Protocol:   prot,
 	}
 }
 
@@ -40,7 +48,9 @@ func (a *APIURLHandlers) ShowStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *APIURLHandlers) Create(w http.ResponseWriter, r *http.Request) {
-	dataByte, err := a.APIURLServ.Create(r)
+	// Put in "Create" obj "Protocol" for processing "request" in "APIURLServ".
+	dataByte, err := a.APIURLServ.Create(context.TODO(), a.Protocol, r)
+
 	status := http.StatusCreated
 
 	// Processing critical errors.

@@ -7,12 +7,12 @@ import (
 	"github.com/boginskiy/Clicki/cmd/server"
 	"github.com/boginskiy/Clicki/internal/audit"
 	"github.com/boginskiy/Clicki/internal/auth"
-	"github.com/boginskiy/Clicki/internal/grpc/shortener"
 	"github.com/boginskiy/Clicki/internal/handler"
 	"github.com/boginskiy/Clicki/internal/layers"
 	"github.com/boginskiy/Clicki/internal/logg"
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/router"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
@@ -65,7 +65,9 @@ func (a *App) Start() {
 	APIDelServ := service.NewAPIDelServ(ctx, a.Cfg, a.Logg, repository)
 
 	// Handlers.
-	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ)
+	protHTTP := protocol.NewProtocolHTTP()                                     // Test
+	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ, protHTTP) // Test
+
 	URLHdler := handler.NewURLHandlers(URLServ)
 	PprofHdler := handler.NewPprofHandlers()
 
@@ -75,8 +77,8 @@ func (a *App) Start() {
 	// gRPC.
 	autherGRPC := auth.NewAuthGRPC(a.Cfg, authLogg, repository)
 	interceptor := mv.NewIntercept(a.Cfg, infraLogg, autherGRPC)
-
-	shortenerService := shortener.NewShortenerService(APIURLServ)
+	protGRPC := protocol.NewProtocolGRPC()
+	shortenerService := handler.NewShortenerService(APIURLServ, protGRPC)
 	server.RunGRPC(a.Cfg, a.Logg, shortenerService, interceptor)
 
 	// HTTP ~ HTTPS

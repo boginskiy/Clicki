@@ -4,7 +4,7 @@
 // 	protoc        v3.21.12
 // source: internal/protos/shortener_service.proto
 
-package shortener
+package grpc
 
 import (
 	reflect "reflect"

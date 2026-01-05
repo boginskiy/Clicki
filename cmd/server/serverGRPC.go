@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/internal/grpc/shortener"
+	appGRPC "github.com/boginskiy/Clicki/internal/grpc"
 	"github.com/boginskiy/Clicki/internal/logg"
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	"google.golang.org/grpc"
@@ -20,7 +20,7 @@ type ServgRPC struct {
 func NewServgRPC(
 	config config.Config,
 	logger logg.Logger,
-	service shortener.ShortenerServiceServer,
+	service appGRPC.ShortenerServiceServer,
 	interceptor mv.Interceptor) *ServgRPC {
 
 	listen, err := net.Listen("tcp", config.GetSrvAddr())
@@ -38,7 +38,7 @@ func NewServgRPC(
 	}
 
 	// Registration service.
-	shortener.RegisterShortenerServiceServer(tmpSrv.S, service)
+	appGRPC.RegisterShortenerServiceServer(tmpSrv.S, service)
 	return tmpSrv
 }
 

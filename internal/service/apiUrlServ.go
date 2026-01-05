@@ -11,6 +11,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	repo "github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
@@ -61,20 +62,26 @@ func (s *APIURLServ) CheckDB(req *http.Request) ([]byte, error) {
 	return EmptyByteSlice, nil
 }
 
-func (s *APIURLServ) Create(req *http.Request) ([]byte, error) {
+func (s *APIURLServ) Create(ctx context.Context, obj protocol.Protocol, request any) ([]byte, error) {
 	// Deserialization Body.
-	bodyJSON := model.NewURLJson()
-	err := s.Funcer.Deserialization(req, bodyJSON)
+	urlJSON := model.NewURLJson()
+	err := s.Funcer.Deserialization(req, urlJSON)
 
 	if err != nil {
-		s.Logg.RaiseFatal(err, "deserialization was bad", nil)
+		s.Logg.RaiseError(err, "deserialization was bad", nil)
 		return EmptyByteSlice, err
 	}
 
 	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта.
-	if !s.Checker.CheckUpURL(bodyJSON.URL) || bodyJSON.URL == "" {
+	if !s.Checker.CheckUpURL(urlJSON.URL) || urlJSON.URL == "" {
 		s.Logg.RaiseError(ErrDataNotValid, "CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
+	}
+
+	// >>
+	urlJSON, err := obj.GetURLFromRequest()
+	if err != nil {
+		return EmptyByteSlice, err
 	}
 
 	// <<
@@ -83,30 +90,18 @@ func (s *APIURLServ) Create(req *http.Request) ([]byte, error) {
 	correlationID := s.encrypOriginURL()                 // Create unic id.
 	shortURL := s.Cfg.GetBaseURL() + "/" + correlationID // Create new short URL.
 
-	preRecord := model.NewURLTb(0, correlationID, bodyJSON.URL, shortURL, userID) // Create dirty record.
-	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)                 // Put record in the DB.
+	modURLTb := model.NewURLTb(0, correlationID, urlJSON.URL, shortURL, userID) // Create dirty record.
+	record, errDB := s.Repo.CreateRecord(context.TODO(), modURLTb)              // Put record in the DB.
 
-	if err != nil && record == nil {
-		s.Logg.RaiseError(err, "APIURLServ.Create>Repo.Create", nil)
-		return EmptyByteSlice, err
+	if record == nil {
+		s.Logg.RaiseError(errDB, "APIURLServ.Create>Repo.Create", nil)
+		return EmptyByteSlice, errDB
 	}
 
 	// Audition.
-	s.eventOfAudit("shorten", userID, bodyJSON.URL)
-
-	// Definition type.
-	// var resJSON *model.ResultJSON
-	switch r := record.(type) {
-
-	case *model.URLTb:
-		resJSON := model.NewResultJSON(bodyJSON, r.ShortURL)
-	case string:
-		resJSON := model.NewResultJSON(bodyJSON, r)
-
-	default:
-		s.Logg.RaiseError(err, "APIURLServ.Create>switch", nil)
-		return EmptyByteSlice, err
-	}
+	s.eventOfAudit("shorten", userID, urlJSON.URL)
+	// Result.
+	resJSON := model.NewResultJSON(urlJSON, record.ShortURL)
 
 	// Serialization.
 	result, err2 := s.Funcer.Serialization(resJSON)
@@ -114,7 +109,7 @@ func (s *APIURLServ) Create(req *http.Request) ([]byte, error) {
 		s.Logg.RaiseError(err2, "APIURLServ.Create>NewResultJSON", nil)
 		return EmptyByteSlice, err2
 	}
-	return result, err
+	return result, errDB
 }
 
 func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {

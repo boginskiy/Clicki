@@ -1,7 +1,10 @@
 package service
 
 import (
+	"context"
 	"net/http"
+
+	"github.com/boginskiy/Clicki/internal/protocol"
 )
 
 type Reader interface {
@@ -33,4 +36,13 @@ type Servicer interface {
 // DelServicer is interface for del service.
 type DelServicer interface {
 	DeleteSet(req *http.Request) ([]byte, error)
+}
+
+type ServicerTest interface {
+	Statistician
+	Checker
+	// Creater
+	Reader
+	Create(ctx context.Context, obj protocol.Protocol, request any) ([]byte, error)
+	CreateSet(*http.Request) ([]byte, error)
 }

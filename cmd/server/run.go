@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/boginskiy/Clicki/cmd/config"
-	"github.com/boginskiy/Clicki/internal/grpc/shortener"
+	"github.com/boginskiy/Clicki/internal/grpc"
 	"github.com/boginskiy/Clicki/internal/logg"
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	"github.com/boginskiy/Clicki/internal/router"
@@ -22,7 +22,7 @@ func RunHTTP(cfg config.Config, logg logg.Logger, router router.Router, mdlwere 
 	}
 }
 
-func RunGRPC(cfg config.Config, logg logg.Logger, service shortener.ShortenerServiceServer, intercept mv.Interceptor) {
+func RunGRPC(cfg config.Config, logg logg.Logger, service grpc.ShortenerServiceServer, intercept mv.Interceptor) {
 	if cfg.GetEnableGRps() == "1" {
 		fmt.Fprintf(os.Stdout, "Protocol:      %s\n", "gRPC")
 		NewServgRPC(cfg, logg, service, intercept).Run()

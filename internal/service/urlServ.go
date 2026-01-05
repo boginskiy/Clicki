@@ -83,10 +83,10 @@ func (s *URLServ) Create(req *http.Request) ([]byte, error) {
 	correlationID := s.encrypOriginURL()                // Take unic id.
 	URLServ := s.Cfg.GetBaseURL() + "/" + correlationID // New short URL.
 
-	preRecord := model.NewURLTb(0, correlationID, originURL, URLServ, userID) // Create record.
-	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)             // Put record in the DB.
+	modURLTb := model.NewURLTb(0, correlationID, originURL, URLServ, userID) // Create record.
+	record, err := s.Repo.CreateRecord(context.TODO(), modURLTb)             // Put record in the DB.
 
-	if err != nil && record == nil {
+	if record == nil {
 		s.Logg.RaiseError(err, "URLServ.CreateURL>Repo.Create", nil)
 		return EmptyByteSlice, err
 	}
@@ -94,7 +94,7 @@ func (s *URLServ) Create(req *http.Request) ([]byte, error) {
 	// Audit.
 	s.eventOfAudit("shorten", userID, originURL)
 
-	return []byte(record.(*model.URLTb).ShortURL), err
+	return []byte(record.ShortURL), err
 }
 
 func (s *URLServ) Read(req *http.Request) ([]byte, error) {

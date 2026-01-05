@@ -22,12 +22,11 @@ func NewRepoDBRecord(repoDB *RepoDB, errCl utils.DBErrClassifier) *RepoDBRecord 
 	}
 }
 
-func (r *RepoDBRecord) checkErrFromDB(ctx context.Context, record *model.URLTb, err error) (*model.URLTb, int, error) {
+func (r *RepoDBRecord) checkErrFromDB(ctx context.Context, record *model.URLTb, err error) (*model.URLTb, int) {
 	code, needRetry := r.errClassifier.Classify(err)
 
 	// Adding record not unique in DB.
 	if code == pgerrcode.UniqueViolation {
-		// Do repeated recording in DB.
 		row := SelectRowByOriginalURL(r.Repo.Store, ctx,
 			record.OriginalURL)
 
@@ -41,11 +40,11 @@ func (r *RepoDBRecord) checkErrFromDB(ctx context.Context, record *model.URLTb, 
 			&record.UserID)
 
 		if errScan != nil {
-			r.Repo.Logg.RaiseError(err, "error in repeated sending record from DB.", nil)
+			r.Repo.Logg.RaiseError(errScan, "error in repeated sending record from DB.", nil)
 		}
-		return record, needRetry, errScan
+		return record, needRetry
 	}
-	return record, needRetry, err
+	return nil, needRetry
 }
 
 // CreateRecord.
@@ -61,9 +60,9 @@ func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (*
 		}
 
 		// There are errors.
-		record, needRetry, err := r.checkErrFromDB(ctx, record, errDB)
-		if err == nil {
-			// В ответ отдаю именно errDB для установки статуса ответа.
+		record, needRetry := r.checkErrFromDB(ctx, record, errDB)
+		if record != nil {
+			// В ответ отдаю именно errDB для установки Conflict status.
 			return record, errDB
 		}
 
@@ -75,7 +74,7 @@ func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (*
 			time.Sleep(10 * time.Millisecond)
 		}
 	}
-	return nil, errs.NewErrPlace("insert into is bad", nil)
+	return nil, errs.NewErrPlace("bad insert to DB", nil)
 }
 
 // ReadRecord.
