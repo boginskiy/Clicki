@@ -81,8 +81,9 @@ func ExampleAPIURLServCreate() {
 	TestAPIURLServ := tserv.InitAPIURLServ(logg, config)
 
 	// Request.
+	ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
 	body := []byte(`{"url": "https://leetcode.com/"}`)
-	request := tfunc.PreparRequest(context.TODO(), "POST", "/shorten", body)
+	request := tfunc.PreparRequest(ctx, "POST", "/shorten", body)
 
 	// Protocol
 	protHTTP := protocol.NewProtocolHTTP()

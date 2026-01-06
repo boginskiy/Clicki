@@ -34,6 +34,7 @@ func (s *ProtocolHTTP) GetUserIDFromCtx(ctx context.Context) (int, error) {
 	var userID int
 
 	UserID, ok := ctx.Value(auth.CtxUserID).(int)
+
 	if !ok || UserID <= 0 {
 		return userID, ErrUserIDNotValid
 	}
