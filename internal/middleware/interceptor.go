@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/auth"
@@ -29,13 +28,16 @@ func (i *Intercept) WithAuth(ctx context.Context, req interface{}, info *grpc.Un
 		return nil, status.Error(codes.Unauthenticated, "token is bad")
 	}
 
-	// Create new metadata.
-	newMD := metadata.New(map[string]string{
-		"userID": strconv.Itoa(UserID), // Add userID.
-		"token":  token,                // Add token.
-	})
+	// Create header.
+	header := metadata.Pairs(
+		"authorization", token,
+	)
 
-	// Update context.
-	ctx = metadata.NewOutgoingContext(ctx, newMD)
-	return handler(ctx, req)
+	err = grpc.SetHeader(ctx, header)
+	if err != nil {
+		i.Logg.RaiseError(err, "error of creating headers for response", nil)
+	}
+
+	// Add UserID in the context.
+	return handler(context.WithValue(ctx, auth.CtxUserID, UserID), req)
 }

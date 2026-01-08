@@ -3,8 +3,8 @@ package handler
 import (
 	"context"
 
-	"github.com/boginskiy/Clicki/internal/grpc"
 	p "github.com/boginskiy/Clicki/internal/protocol"
+	"github.com/boginskiy/Clicki/internal/rpc"
 	"github.com/boginskiy/Clicki/internal/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,7 +12,7 @@ import (
 )
 
 type ShortenerService struct {
-	grpc.UnimplementedShortenerServiceServer
+	rpc.UnimplementedShortenerServiceServer
 	APIURLServ service.ServicerTest // APIURLServ is business service.
 	Protocol   p.Protocol           // Protocol is Protocol service.
 }
@@ -27,7 +27,7 @@ func NewShortenerService(
 	}
 }
 
-func (s *ShortenerService) ShortenURL(ctx context.Context, in *grpc.URLShortenRequest) (*grpc.URLShortenResponse, error) {
+func (s *ShortenerService) ShortenURL(ctx context.Context, in *rpc.URLShortenRequest) (*rpc.URLShortenResponse, error) {
 	// Put in "Create" obj "Protocol" for processing "request" in "APIURLServ".
 	dataByte, err := s.APIURLServ.Create(ctx, s.Protocol, in)
 
@@ -36,9 +36,7 @@ func (s *ShortenerService) ShortenURL(ctx context.Context, in *grpc.URLShortenRe
 	}
 
 	// Make response.
-	response := &grpc.URLShortenResponse{
-		Result: string(dataByte),
-	}
+	response := &rpc.URLShortenResponse{Result: string(dataByte)}
 
 	// If conflict on the server.
 	if err != nil && len(dataByte) > 0 {
@@ -48,10 +46,10 @@ func (s *ShortenerService) ShortenURL(ctx context.Context, in *grpc.URLShortenRe
 	return response, nil
 }
 
-func (s *ShortenerService) ExpandURL(ctx context.Context, in *grpc.URLExpandRequest) (*grpc.URLExpandResponse, error) {
-	return &grpc.URLExpandResponse{}, nil
+func (s *ShortenerService) ExpandURL(ctx context.Context, in *rpc.URLExpandRequest) (*rpc.URLExpandResponse, error) {
+	return &rpc.URLExpandResponse{}, nil
 }
 
-func (s *ShortenerService) ListUserURLs(ctx context.Context, _ *emptypb.Empty) (*grpc.UserURLsResponse, error) {
-	return &grpc.UserURLsResponse{}, nil
+func (s *ShortenerService) ListUserURLs(ctx context.Context, _ *emptypb.Empty) (*rpc.UserURLsResponse, error) {
+	return &rpc.UserURLsResponse{}, nil
 }

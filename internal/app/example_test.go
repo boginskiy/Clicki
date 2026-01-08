@@ -8,6 +8,7 @@ import (
 
 	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/logg"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
 	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/tester/tfunc"
@@ -86,7 +87,8 @@ func ExampleAPIURLServCreate() {
 	request := tfunc.PreparRequest(ctx, "POST", "/shorten", body)
 
 	// Protocol
-	protHTTP := protocol.NewProtocolHTTP()
+	funcer := prep.NewFunctions(logg)
+	protHTTP := protocol.NewProtocolHTTP(funcer)
 
 	// Handler.
 	body, err := TestAPIURLServ.Create(request.Context(), protHTTP, request)

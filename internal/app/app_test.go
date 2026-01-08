@@ -78,7 +78,8 @@ func RunRouter(config config.Config, logg logg.Logger) http.Handler {
 	APIDelServ := service.NewAPIDelServ(ctx, config, logg, repo)
 
 	// Protocol
-	protHTTP := protocol.NewProtocolHTTP()
+	funcer := prep.NewFunctions(logg)
+	protHTTP := protocol.NewProtocolHTTP(funcer)
 
 	// Handler
 	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ, protHTTP)

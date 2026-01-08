@@ -76,7 +76,7 @@ func (s *APIURLServ) Create(ctx context.Context, protocol p.Protocol, request an
 	}
 
 	// Take userID from context.
-	userID, err := protocol.GetUserIDFromCtx(ctx)
+	userID, err := s.getUserIDFromCtx(ctx)
 	if err != nil {
 		return EmptyByteSlice, err
 	}
@@ -95,10 +95,7 @@ func (s *APIURLServ) Create(ctx context.Context, protocol p.Protocol, request an
 	// Audition.
 	s.eventOfAudit("shorten", userID, urlJSON.URL)
 
-	// Result.
-	resJSON := model.NewResultJSON(urlJSON, record.ShortURL)
-
-	return s.Funcer.Serialization(resJSON), errDB
+	return protocol.PreparResult(record), errDB
 }
 
 func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {
@@ -173,6 +170,15 @@ func (s *APIURLServ) takeUserIDFromCtx(req *http.Request) int {
 		s.Logg.RaiseError(ErrUserIDNotValid, "APIURLServ.takeUserIDFromCtx>CtxUserID", nil)
 	}
 	return UserID
+}
+
+func (s *APIURLServ) getUserIDFromCtx(ctx context.Context) (int, error) {
+	var userID int
+	UserID, ok := ctx.Value(auth.CtxUserID).(int)
+	if !ok || UserID <= 0 {
+		return userID, ErrUserIDNotValid
+	}
+	return UserID, nil
 }
 
 func (s *APIURLServ) encrypOriginURL() (correlID string) {

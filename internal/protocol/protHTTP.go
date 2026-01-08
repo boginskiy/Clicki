@@ -1,19 +1,19 @@
 package protocol
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
-	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/model"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
 )
 
 type ProtocolHTTP struct {
+	Funcer prep.Funcer
 }
 
-func NewProtocolHTTP() *ProtocolHTTP {
-	return &ProtocolHTTP{}
+func NewProtocolHTTP(fancer prep.Funcer) *ProtocolHTTP {
+	return &ProtocolHTTP{Funcer: fancer}
 }
 
 func (s *ProtocolHTTP) GetURLFromRequest(req any) (*model.URLJson, error) {
@@ -30,13 +30,6 @@ func (s *ProtocolHTTP) GetURLFromRequest(req any) (*model.URLJson, error) {
 	return urlJSON, nil
 }
 
-func (s *ProtocolHTTP) GetUserIDFromCtx(ctx context.Context) (int, error) {
-	var userID int
-
-	UserID, ok := ctx.Value(auth.CtxUserID).(int)
-
-	if !ok || UserID <= 0 {
-		return userID, ErrUserIDNotValid
-	}
-	return UserID, nil
+func (s *ProtocolHTTP) PreparResult(modURLTb *model.URLTb) []byte {
+	return s.Funcer.Serialization(map[string]string{"result": modURLTb.ShortURL})
 }

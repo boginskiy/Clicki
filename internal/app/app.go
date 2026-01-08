@@ -65,7 +65,7 @@ func (a *App) Start() {
 	APIDelServ := service.NewAPIDelServ(ctx, a.Cfg, a.Logg, repository)
 
 	// Handlers.
-	protHTTP := protocol.NewProtocolHTTP()                                     // Test
+	protHTTP := protocol.NewProtocolHTTP(funcer)                                     // Test
 	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ, protHTTP) // Test
 
 	URLHdler := handler.NewURLHandlers(URLServ)
@@ -77,11 +77,11 @@ func (a *App) Start() {
 	// gRPC.
 	autherGRPC := auth.NewAuthGRPC(a.Cfg, authLogg, repository)
 	interceptor := mv.NewIntercept(a.Cfg, infraLogg, autherGRPC)
-	protGRPC := protocol.NewProtocolGRPC()
+	protGRPC := protocol.NewProtocolGRPC(funcer)
 	shortenerService := handler.NewShortenerService(APIURLServ, protGRPC)
-	server.RunGRPC(a.Cfg, a.Logg, shortenerService, interceptor)
 
-	// HTTP ~ HTTPS
+	// Servers.
+	server.RunGRPC(a.Cfg, a.Logg, shortenerService, interceptor)
 	server.RunHTTP(a.Cfg, a.Logg, router, middleware)
 
 	defer setupLayers.Close()

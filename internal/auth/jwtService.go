@@ -29,7 +29,8 @@ func (j *JWTService) CreateJWT(userID int) (string, error) {
 	// New token.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(j.Cfg.GetTokenLiveTime())))},
+			ExpiresAt: jwt.NewNumericDate(
+				time.Now().Add(time.Duration(j.Cfg.GetTokenLiveTime() * int(time.Second))))},
 		UserID: userID,
 	})
 
@@ -42,10 +43,10 @@ func (j *JWTService) CreateJWT(userID int) (string, error) {
 }
 
 // GetUserID - get id of client.
-func (j *JWTService) GetIDAndValidJWT(tokenStr string) (int, error) {
+func (j *JWTService) GetIDAndValidJWT(checkingToken string) (int, error) {
 	claims := &Claims{}
 
-	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(checkingToken, claims, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}

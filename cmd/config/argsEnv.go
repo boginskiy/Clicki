@@ -55,7 +55,7 @@ func (ae *ArgsENV) ParseFlags() {
 
 	valueStr = strings.TrimSpace(os.Getenv("TOKEN_LIVE_TIME"))
 	if len(valueStr) == 0 {
-		ae.TokenLiveTime = 10
+		ae.TokenLiveTime = 3600
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("COKI_LIVE_TIME"))
