@@ -1,9 +1,9 @@
-package main
+package client
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"testing"
 
 	"github.com/boginskiy/Clicki/internal/rpc"
 	"google.golang.org/grpc"
@@ -38,37 +38,62 @@ func (c *ClientGRPC) Close() error {
 	return c.Conn.Close()
 }
 
-func SendRequests(ctx context.Context, client *ClientGRPC) {
-	// ShortenURL
-	req := &rpc.URLShortenRequest{
-		Url: "https://practicum.yandex.ru1",
-	}
+var (
+	TOKEN string = ""
+)
 
-	var header metadata.MD
-
-	res, err := client.C.ShortenURL(ctx, req, grpc.Header(&header))
-
-	if err != nil {
-		grpcStatus, _ := status.FromError(err)
-		log.Printf("bad request for ShortenURL. Mess: %v\n", grpcStatus.Message())
-		return
-	}
-
-	fmt.Println(res.Result)
-
-	fmt.Println(header.Get("authorization"))
-
-}
-
-func main() {
+func TestShortenerService(t *testing.T) {
+	// ClientGRPC
 	client := NewClientGRPC("localhost:8080")
 	defer client.Close()
 
-	// Context
-	ctx := metadata.AppendToOutgoingContext(
-		context.Background(),
-		"authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3Njc4ODcxNjQsIlVzZXJJRCI6MX0._eynwVVtoedNZR_DYgNM-ytcgeWIqFD-EIlcSZ9aXu4",
-	)
+	testAuth(t, client)
 
-	SendRequests(ctx, client)
+	if TOKEN == "" {
+		t.Errorf("%s:\n\tactual: %v", "dont't taking TOKEN", TOKEN)
+		return
+	}
+
+	testShortenURL(t, client)
+}
+
+func testAuth(t *testing.T, client *ClientGRPC) {
+	tests := []struct {
+		name          string
+		authorization string
+		url           string
+		statusCode    int
+	}{
+		{"test negative authentication for gRPC", "Nemo", "", 16},
+		{"test positive authentication for gRPC", "", "", 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			ctx := metadata.AppendToOutgoingContext(context.Background(), "authorization", tt.authorization)
+			var header metadata.MD
+
+			_, err := client.C.ShortenURL(ctx, &rpc.URLShortenRequest{}, grpc.Header(&header))
+
+			grpcStatus, ok := status.FromError(err)
+
+			// Check error.
+			if ok && int(grpcStatus.Code()) != tt.statusCode {
+				t.Errorf("%s:\n\texpected: %v\n\tactual: %v", tt.name, tt.statusCode, int(grpcStatus.Code()))
+
+			}
+
+			// Take new token.
+			auth := header.Get("authorization")
+			if len(auth) > 0 {
+				TOKEN = auth[0]
+			}
+
+		})
+	}
+}
+
+func testShortenURL(t *testing.T, client *ClientGRPC) {
+	// TODO ...
 }
