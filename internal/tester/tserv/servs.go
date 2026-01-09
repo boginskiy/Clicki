@@ -47,3 +47,22 @@ func InitURLServ(logger logg.Logger, cfg config.Config) *service.URLServ {
 
 	return service.NewURLServ(cfg, logger, repo, checker, fancer, publisher)
 }
+
+func Init_URLServ_and_APIURLServ(logger logg.Logger, cfg config.Config) (*service.URLServ, *service.APIURLServ) {
+	db, _ := database.NewStoreMap(cfg, logger)
+	repo := repository.NewMainRepoMap(cfg, logger, db)
+
+	tfunc.WriteRecord(repo)
+
+	var sub1 = audit.NewFileReceiver(logger, cfg.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
+	var publisher = audit.NewPublish(sub1, sub2)
+
+	var fancer = preparation.NewFunctions(logger)
+	var checker = validation.NewChecker()
+
+	URLServ := service.NewURLServ(cfg, logger, repo, checker, fancer, publisher)
+	APIURLServ := service.NewAPIURLServ(cfg, logger, repo, checker, fancer, publisher)
+
+	return URLServ, APIURLServ
+}

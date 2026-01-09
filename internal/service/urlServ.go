@@ -97,6 +97,7 @@ func (s *URLServ) Read(ctx context.Context, protocol p.Protocol, request any) ([
 	// Take user id.
 	userID, err := s.getUserIDFromCtx(ctx)
 	if err != nil {
+
 		return EmptyByteSlice, err
 	}
 
