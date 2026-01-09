@@ -144,7 +144,7 @@ func InitShortenerService(path string) *handler.ShortenerService {
 	funcer := preparation.NewFunctions(logg)
 	protGRPC := protocol.NewProtocolGRPC(funcer)
 	//
-	URLSrv, APISrv := tserv.Init_URLServ_and_APIURLServ(logg, config)
+	URLSrv, APISrv := tserv.InitURLServAndAPIURLServ(logg, config)
 
 	return handler.NewShortenerService(APISrv, URLSrv, protGRPC)
 }

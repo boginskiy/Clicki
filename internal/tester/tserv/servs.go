@@ -48,7 +48,7 @@ func InitURLServ(logger logg.Logger, cfg config.Config) *service.URLServ {
 	return service.NewURLServ(cfg, logger, repo, checker, fancer, publisher)
 }
 
-func Init_URLServ_and_APIURLServ(logger logg.Logger, cfg config.Config) (*service.URLServ, *service.APIURLServ) {
+func InitURLServAndAPIURLServ(logger logg.Logger, cfg config.Config) (*service.URLServ, *service.APIURLServ) {
 	db, _ := database.NewStoreMap(cfg, logger)
 	repo := repository.NewMainRepoMap(cfg, logger, db)
 

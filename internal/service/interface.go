@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/boginskiy/Clicki/internal/protocol"
 	p "github.com/boginskiy/Clicki/internal/protocol"
 )
 
@@ -18,7 +17,7 @@ type Creater interface {
 }
 
 type ProtoCreater interface {
-	Create(ctx context.Context, obj protocol.Protocol, request any) ([]byte, error)
+	Create(ctx context.Context, obj p.Protocol, request any) ([]byte, error)
 }
 
 type Checker interface {

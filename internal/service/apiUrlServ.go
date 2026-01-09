@@ -137,13 +137,13 @@ func (s *APIURLServ) ReadSet(ctx context.Context, protocol p.Protocol) (any, err
 	// Take id user.
 	userID, err := s.getUserIDFromCtx(ctx)
 	if err != nil {
-		return nil, err
+		return EmptyByteSlice, err
 	}
 	// Take records.
 	records, err := s.Repo.ReadRecords(context.TODO(), userID)
 	if err != nil {
 		s.Logg.RaiseError(err, "error when getting data from the database", nil)
-		return nil, err
+		return EmptyByteSlice, err
 	}
 
 	return protocol.PreparReadResult(records), nil
