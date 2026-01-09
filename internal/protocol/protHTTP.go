@@ -44,5 +44,8 @@ func (s *ProtocolHTTP) GetURLID(req any) (string, error) {
 }
 
 func (s *ProtocolHTTP) PreparReadResult(modURLSet []model.ResUserURLSet) any {
+	if len(modURLSet) == 0 {
+		return EmptyByteSlice
+	}
 	return s.Funcer.Serialization(modURLSet)
 }
