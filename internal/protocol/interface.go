@@ -5,7 +5,8 @@ import (
 )
 
 type Preparator interface {
-	PreparResult(modURLTb *model.URLTb) []byte
+	PreparCreatedResult(modURLTb *model.URLTb) []byte
+	PreparReadResult(modURLSet []model.ResUserURLSet) any
 }
 
 type Protocol interface {

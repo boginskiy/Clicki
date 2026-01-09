@@ -8,12 +8,9 @@ import (
 	p "github.com/boginskiy/Clicki/internal/protocol"
 )
 
-type Reader interface {
-	ReadSet(*http.Request) ([]byte, error)
-}
-
 type ProtoReader interface {
 	Read(ctx context.Context, protocol p.Protocol, request any) ([]byte, error)
+	ReadSet(ctx context.Context, protocol p.Protocol) (any, error)
 }
 
 type Creater interface {
@@ -49,6 +46,6 @@ type Servicer interface {
 type APIServicer interface {
 	ProtoCreater
 	Statistician
-	Reader
+	ProtoReader
 	CreateSet(*http.Request) ([]byte, error)
 }

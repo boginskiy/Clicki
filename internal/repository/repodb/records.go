@@ -50,7 +50,7 @@ func (r *RepoDBRecords) CreateRecords(ctx context.Context, records any) error {
 }
 
 // ReadRecords - implements interface RecordsRepo.
-func (r *RepoDBRecords) ReadRecords(ctx context.Context, userID int) (any, error) {
+func (r *RepoDBRecords) ReadRecords(ctx context.Context, userID int) ([]model.ResUserURLSet, error) {
 	records := []model.ResUserURLSet{}
 	record := model.ResUserURLSet{}
 

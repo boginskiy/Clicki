@@ -24,7 +24,7 @@ func (s *ProtocolGRPC) GetURLFromRequest(req any) (*model.URLJson, error) {
 	return &model.URLJson{URL: in.Url}, nil
 }
 
-func (s *ProtocolGRPC) PreparResult(modURLTb *model.URLTb) []byte {
+func (s *ProtocolGRPC) PreparCreatedResult(modURLTb *model.URLTb) []byte {
 	return []byte(modURLTb.ShortURL)
 }
 
@@ -34,4 +34,16 @@ func (s *ProtocolGRPC) GetURLID(req any) (string, error) {
 		return "", status.Error(codes.InvalidArgument, "bad request")
 	}
 	return in.GetId(), nil
+}
+
+func (s *ProtocolGRPC) PreparReadResult(modURLSet []model.ResUserURLSet) any {
+	result := make([]*rpc.URLData, len(modURLSet))
+
+	for i, url := range modURLSet {
+		result[i] = &rpc.URLData{
+			ShortUrl:    url.ShortURL,
+			OriginalUrl: url.OriginalURL,
+		}
+	}
+	return result
 }

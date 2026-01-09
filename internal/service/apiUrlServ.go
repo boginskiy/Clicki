@@ -87,7 +87,7 @@ func (s *APIURLServ) Create(ctx context.Context, protocol p.Protocol, request an
 	// Audition.
 	s.eventOfAudit("shorten", userID, urlJSON.URL)
 
-	return protocol.PreparResult(record), errDB
+	return protocol.PreparCreatedResult(record), errDB
 }
 
 func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {
@@ -133,27 +133,20 @@ func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {
 	return s.Funcer.Serialization(respURLSet), nil
 }
 
-func (s *APIURLServ) ReadSet(req *http.Request) ([]byte, error) {
+func (s *APIURLServ) ReadSet(ctx context.Context, protocol p.Protocol) (any, error) {
 	// Take id user.
-	userID := s.takeUserIDFromCtx(req)
-
-	dataSet, err := s.Repo.ReadRecords(context.TODO(), userID)
+	userID, err := s.getUserIDFromCtx(ctx)
 	if err != nil {
-		s.Logg.RaiseError(err, "APIURLServ.ReadSetUserURL>ReadSet", nil)
-		return EmptyByteSlice, err
+		return nil, err
+	}
+	// Take records.
+	records, err := s.Repo.ReadRecords(context.TODO(), userID)
+	if err != nil {
+		s.Logg.RaiseError(err, "error when getting data from the database", nil)
+		return nil, err
 	}
 
-	// Definition record by user.
-	records, ok := dataSet.([]model.ResUserURLSet)
-	if !ok {
-		s.Logg.RaiseError(ErrDataNotValid, "APIURLServ.ReadSetUserURL>Type?", nil)
-		return EmptyByteSlice, ErrDataNotValid
-	}
-	if len(records) == 0 {
-		return EmptyByteSlice, nil
-	}
-
-	return s.Funcer.Serialization(records), nil
+	return protocol.PreparReadResult(records), nil
 }
 
 func (s *APIURLServ) takeUserIDFromCtx(req *http.Request) int {
@@ -190,4 +183,8 @@ func (s *APIURLServ) eventOfAudit(action string, userID int, url string) {
 	if s.Publisher != nil {
 		s.Publisher.Send(event)
 	}
+}
+
+func (s *APIURLServ) Read(ctx context.Context, protocol p.Protocol, request any) ([]byte, error) {
+	return EmptyByteSlice, nil
 }

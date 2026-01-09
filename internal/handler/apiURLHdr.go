@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"reflect"
 
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	p "github.com/boginskiy/Clicki/internal/protocol"
@@ -79,20 +80,22 @@ func (a *APIURLHandlers) CreateSet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *APIURLHandlers) ReadSet(w http.ResponseWriter, r *http.Request) {
-	body, err := a.APIURLServ.ReadSet(r)
-
-	if err != nil {
+	data, err := a.APIURLServ.ReadSet(r.Context(), a.Protocol)
+	if err != nil || reflect.TypeOf(data) != reflect.TypeOf([]byte{}) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	dataByte := data.([]byte)
+
 	// if user does't have record.
-	if len(body) == 0 {
+	if len(dataByte) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(body)
+	w.Write(dataByte)
 }
 
 func (a *APIURLHandlers) DeleteSet(w http.ResponseWriter, r *http.Request) {

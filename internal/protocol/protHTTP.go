@@ -31,7 +31,7 @@ func (s *ProtocolHTTP) GetURLFromRequest(req any) (*model.URLJson, error) {
 	return urlJSON, nil
 }
 
-func (s *ProtocolHTTP) PreparResult(modURLTb *model.URLTb) []byte {
+func (s *ProtocolHTTP) PreparCreatedResult(modURLTb *model.URLTb) []byte {
 	return s.Funcer.Serialization(map[string]string{"result": modURLTb.ShortURL})
 }
 
@@ -41,4 +41,8 @@ func (s *ProtocolHTTP) GetURLID(req any) (string, error) {
 		return "", ErrDataNotValid
 	}
 	return strings.TrimLeft(r.URL.Path, "/"), nil
+}
+
+func (s *ProtocolHTTP) PreparReadResult(modURLSet []model.ResUserURLSet) any {
+	return s.Funcer.Serialization(modURLSet)
 }

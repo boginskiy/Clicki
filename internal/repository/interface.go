@@ -26,7 +26,7 @@ type RecordRepo interface {
 // Operations with groups of records.
 type RecordsRepo interface {
 	CreateRecords(ctx context.Context, records any) error
-	ReadRecords(ctx context.Context, userID int) (any, error)
+	ReadRecords(ctx context.Context, userID int) ([]model.ResUserURLSet, error)
 	DeleteRecords(ctx context.Context) error
 }
 

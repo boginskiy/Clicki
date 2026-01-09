@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"reflect"
 
 	p "github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/rpc"
@@ -65,5 +66,16 @@ func (s *ShortenerService) ExpandURL(ctx context.Context, in *rpc.URLExpandReque
 }
 
 func (s *ShortenerService) ListUserURLs(ctx context.Context, _ *emptypb.Empty) (*rpc.UserURLsResponse, error) {
-	return &rpc.UserURLsResponse{}, nil
+	data, err := s.APIURLServ.ReadSet(ctx, s.Protocol)
+
+	if err != nil || reflect.TypeOf(data) != reflect.TypeOf([]*rpc.URLData(nil)) {
+		return nil, status.Error(codes.InvalidArgument, "bad request")
+	}
+
+	dataURL := data.([]*rpc.URLData)
+	if len(dataURL) == 0 {
+		return nil, status.Error(codes.OK, "no content")
+	}
+
+	return &rpc.UserURLsResponse{Url: dataURL}, nil
 }
