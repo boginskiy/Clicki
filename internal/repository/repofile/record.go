@@ -30,7 +30,7 @@ func (r *FileRecordRepo) ReadLastRecord(ctx context.Context) int {
 }
 
 // ReadRecord.
-func (r *FileRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, error) {
+func (r *FileRecordRepo) ReadRecord(ctx context.Context, correlID string) (*model.URLTb, error) {
 	r.Repo.muR.RLock()
 	defer r.Repo.muR.RUnlock()
 

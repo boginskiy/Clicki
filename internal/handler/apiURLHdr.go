@@ -10,13 +10,13 @@ import (
 )
 
 type APIURLHandlers struct {
-	APIURLServ service.ServicerTest
+	APIURLServ service.APIServicer
 	APIDelServ service.DelServicer
 	Protocol   p.Protocol
 }
 
 func NewAPIURLHandlers(
-	apiURLServ service.ServicerTest,
+	apiURLServ service.APIServicer,
 	apiDelServ service.DelServicer,
 	prot p.Protocol) *APIURLHandlers {
 

@@ -27,3 +27,11 @@ func (s *ProtocolGRPC) GetURLFromRequest(req any) (*model.URLJson, error) {
 func (s *ProtocolGRPC) PreparResult(modURLTb *model.URLTb) []byte {
 	return []byte(modURLTb.ShortURL)
 }
+
+func (s *ProtocolGRPC) GetURLID(req any) (string, error) {
+	in, ok := req.(*rpc.URLExpandRequest)
+	if !ok {
+		return "", status.Error(codes.InvalidArgument, "bad request")
+	}
+	return in.GetId(), nil
+}

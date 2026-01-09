@@ -5,16 +5,23 @@ import (
 	"net/http"
 
 	"github.com/boginskiy/Clicki/internal/protocol"
+	p "github.com/boginskiy/Clicki/internal/protocol"
 )
 
 type Reader interface {
 	ReadSet(*http.Request) ([]byte, error)
-	Read(*http.Request) ([]byte, error)
+}
+
+type ProtoReader interface {
+	Read(ctx context.Context, protocol p.Protocol, request any) ([]byte, error)
 }
 
 type Creater interface {
-	CreateSet(*http.Request) ([]byte, error)
 	Create(*http.Request) ([]byte, error)
+}
+
+type ProtoCreater interface {
+	Create(ctx context.Context, obj protocol.Protocol, request any) ([]byte, error)
 }
 
 type Checker interface {
@@ -25,24 +32,23 @@ type Statistician interface {
 	GetStats(*http.Request) ([]byte, error)
 }
 
-// Servicer is interface for standart service.
-type Servicer interface {
-	Statistician
-	Checker
-	Creater
-	Reader
-}
-
 // DelServicer is interface for del service.
 type DelServicer interface {
 	DeleteSet(req *http.Request) ([]byte, error)
 }
 
-type ServicerTest interface {
+// Servicer is interface for standart service.
+type Servicer interface {
 	Statistician
+	ProtoReader
 	Checker
-	// Creater
+	Creater
+}
+
+// Servicer is interface for API.
+type APIServicer interface {
+	ProtoCreater
+	Statistician
 	Reader
-	Create(ctx context.Context, obj protocol.Protocol, request any) ([]byte, error)
 	CreateSet(*http.Request) ([]byte, error)
 }

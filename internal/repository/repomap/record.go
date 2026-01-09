@@ -29,7 +29,7 @@ func (r *MapRecordRepo) CheckUniqueRecord(ctx context.Context, correlID string) 
 }
 
 // ReadRecord - for interface.
-func (r *MapRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, error) {
+func (r *MapRecordRepo) ReadRecord(ctx context.Context, correlID string) (*model.URLTb, error) {
 	r.Repo.muR.RLock()
 	defer r.Repo.muR.RUnlock()
 

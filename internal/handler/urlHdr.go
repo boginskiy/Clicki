@@ -4,17 +4,20 @@ import (
 	"net/http"
 
 	mv "github.com/boginskiy/Clicki/internal/middleware"
+	p "github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/go-chi/chi"
 )
 
 type URLHandlers struct {
-	URLServ service.Servicer
+	URLServ  service.Servicer
+	Protocol p.Protocol
 }
 
-func NewURLHandlers(urlServ service.Servicer) *URLHandlers {
+func NewURLHandlers(urlServ service.Servicer, prot p.Protocol) *URLHandlers {
 	return &URLHandlers{
-		URLServ: urlServ,
+		URLServ:  urlServ,
+		Protocol: prot,
 	}
 }
 
@@ -43,7 +46,8 @@ func (u *URLHandlers) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *URLHandlers) Read(w http.ResponseWriter, r *http.Request) {
-	dataByte, err := u.URLServ.Read(r)
+	// Put in "Create" obj "Protocol" for processing "request" in "APIURLServ".
+	dataByte, err := u.URLServ.Read(r.Context(), u.Protocol, r)
 
 	if err == service.ErrReadRecord {
 		w.WriteHeader(http.StatusGone)

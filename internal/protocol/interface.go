@@ -10,5 +10,6 @@ type Preparator interface {
 
 type Protocol interface {
 	GetURLFromRequest(req any) (*model.URLJson, error)
+	GetURLID(req any) (string, error)
 	Preparator
 }

@@ -13,16 +13,19 @@ import (
 
 type ShortenerService struct {
 	rpc.UnimplementedShortenerServiceServer
-	APIURLServ service.ServicerTest // APIURLServ is business service.
-	Protocol   p.Protocol           // Protocol is Protocol service.
+	APIURLServ service.APIServicer // APIURLServ is business service.
+	URLServ    service.Servicer    // URLServ is business service.
+	Protocol   p.Protocol          // Protocol is Protocol service.
 }
 
 func NewShortenerService(
-	apiURLServ service.ServicerTest,
+	apiURLServ service.APIServicer,
+	urlServ service.Servicer,
 	prot p.Protocol) *ShortenerService {
 
 	return &ShortenerService{
 		APIURLServ: apiURLServ,
+		URLServ:    urlServ,
 		Protocol:   prot,
 	}
 }
@@ -47,7 +50,18 @@ func (s *ShortenerService) ShortenURL(ctx context.Context, in *rpc.URLShortenReq
 }
 
 func (s *ShortenerService) ExpandURL(ctx context.Context, in *rpc.URLExpandRequest) (*rpc.URLExpandResponse, error) {
-	return &rpc.URLExpandResponse{}, nil
+	// Put in "Create" obj "Protocol" for processing "request" in "APIURLServ".
+	dataByte, err := s.URLServ.Read(ctx, s.Protocol, in)
+
+	if err == service.ErrReadRecord {
+		return nil, status.Error(codes.FailedPrecondition, err.Error())
+	}
+
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	return &rpc.URLExpandResponse{Result: string(dataByte)}, nil
 }
 
 func (s *ShortenerService) ListUserURLs(ctx context.Context, _ *emptypb.Empty) (*rpc.UserURLsResponse, error) {

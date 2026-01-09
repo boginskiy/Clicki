@@ -65,10 +65,10 @@ func (a *App) Start() {
 	APIDelServ := service.NewAPIDelServ(ctx, a.Cfg, a.Logg, repository)
 
 	// Handlers.
-	protHTTP := protocol.NewProtocolHTTP(funcer)                                     // Test
+	protHTTP := protocol.NewProtocolHTTP(funcer)                               // Test
 	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ, protHTTP) // Test
 
-	URLHdler := handler.NewURLHandlers(URLServ)
+	URLHdler := handler.NewURLHandlers(URLServ, protHTTP)
 	PprofHdler := handler.NewPprofHandlers()
 
 	// Router.
@@ -78,7 +78,7 @@ func (a *App) Start() {
 	autherGRPC := auth.NewAuthGRPC(a.Cfg, authLogg, repository)
 	interceptor := mv.NewIntercept(a.Cfg, infraLogg, autherGRPC)
 	protGRPC := protocol.NewProtocolGRPC(funcer)
-	shortenerService := handler.NewShortenerService(APIURLServ, protGRPC)
+	shortenerService := handler.NewShortenerService(APIURLServ, URLServ, protGRPC)
 
 	// Servers.
 	server.RunGRPC(a.Cfg, a.Logg, shortenerService, interceptor)

@@ -83,7 +83,7 @@ func RunRouter(config config.Config, logg logg.Logger) http.Handler {
 
 	// Handler
 	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ, protHTTP)
-	URLHdler := handler.NewURLHandlers(URLServ)
+	URLHdler := handler.NewURLHandlers(URLServ, protHTTP)
 	PprofHdler := handler.NewPprofHandlers()
 
 	// Router

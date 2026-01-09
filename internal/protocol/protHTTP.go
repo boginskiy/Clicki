@@ -3,6 +3,7 @@ package protocol
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
@@ -32,4 +33,12 @@ func (s *ProtocolHTTP) GetURLFromRequest(req any) (*model.URLJson, error) {
 
 func (s *ProtocolHTTP) PreparResult(modURLTb *model.URLTb) []byte {
 	return s.Funcer.Serialization(map[string]string{"result": modURLTb.ShortURL})
+}
+
+func (s *ProtocolHTTP) GetURLID(req any) (string, error) {
+	r, ok := req.(*http.Request)
+	if !ok {
+		return "", ErrDataNotValid
+	}
+	return strings.TrimLeft(r.URL.Path, "/"), nil
 }

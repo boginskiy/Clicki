@@ -54,14 +54,6 @@ func (s *APIURLServ) GetStats(req *http.Request) ([]byte, error) {
 	return s.Funcer.Serialization(tmpMap), nil
 }
 
-func (s *APIURLServ) Read(req *http.Request) ([]byte, error) {
-	return EmptyByteSlice, nil
-}
-
-func (s *APIURLServ) CheckDB(req *http.Request) ([]byte, error) {
-	return EmptyByteSlice, nil
-}
-
 func (s *APIURLServ) Create(ctx context.Context, protocol p.Protocol, request any) ([]byte, error) {
 	// Take URL from request.
 	urlJSON, err := protocol.GetURLFromRequest(request)

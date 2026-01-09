@@ -32,11 +32,15 @@ func ExampleURLServRead() {
 
 	URLServ := tserv.InitURLServ(logg, config)
 
+	// Protocol
+	funcer := prep.NewFunctions(logg)
+	protHTTP := protocol.NewProtocolHTTP(funcer)
+
 	// Request.'
 	ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
 	request := tfunc.PreparRequest(ctx, "GET", "/wrs4db6j", nil)
 	// Handler.
-	body, err := URLServ.Read(request)
+	body, err := URLServ.Read(ctx, protHTTP, request)
 	if err != nil {
 		log.Fatalln(err)
 	}

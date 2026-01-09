@@ -78,7 +78,7 @@ func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (*
 }
 
 // ReadRecord.
-func (r *RepoDBRecord) ReadRecord(ctx context.Context, correlID string) (any, error) {
+func (r *RepoDBRecord) ReadRecord(ctx context.Context, correlID string) (*model.URLTb, error) {
 	record := &model.URLTb{}
 	row := SelectRowByCorrelID(r.Repo.Store, ctx, correlID)
 
