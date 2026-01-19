@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	conf "github.com/boginskiy/Clicki/cmd/config"
 	"github.com/boginskiy/Clicki/internal/audit"
@@ -11,6 +10,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
+	p "github.com/boginskiy/Clicki/internal/protocol"
 	repo "github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
@@ -44,12 +44,12 @@ func NewURLServ(
 	}
 }
 
-func (s *URLServ) CreateSet(req *http.Request) ([]byte, error) {
+func (s *URLServ) GetStats(req *http.Request) ([]byte, error) {
 	return StoreDBIsSucces, nil
 }
 
-func (s *URLServ) ReadSet(req *http.Request) ([]byte, error) {
-	return StoreDBIsSucces, nil
+func (s *URLServ) ReadSet(ctx context.Context, protocol p.Protocol) (any, error) {
+	return EmptyByteSlice, nil
 }
 
 func (s *URLServ) CheckDB(req *http.Request) ([]byte, error) {
@@ -79,10 +79,10 @@ func (s *URLServ) Create(req *http.Request) ([]byte, error) {
 	correlationID := s.encrypOriginURL()                // Take unic id.
 	URLServ := s.Cfg.GetBaseURL() + "/" + correlationID // New short URL.
 
-	preRecord := model.NewURLTb(0, correlationID, originURL, URLServ, userID) // Create record.
-	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)             // Put record in the DB.
+	modURLTb := model.NewURLTb(0, correlationID, originURL, URLServ, userID) // Create record.
+	record, err := s.Repo.CreateRecord(context.TODO(), modURLTb)             // Put record in the DB.
 
-	if err != nil && record == nil {
+	if record == nil {
 		s.Logg.RaiseError(err, "URLServ.CreateURL>Repo.Create", nil)
 		return EmptyByteSlice, err
 	}
@@ -90,34 +90,39 @@ func (s *URLServ) Create(req *http.Request) ([]byte, error) {
 	// Audit.
 	s.eventOfAudit("shorten", userID, originURL)
 
-	return []byte(record.(*model.URLTb).ShortURL), err
+	return []byte(record.ShortURL), err
 }
 
-func (s *URLServ) Read(req *http.Request) ([]byte, error) {
-	userID := s.takeUserIDFromCtx(req)                              // Take user id.
-	correlationID := strings.TrimLeft(req.URL.Path, "/")            // Take params correlationID.
-	record, err := s.Repo.ReadRecord(context.TODO(), correlationID) // Take origin URL.
+func (s *URLServ) Read(ctx context.Context, protocol p.Protocol, request any) ([]byte, error) {
+	// Take user id.
+	userID, err := s.getUserIDFromCtx(ctx)
+	if err != nil {
 
+		return EmptyByteSlice, err
+	}
+
+	// Take params correlationID.
+	correlationID, err := protocol.GetURLID(request)
+	if err != nil {
+		return EmptyByteSlice, err
+	}
+
+	// Take origin URL.
+	record, err := s.Repo.ReadRecord(context.TODO(), correlationID)
 	if err != nil {
 		s.Logg.RaiseError(err, "URLServ.Read>DB.Read", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	if r, ok := record.(*model.URLTb); ok {
-		// if flag == true, record is in queue on deleting
-		if r.DeletedFlag {
-			return EmptyByteSlice, ErrReadRecord
-
-		} else {
-			// Audit.
-			s.eventOfAudit("follow", userID, r.OriginalURL)
-			return []byte(r.OriginalURL), nil
-		}
+	// if flag == true, record is in queue on deleting
+	if record.DeletedFlag {
+		return EmptyByteSlice, ErrReadRecord
 	}
 
-	// Default.
-	s.Logg.RaiseError(err, "URLServ.Read>DB.Read>switch", nil)
-	return EmptyByteSlice, ErrDataNotValid
+	// Audit.
+	s.eventOfAudit("follow", userID, record.OriginalURL)
+
+	return []byte(record.OriginalURL), nil
 }
 
 func (s *URLServ) takeUserIDFromCtx(req *http.Request) int {
@@ -126,6 +131,15 @@ func (s *URLServ) takeUserIDFromCtx(req *http.Request) int {
 		s.Logg.RaiseError(ErrUserIDNotValid, "URLServ.takeUserIDFromCtx>CtxUserID", nil)
 	}
 	return UserID
+}
+
+func (s *URLServ) getUserIDFromCtx(ctx context.Context) (int, error) {
+	var userID int
+	UserID, ok := ctx.Value(auth.CtxUserID).(int)
+	if !ok || UserID <= 0 {
+		return userID, ErrUserIDNotValid
+	}
+	return UserID, nil
 }
 
 func (s *URLServ) encrypOriginURL() (correlID string) {

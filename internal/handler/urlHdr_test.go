@@ -11,6 +11,8 @@ import (
 	"github.com/boginskiy/Clicki/internal/handler"
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/model"
+	"github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/boginskiy/Clicki/internal/tester/tserv"
@@ -23,16 +25,19 @@ func TestHandlerURL(t *testing.T) {
 
 	config := tserv.InitConfig()
 
+	funcer := preparation.NewFunctions(logg)
+	protHTTP := protocol.NewProtocolHTTP(funcer)
+
 	URLServ := tserv.InitURLServ(logg, config)
 
 	// Testing
-	testCreateRecord(t, URLServ)
-	testReadRecord(t, URLServ)
+	testCreateRecord(t, URLServ, protHTTP)
+	testReadRecord(t, URLServ, protHTTP)
 
 	defer tfunc.DeleteTestFiles(pathToLogg)
 }
 
-func testCreateRecord(t *testing.T, URLServ *service.URLServ) {
+func testCreateRecord(t *testing.T, URLServ *service.URLServ, protocol *protocol.ProtocolHTTP) {
 	type req struct {
 		url  string
 		body string
@@ -85,7 +90,7 @@ func testCreateRecord(t *testing.T, URLServ *service.URLServ) {
 			response := httptest.NewRecorder()
 
 			// URLHandlers
-			URLHandlers := handler.NewURLHandlers(URLServ)
+			URLHandlers := handler.NewURLHandlers(URLServ, protocol)
 			URLHandlers.Create(response, request)
 
 			// StatusCode
@@ -109,7 +114,7 @@ func testCreateRecord(t *testing.T, URLServ *service.URLServ) {
 	}
 }
 
-func testReadRecord(t *testing.T, URLServ *service.URLServ) {
+func testReadRecord(t *testing.T, URLServ *service.URLServ, protocol *protocol.ProtocolHTTP) {
 	type req struct {
 		url string
 	}
@@ -159,7 +164,7 @@ func testReadRecord(t *testing.T, URLServ *service.URLServ) {
 			response := httptest.NewRecorder()
 
 			// URLHandlers
-			URLHandlers := handler.NewURLHandlers(URLServ)
+			URLHandlers := handler.NewURLHandlers(URLServ, protocol)
 			URLHandlers.Read(response, request)
 
 			// StatusCode

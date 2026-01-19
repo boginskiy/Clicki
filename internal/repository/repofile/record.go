@@ -30,7 +30,7 @@ func (r *FileRecordRepo) ReadLastRecord(ctx context.Context) int {
 }
 
 // ReadRecord.
-func (r *FileRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, error) {
+func (r *FileRecordRepo) ReadRecord(ctx context.Context, correlID string) (*model.URLTb, error) {
 	r.Repo.muR.RLock()
 	defer r.Repo.muR.RUnlock()
 
@@ -42,33 +42,28 @@ func (r *FileRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, 
 }
 
 // CreateRecord.
-func (r *FileRecordRepo) CreateRecord(ctx context.Context, preRecord any) (any, error) {
-	row, ok := preRecord.(*model.URLTb)
-	if !ok {
-		return nil, errs.NewErrPlace("type is not available", nil)
-	}
-
-	// Логика, если данные уже есть в Store.
+func (r *FileRecordRepo) CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error) {
+	// Logic, if data in a Store.
 	r.Repo.muR.RLock()
-	if correlID, ok := r.Repo.uniqueFields[row.OriginalURL]; ok {
+	if correlID, ok := r.Repo.uniqueFields[record.OriginalURL]; ok {
 		return r.Repo.tmpStore[correlID], errs.ErrUniqueData
 	}
 	r.Repo.muR.RUnlock()
 
-	// Логика, если данные отсутствуют в Store.
+	// Logic, if data not in a Store.
 	r.Repo.mu.Lock()
 	r.Repo.lastRecord += 1
-	row.ID = r.Repo.lastRecord
-	r.Repo.tmpStore[row.CorrelationID] = row
-	r.Repo.uniqueFields[row.OriginalURL] = row.CorrelationID
+	record.ID = r.Repo.lastRecord
+	r.Repo.tmpStore[record.CorrelationID] = record
+	r.Repo.uniqueFields[record.OriginalURL] = record.CorrelationID
 	r.Repo.mu.Unlock()
 
-	jsonData, err := json.Marshal(row)
+	jsonData, err := json.Marshal(record)
 	if err != nil {
 		return nil, errs.NewErrPlace("type is not available", err)
 	}
 	jsonData = append(jsonData, byte('\n'))
 
 	_, err = r.Repo.Store.Write(jsonData)
-	return row, err
+	return record, err
 }

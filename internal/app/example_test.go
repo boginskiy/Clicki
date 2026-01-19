@@ -8,6 +8,8 @@ import (
 
 	"github.com/boginskiy/Clicki/internal/auth"
 	"github.com/boginskiy/Clicki/internal/logg"
+	prep "github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/boginskiy/Clicki/internal/tester/tserv"
@@ -30,11 +32,15 @@ func ExampleURLServRead() {
 
 	URLServ := tserv.InitURLServ(logg, config)
 
+	// Protocol
+	funcer := prep.NewFunctions(logg)
+	protHTTP := protocol.NewProtocolHTTP(funcer)
+
 	// Request.'
 	ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
 	request := tfunc.PreparRequest(ctx, "GET", "/wrs4db6j", nil)
 	// Handler.
-	body, err := URLServ.Read(request)
+	body, err := URLServ.Read(ctx, protHTTP, request)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -80,11 +86,16 @@ func ExampleAPIURLServCreate() {
 	TestAPIURLServ := tserv.InitAPIURLServ(logg, config)
 
 	// Request.
+	ctx := context.WithValue(context.Background(), auth.CtxUserID, 100)
 	body := []byte(`{"url": "https://leetcode.com/"}`)
-	request := tfunc.PreparRequest(context.TODO(), "POST", "/shorten", body)
+	request := tfunc.PreparRequest(ctx, "POST", "/shorten", body)
+
+	// Protocol
+	funcer := prep.NewFunctions(logg)
+	protHTTP := protocol.NewProtocolHTTP(funcer)
 
 	// Handler.
-	body, err := TestAPIURLServ.Create(request)
+	body, err := TestAPIURLServ.Create(request.Context(), protHTTP, request)
 	if err != nil {
 		log.Fatalln(err)
 	}

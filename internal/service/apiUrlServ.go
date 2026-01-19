@@ -11,6 +11,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/model"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
+	p "github.com/boginskiy/Clicki/internal/protocol"
 	repo "github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/validation"
 	"github.com/boginskiy/Clicki/pkg"
@@ -44,65 +45,49 @@ func NewAPIURLServ(
 	}
 }
 
-func (s *APIURLServ) Read(req *http.Request) ([]byte, error) {
-	return EmptyByteSlice, nil
+func (s *APIURLServ) GetStats(req *http.Request) ([]byte, error) {
+	// In this place we know about who need stats
+	tmpMap := map[string]int{
+		"urls":  s.Repo.ReadQuantityShortURLs(context.TODO()), // quantityURLs
+		"users": s.Repo.ReadQuantityUsers(context.TODO()),     // quantityUsers
+	}
+	return s.Funcer.Serialization(tmpMap), nil
 }
 
-func (s *APIURLServ) CheckDB(req *http.Request) ([]byte, error) {
-	return EmptyByteSlice, nil
-}
-
-func (s *APIURLServ) Create(req *http.Request) ([]byte, error) {
-	// Deserialization Body.
-	bodyJSON := model.NewURLJson()
-	err := s.Funcer.Deserialization(req, bodyJSON)
-
+func (s *APIURLServ) Create(ctx context.Context, protocol p.Protocol, request any) ([]byte, error) {
+	// Take URL from request.
+	urlJSON, err := protocol.GetURLFromRequest(request)
 	if err != nil {
-		s.Logg.RaiseFatal(err, "deserialization was bad", nil)
 		return EmptyByteSlice, err
 	}
 
-	// Валидируем URL. Проверка регуляркой, что строка является доменом сайта.
-	if !s.Checker.CheckUpURL(bodyJSON.URL) || bodyJSON.URL == "" {
-		s.Logg.RaiseInfo("APIURLServ.Create>CheckUpURL",
-			logg.Fields{"error": ErrDataNotValid.Error()})
+	// Validation URL.
+	if !s.Checker.CheckUpURL(urlJSON.URL) || urlJSON.URL == "" {
+		s.Logg.RaiseError(ErrDataNotValid, "CheckUpURL", nil)
 		return EmptyByteSlice, ErrDataNotValid
 	}
 
-	userID := s.takeUserIDFromCtx(req)                   // Take id user.
+	// Take userID from context.
+	userID, err := s.getUserIDFromCtx(ctx)
+	if err != nil {
+		return EmptyByteSlice, err
+	}
+
 	correlationID := s.encrypOriginURL()                 // Create unic id.
 	shortURL := s.Cfg.GetBaseURL() + "/" + correlationID // Create new short URL.
 
-	preRecord := model.NewURLTb(0, correlationID, bodyJSON.URL, shortURL, userID) // Create dirty record.
-	record, err := s.Repo.CreateRecord(context.TODO(), preRecord)                 // Put record in the DB.
+	modURLTb := model.NewURLTb(0, correlationID, urlJSON.URL, shortURL, userID) // Create dirty record.
+	record, errDB := s.Repo.CreateRecord(context.TODO(), modURLTb)              // Put record in the DB.
 
-	if err != nil && record == nil {
-		s.Logg.RaiseError(err, "APIURLServ.Create>Repo.Create", nil)
-		return EmptyByteSlice, err
+	if record == nil {
+		s.Logg.RaiseError(errDB, "APIURLServ.Create>Repo.Create", nil)
+		return EmptyByteSlice, errDB
 	}
 
 	// Audition.
-	s.eventOfAudit("shorten", userID, bodyJSON.URL)
+	s.eventOfAudit("shorten", userID, urlJSON.URL)
 
-	// Definition type.
-	var resJSON *model.ResultJSON
-	switch r := record.(type) {
-	case *model.URLTb:
-		resJSON = model.NewResultJSON(bodyJSON, r.ShortURL)
-	case string:
-		resJSON = model.NewResultJSON(bodyJSON, r)
-	default:
-		s.Logg.RaiseError(err, "APIURLServ.Create>switch", nil)
-		return EmptyByteSlice, err
-	}
-
-	// Serialization.
-	result, err2 := s.Funcer.Serialization(resJSON)
-	if err2 != nil {
-		s.Logg.RaiseError(err2, "APIURLServ.Create>NewResultJSON", nil)
-		return EmptyByteSlice, err2
-	}
-	return result, err
+	return protocol.PreparCreatedResult(record), errDB
 }
 
 func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {
@@ -145,39 +130,23 @@ func (s *APIURLServ) CreateSet(req *http.Request) ([]byte, error) {
 		return EmptyByteSlice, err
 	}
 
-	// Serialization.
-	result, err := json.Marshal(respURLSet)
-	s.Logg.RaiseFatal(err, "ShortURL>SetBatch>Marshal", nil)
-	return result, nil
+	return s.Funcer.Serialization(respURLSet), nil
 }
 
-func (s *APIURLServ) ReadSet(req *http.Request) ([]byte, error) {
+func (s *APIURLServ) ReadSet(ctx context.Context, protocol p.Protocol) (any, error) {
 	// Take id user.
-	userID := s.takeUserIDFromCtx(req)
-
-	dataSet, err := s.Repo.ReadRecords(context.TODO(), userID)
+	userID, err := s.getUserIDFromCtx(ctx)
 	if err != nil {
-		s.Logg.RaiseError(err, "APIURLServ.ReadSetUserURL>ReadSet", nil)
+		return EmptyByteSlice, err
+	}
+	// Take records.
+	records, err := s.Repo.ReadRecords(context.TODO(), userID)
+	if err != nil {
+		s.Logg.RaiseError(err, "error when getting data from the database", nil)
 		return EmptyByteSlice, err
 	}
 
-	// Definition record by user.
-	records, ok := dataSet.([]model.ResUserURLSet)
-	if !ok {
-		s.Logg.RaiseError(ErrDataNotValid, "APIURLServ.ReadSetUserURL>Type?", nil)
-		return EmptyByteSlice, ErrDataNotValid
-	}
-	if len(records) == 0 {
-		return EmptyByteSlice, nil
-	}
-
-	// Serialization.
-	result, err := s.Funcer.Serialization(records)
-	if err != nil {
-		s.Logg.RaiseError(err, "APIURLServ.ReadSetUserURL>Serialization", nil)
-		return EmptyByteSlice, err
-	}
-	return result, err
+	return protocol.PreparReadResult(records), nil
 }
 
 func (s *APIURLServ) takeUserIDFromCtx(req *http.Request) int {
@@ -186,6 +155,15 @@ func (s *APIURLServ) takeUserIDFromCtx(req *http.Request) int {
 		s.Logg.RaiseError(ErrUserIDNotValid, "APIURLServ.takeUserIDFromCtx>CtxUserID", nil)
 	}
 	return UserID
+}
+
+func (s *APIURLServ) getUserIDFromCtx(ctx context.Context) (int, error) {
+	var userID int
+	UserID, ok := ctx.Value(auth.CtxUserID).(int)
+	if !ok || UserID <= 0 {
+		return userID, ErrUserIDNotValid
+	}
+	return UserID, nil
 }
 
 func (s *APIURLServ) encrypOriginURL() (correlID string) {
@@ -205,4 +183,8 @@ func (s *APIURLServ) eventOfAudit(action string, userID int, url string) {
 	if s.Publisher != nil {
 		s.Publisher.Send(event)
 	}
+}
+
+func (s *APIURLServ) Read(ctx context.Context, protocol p.Protocol, request any) ([]byte, error) {
+	return EmptyByteSlice, nil
 }

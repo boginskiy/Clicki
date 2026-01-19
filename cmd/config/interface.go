@@ -6,8 +6,10 @@ type Argsmenter interface {
 
 // ConfigPrioryty - interface about args comm line interface.
 type ConfigPrioryty interface {
+	GetTrustedSubnet() (TrustedSubnet string)
 	GetEnableHTTPS() (EnableHTTPS string)
 	GetPathToStore() (PathToStore string)
+	GetEnableGRPC() (EnableGRPC string)
 	GetAuditFile() (AuditFile string)
 	GetAuditURL() (AuditURL string)
 	GetSrvAddr() (ServerAddress string)
@@ -15,20 +17,28 @@ type ConfigPrioryty interface {
 	GetDB() (DB string)
 }
 
-// ConfigENV - interface about args environment.
-type ConfigENV interface {
+type ConfigLog interface {
+	GetLogFile() (LogFile string)
+}
+
+type ConfigDB interface {
 	GetSoftDeleteTime() (SoftDeleteTime int)
 	GetHardDeleteTime() (HardDeleteTime int)
+	GetMaxRetries() (MaxRetries int)
+}
+
+type ConfigAuth interface {
 	GetTokenLiveTime() (TokenLiveTime int)
 	GetCokiLiveTime() (CokiLiveTime int)
 	GetSecretKey() (SecretKey string)
-	GetMaxRetries() (MaxRetries int)
 	GetNameCoki() (NameCoki string)
-	GetLogFile() (LogFile string)
 }
 
 // Config - interface.
 type Config interface {
-	ConfigENV
 	ConfigPrioryty
+
+	ConfigAuth
+	ConfigLog
+	ConfigDB
 }

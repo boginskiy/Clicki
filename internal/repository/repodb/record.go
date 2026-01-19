@@ -11,33 +11,46 @@ import (
 )
 
 type RepoDBRecord struct {
-	Repo *RepoDB
+	Repo          *RepoDB
+	errClassifier utils.DBErrClassifier
 }
 
-func NewRepoDBRecord(repoDB *RepoDB) *RepoDBRecord {
+func NewRepoDBRecord(repoDB *RepoDB, errCl utils.DBErrClassifier) *RepoDBRecord {
 	return &RepoDBRecord{
-		Repo: repoDB,
+		Repo:          repoDB,
+		errClassifier: errCl,
 	}
+}
+
+func (r *RepoDBRecord) checkErrFromDB(ctx context.Context, record *model.URLTb, err error) (*model.URLTb, int) {
+	code, needRetry := r.errClassifier.Classify(err)
+
+	// Adding record not unique in DB.
+	if code == pgerrcode.UniqueViolation {
+		row := SelectRowByOriginalURL(r.Repo.Store, ctx,
+			record.OriginalURL)
+
+		// Ошибок нет, возвращаем запись.
+		errScan := row.Scan(
+			&record.ID,
+			&record.OriginalURL,
+			&record.ShortURL,
+			&record.CorrelationID,
+			&record.CreatedAt,
+			&record.UserID)
+
+		if errScan != nil {
+			r.Repo.Logg.RaiseError(errScan, "error in repeated sending record from DB.", nil)
+		}
+		return record, needRetry
+	}
+	return nil, needRetry
 }
 
 // CreateRecord.
-func (r *RepoDBRecord) CreateRecord(ctx context.Context, preRecord any) (any, error) {
-	record, ok := preRecord.(*model.URLTb)
-	if !ok {
-		return nil, errs.NewErrPlace("data not valid", nil)
-	}
-
-	errClassifier := utils.NewPGErrorClass()
-
-	// Strategy №2. SQl-Query-error.
+func (r *RepoDBRecord) CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error) {
 	for attempt := 0; attempt <= r.Repo.Cfg.GetMaxRetries(); attempt++ {
-
-		row, errDB := InsertRowToUrls(r.Repo.Store, ctx,
-			record.CorrelationID,
-			record.OriginalURL,
-			record.ShortURL,
-			record.CreatedAt,
-			record.UserID)
+		row, errDB := InsertRowToUrls(ctx, r.Repo.Store, record)
 
 		// There are not errors. Data is recorded.
 		if errDB == nil {
@@ -46,46 +59,26 @@ func (r *RepoDBRecord) CreateRecord(ctx context.Context, preRecord any) (any, er
 			return record, nil
 		}
 
-		// Behaviour with gotting errors.
-		code, needRetry := errClassifier.Classify(errDB)
+		// There are errors.
+		record, needRetry := r.checkErrFromDB(ctx, record, errDB)
+		if record != nil {
+			// В ответ отдаю именно errDB для установки Conflict status.
+			return record, errDB
+		}
 
-		// Логика, если добавляемая запись не уникальна в БД.
-		if code == pgerrcode.UniqueViolation {
-
-			// Делаем повторный запрос в БД.
-			row := SelectRowByOriginalURL(r.Repo.Store, ctx,
-				record.OriginalURL)
-
-			// Ошибок нет, возвращаем запись.
-			errScan := row.Scan(
-				&record.ID,
-				&record.OriginalURL,
-				&record.ShortURL,
-				&record.CorrelationID,
-				&record.CreatedAt,
-				&record.UserID)
-
-			// Ошибок нет, возвращаем запись.
-			if errScan == nil {
-				// В ответ отдаю именно errDB для установки статуса ответа.
-				return record, errDB
-			} else {
-				break
-			}
-
-			// Логика, если запрос к БД не надо повторять.
-		} else if needRetry == utils.NonRetriable {
+		if needRetry == utils.NonRetriable {
+			// Logic, if query doesn't need to repeate for DB.
 			break
-			// Логика, если запрос к БД необходимо повторить.
 		} else {
-			time.Sleep(3 * time.Millisecond)
+			// Logic, if query needs to repeate for DB.
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
-	return nil, errs.NewErrPlace("insert into is bad", nil)
+	return nil, errs.NewErrPlace("bad insert to DB", nil)
 }
 
 // ReadRecord.
-func (r *RepoDBRecord) ReadRecord(ctx context.Context, correlID string) (any, error) {
+func (r *RepoDBRecord) ReadRecord(ctx context.Context, correlID string) (*model.URLTb, error) {
 	record := &model.URLTb{}
 	row := SelectRowByCorrelID(r.Repo.Store, ctx, correlID)
 

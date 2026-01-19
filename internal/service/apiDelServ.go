@@ -39,6 +39,10 @@ func NewAPIDelServ(
 	return item
 }
 
+func (d *APIDelServ) GetStats(req *http.Request) ([]byte, error) {
+	return StoreDBIsSucces, nil
+}
+
 // DeleteSet - Producer .
 func (d *APIDelServ) DeleteSet(req *http.Request) ([]byte, error) {
 	// Принимаем список идентификаторов URLs.

@@ -8,5 +8,5 @@ type Funcer interface {
 	Deserialization(req *http.Request, st any) error
 	GetProtocolFromReq(req *http.Request) string
 	ChangePort(host, newPort string) string
-	Serialization(any) ([]byte, error)
+	Serialization(any) []byte
 }

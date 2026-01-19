@@ -2,10 +2,13 @@ package repository
 
 import (
 	"context"
+
+	"github.com/boginskiy/Clicki/internal/model"
 )
 
 // Repository.
 type Repository interface {
+	StatisticianRepo
 	HealthCheckRepo
 	RecordsRepo
 	RecordRepo
@@ -14,8 +17,8 @@ type Repository interface {
 
 // Record Storage.
 type RecordRepo interface {
-	CreateRecord(ctx context.Context, record any) (any, error)
-	ReadRecord(ctx context.Context, recordID string) (any, error)
+	CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error)
+	ReadRecord(ctx context.Context, recordID string) (*model.URLTb, error)
 	CheckUniqueRecord(ctx context.Context, recordID string) bool
 	ReadLastRecord(ctx context.Context) int
 }
@@ -23,7 +26,7 @@ type RecordRepo interface {
 // Operations with groups of records.
 type RecordsRepo interface {
 	CreateRecords(ctx context.Context, records any) error
-	ReadRecords(ctx context.Context, userID int) (any, error)
+	ReadRecords(ctx context.Context, userID int) ([]model.ResUserURLSet, error)
 	DeleteRecords(ctx context.Context) error
 }
 
@@ -35,4 +38,10 @@ type MarkerRepo interface {
 // Diagnostic and monitoring methods.
 type HealthCheckRepo interface {
 	PingStore(ctx context.Context) (bool, error)
+}
+
+// Collection stats.
+type StatisticianRepo interface {
+	ReadQuantityShortURLs(ctx context.Context) int
+	ReadQuantityUsers(ctx context.Context) int
 }

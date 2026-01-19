@@ -1,10 +1,6 @@
-package service
+package protocol
 
 import "errors"
-
-const (
-	LONG = 8
-)
 
 var (
 	// Errors:

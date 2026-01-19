@@ -26,7 +26,9 @@ type ArgsENV struct {
 	SoftDeleteTime int    `env:"SOFT_DELETE_TIME"`
 	HardDeleteTime int    `env:"HARD_DELETE_TIME"`
 	EnableHTTPS    string `env:"ENABLE_HTTPS"`
+	EnableGRPC     string `env:"ENABLE_GRPS"`
 	ConfigFile     string `env:"CONFIG"`
+	TrustedSubnet  string `env:"TRUSTED_SUBNET"`
 }
 
 func NewArgsENV() *ArgsENV {
@@ -53,7 +55,7 @@ func (ae *ArgsENV) ParseFlags() {
 
 	valueStr = strings.TrimSpace(os.Getenv("TOKEN_LIVE_TIME"))
 	if len(valueStr) == 0 {
-		ae.TokenLiveTime = 10
+		ae.TokenLiveTime = 3600
 	}
 
 	valueStr = strings.TrimSpace(os.Getenv("COKI_LIVE_TIME"))
@@ -113,4 +115,12 @@ func (ae *ArgsENV) GetEnableHTTPS() (EnableHTTPS string) {
 
 func (ae *ArgsENV) GetConfigFile() (ConfigFile string) {
 	return ae.ConfigFile
+}
+
+func (ae *ArgsENV) GetTrustedSubnet() (TrustedSubnet string) {
+	return ae.TrustedSubnet
+}
+
+func (ae *ArgsENV) GetEnableGRPC() (EnableGRPC string) {
+	return ae.EnableGRPC
 }

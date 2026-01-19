@@ -29,7 +29,7 @@ func (r *MapRecordRepo) CheckUniqueRecord(ctx context.Context, correlID string) 
 }
 
 // ReadRecord - for interface.
-func (r *MapRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, error) {
+func (r *MapRecordRepo) ReadRecord(ctx context.Context, correlID string) (*model.URLTb, error) {
 	r.Repo.muR.RLock()
 	defer r.Repo.muR.RUnlock()
 
@@ -41,17 +41,12 @@ func (r *MapRecordRepo) ReadRecord(ctx context.Context, correlID string) (any, e
 }
 
 // CreateRecord - for interface.
-func (r *MapRecordRepo) CreateRecord(ctx context.Context, records any) (any, error) {
-	row, ok := records.(*model.URLTb)
-	if !ok {
-		return nil, errs.NewErrPlace("records in CreateRecord not valid", nil)
-	}
-
-	// If data is in the Store.
+func (r *MapRecordRepo) CreateRecord(ctx context.Context, record *model.URLTb) (*model.URLTb, error) {
+	// If data in a Store.
 	r.Repo.muR.RLock()
 	defer r.Repo.muR.RUnlock()
 
-	if correlID, ok := r.Repo.uniqueFields[row.OriginalURL]; ok {
+	if correlID, ok := r.Repo.uniqueFields[record.OriginalURL]; ok {
 		return r.Repo.Store[correlID], errs.ErrUniqueData
 	}
 
@@ -59,8 +54,8 @@ func (r *MapRecordRepo) CreateRecord(ctx context.Context, records any) (any, err
 	r.Repo.mu.Lock()
 	defer r.Repo.mu.Unlock()
 
-	r.Repo.Store[row.CorrelationID] = row
-	r.Repo.uniqueFields[row.OriginalURL] = row.CorrelationID
+	r.Repo.Store[record.CorrelationID] = record
+	r.Repo.uniqueFields[record.OriginalURL] = record.CorrelationID
 
-	return row, nil
+	return record, nil
 }

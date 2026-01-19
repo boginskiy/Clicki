@@ -11,6 +11,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/database"
 	"github.com/boginskiy/Clicki/internal/logg"
 	"github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/repository"
 	"github.com/boginskiy/Clicki/internal/tester/tfunc"
 	"github.com/boginskiy/Clicki/internal/validation"
@@ -29,6 +30,10 @@ func BenchmarkRead(b *testing.B) {
 
 	config := InitConfig()
 
+	// Protocol
+	funcer := preparation.NewFunctions(logg)
+	protHTTP := protocol.NewProtocolHTTP(funcer)
+
 	// Service
 	servShortURL := InitURLServ(logg, config)
 
@@ -43,7 +48,7 @@ func BenchmarkRead(b *testing.B) {
 	b.ResetTimer() // Обнуление счетчика
 
 	for i := 1; i < b.N; i++ {
-		dataByte, _ := servShortURL.Read(request)
+		dataByte, _ := servShortURL.Read(ctx, protHTTP, request)
 		_ = dataByte
 	}
 
@@ -108,12 +113,14 @@ func TestURLServ(t *testing.T) {
 	userID := 100
 	ctx := context.WithValue(context.Background(), auth.CtxUserID, userID)
 
+	// Protocol
+	funcer := preparation.NewFunctions(logg)
+	protocol := protocol.NewProtocolHTTP(funcer)
+
 	// Public method
-	testCreateSet(t, ctx, URLServ)
-	testReadSet(t, ctx, URLServ)
 	testCheckDB(t, ctx, URLServ)
 	testCreate(t, ctx, URLServ)
-	testRead(t, ctx, URLServ)
+	testRead(t, ctx, URLServ, protocol)
 
 	// Private method
 	testTakeUserIDFromCtx(t, ctx, URLServ)
@@ -141,20 +148,6 @@ func testTakeUserIDFromCtx(t *testing.T, ctx context.Context, srv *URLServ) {
 
 }
 
-func testReadSet(t *testing.T, ctx context.Context, srv *URLServ) {
-	request := tfunc.PreparRequest(ctx, "GET", "/", nil)
-	dataByte, err := srv.ReadSet(request)
-	assert.NoError(t, err)
-	assert.Greater(t, len(dataByte), 0)
-}
-
-func testCreateSet(t *testing.T, ctx context.Context, srv *URLServ) {
-	request := tfunc.PreparRequest(ctx, "GET", "/", nil)
-	dataByte, err := srv.CreateSet(request)
-	assert.NoError(t, err)
-	assert.Greater(t, len(dataByte), 0)
-}
-
 func testCheckDB(t *testing.T, ctx context.Context, srv *URLServ) {
 	Method := "GET"
 	URL := "/ping"
@@ -164,14 +157,14 @@ func testCheckDB(t *testing.T, ctx context.Context, srv *URLServ) {
 	assert.Greater(t, len(dataByte), 0)
 }
 
-func testRead(t *testing.T, ctx context.Context, srv *URLServ) {
+func testRead(t *testing.T, ctx context.Context, srv *URLServ, prot protocol.Protocol) {
 	Method := "GET"
 	URL := "/wrs4db6j"
 
 	msg := "check ReadURL in URLServ"
 	request := tfunc.PreparRequest(ctx, Method, URL, nil)
 
-	dataByte, err := srv.Read(request)
+	dataByte, err := srv.Read(ctx, prot, request)
 	if err != nil {
 		tfunc.PprintErr(t, msg, err, nil)
 	}
@@ -208,7 +201,7 @@ func InitURLServ(logger logg.Logger, cfg config.Config) *URLServ {
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
-	var fancer = preparation.NewFunctions()
+	var fancer = preparation.NewFunctions(logger)
 	var checker = validation.NewChecker()
 
 	return NewURLServ(cfg, logger, repo, checker, fancer, publisher)

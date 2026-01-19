@@ -13,6 +13,8 @@ type ArgsCLI struct {
 	BaseURL       string // BaseURL is result port is the port after changing.
 	ConfigFile    string // Loag config from file.json.
 	DB            string // DB is data of connected.
+	TrustedSubnet string // CIDR.
+	EnableGRPC    string // Turn of/on GRps.
 }
 
 func NewArgsCLI() *ArgsCLI {
@@ -36,6 +38,8 @@ func (ac *ArgsCLI) ParseFlags() {
 	flag.StringVar(&ac.PathToStore, "f", "", "Path to file of store URL")
 	flag.StringVar(&ac.EnableHTTPS, "s", "", "Turn of/on HTTPS protocol")
 	flag.StringVar(&ac.DB, "d", "", "Data of connected DB")
+	flag.StringVar(&ac.TrustedSubnet, "t", "", "CIDR")
+	flag.StringVar(&ac.EnableGRPC, "g", "", "Turn of/on GRps")
 
 	flag.Parse()
 }
@@ -70,4 +74,12 @@ func (ac *ArgsCLI) GetEnableHTTPS() (EnableHTTPS string) {
 
 func (ac *ArgsCLI) GetConfigFile() (ConfigFile string) {
 	return ac.ConfigFile
+}
+
+func (ac *ArgsCLI) GetTrustedSubnet() (TrustedSubnet string) {
+	return ac.TrustedSubnet
+}
+
+func (ac *ArgsCLI) GetEnableGRPC() (EnableGRPC string) {
+	return ac.EnableGRPC
 }

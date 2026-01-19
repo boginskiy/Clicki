@@ -25,7 +25,7 @@ func InitAPIURLServ(logger logg.Logger, cfg config.Config) *service.APIURLServ {
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
-	var fancer = preparation.NewFunctions()
+	var fancer = preparation.NewFunctions(logger)
 	var checker = validation.NewChecker()
 
 	return service.NewAPIURLServ(cfg, logger, repo, checker, fancer, publisher)
@@ -42,8 +42,27 @@ func InitURLServ(logger logg.Logger, cfg config.Config) *service.URLServ {
 	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
 	var publisher = audit.NewPublish(sub1, sub2)
 
-	var fancer = preparation.NewFunctions()
+	var fancer = preparation.NewFunctions(logger)
 	var checker = validation.NewChecker()
 
 	return service.NewURLServ(cfg, logger, repo, checker, fancer, publisher)
+}
+
+func InitURLServAndAPIURLServ(logger logg.Logger, cfg config.Config) (*service.URLServ, *service.APIURLServ) {
+	db, _ := database.NewStoreMap(cfg, logger)
+	repo := repository.NewMainRepoMap(cfg, logger, db)
+
+	tfunc.WriteRecord(repo)
+
+	var sub1 = audit.NewFileReceiver(logger, cfg.GetAuditFile(), 1)
+	var sub2 = audit.NewServerReceiver(logger, cfg.GetAuditURL(), 2)
+	var publisher = audit.NewPublish(sub1, sub2)
+
+	var fancer = preparation.NewFunctions(logger)
+	var checker = validation.NewChecker()
+
+	URLServ := service.NewURLServ(cfg, logger, repo, checker, fancer, publisher)
+	APIURLServ := service.NewAPIURLServ(cfg, logger, repo, checker, fancer, publisher)
+
+	return URLServ, APIURLServ
 }

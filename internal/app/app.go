@@ -12,6 +12,7 @@ import (
 	"github.com/boginskiy/Clicki/internal/logg"
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	prep "github.com/boginskiy/Clicki/internal/preparation"
+	"github.com/boginskiy/Clicki/internal/protocol"
 	"github.com/boginskiy/Clicki/internal/router"
 	"github.com/boginskiy/Clicki/internal/service"
 	"github.com/boginskiy/Clicki/internal/validation"
@@ -49,11 +50,11 @@ func (a *App) Start() {
 	publisher := audit.NewPublish(sub1, sub2)
 
 	// Middleware & Auth.
-	auth := auth.NewAuth(a.Cfg, authLogg, repository)
-	middleware := mv.NewMdlwere(infraLogg, auth)
+	auther := auth.NewAuth(a.Cfg, authLogg, repository)
+	middleware := mv.NewMdlwere(a.Cfg, infraLogg, auther)
 
-	checker := validation.NewChecker() // Checker for validation.
-	funcer := prep.NewFunctions()      // Funcer for extra main function.
+	checker := validation.NewChecker()  // Checker for validation.
+	funcer := prep.NewFunctions(a.Logg) // Funcer for extra main function.
 
 	// Context.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -64,15 +65,24 @@ func (a *App) Start() {
 	APIDelServ := service.NewAPIDelServ(ctx, a.Cfg, a.Logg, repository)
 
 	// Handlers.
-	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ)
-	URLHdler := handler.NewURLHandlers(URLServ)
+	protHTTP := protocol.NewProtocolHTTP(funcer)                               // Test
+	APIURLHdler := handler.NewAPIURLHandlers(APIURLServ, APIDelServ, protHTTP) // Test
+
+	URLHdler := handler.NewURLHandlers(URLServ, protHTTP)
 	PprofHdler := handler.NewPprofHandlers()
 
 	// Router.
 	router := router.NewRoute(URLHdler, APIURLHdler, PprofHdler)
 
-	// Server.
-	server.Run(a.Cfg, a.Logg, router, middleware)
+	// gRPC.
+	autherGRPC := auth.NewAuthGRPC(a.Cfg, authLogg, repository)
+	interceptor := mv.NewIntercept(a.Cfg, infraLogg, autherGRPC)
+	protGRPC := protocol.NewProtocolGRPC(funcer)
+	shortenerService := handler.NewShortenerService(APIURLServ, URLServ, protGRPC)
+
+	// Servers.
+	server.RunGRPC(a.Cfg, a.Logg, shortenerService, interceptor)
+	server.RunHTTP(a.Cfg, a.Logg, router, middleware)
 
 	defer setupLayers.Close()
 	defer infraLogg.Close()

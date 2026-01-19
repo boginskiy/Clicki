@@ -8,6 +8,7 @@ import (
 )
 
 type MainRepoFile struct {
+	StatisticianRepo
 	HealthCheckRepo
 	RecordsRepo
 	RecordRepo
@@ -19,9 +20,10 @@ func NewMainRepoFile(config config.Config, logger logg.Logger, db database.DataB
 	RepoFile := repofile.NewRepoFile(config, logger, db)
 
 	return &MainRepoFile{
-		RecordsRepo:     repofile.NewFileRecordsRepo(RepoFile),
-		RecordRepo:      repofile.NewFileRecordRepo(RepoFile),
-		HealthCheckRepo: repofile.NewFileRecordsRepo(RepoFile),
-		MarkerRepo:      nil, // repository is absent
+		RecordsRepo:      repofile.NewFileRecordsRepo(RepoFile),
+		RecordRepo:       repofile.NewFileRecordRepo(RepoFile),
+		HealthCheckRepo:  repofile.NewFileRecordsRepo(RepoFile),
+		StatisticianRepo: repofile.NewFileStatistician(RepoFile),
+		MarkerRepo:       nil, // repository is absent
 	}
 }

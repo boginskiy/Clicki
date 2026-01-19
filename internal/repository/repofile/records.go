@@ -50,7 +50,7 @@ func (fr *FileRecordsRepo) CreateRecords(ctx context.Context, records any) error
 	return nil
 }
 
-func (fr *FileRecordsRepo) ReadRecords(ctx context.Context, userID int) (any, error) {
+func (fr *FileRecordsRepo) ReadRecords(ctx context.Context, userID int) ([]model.ResUserURLSet, error) {
 	records := []model.ResUserURLSet{}
 
 	fr.Repo.muR.RLock()

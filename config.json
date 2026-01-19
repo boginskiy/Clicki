@@ -2,8 +2,10 @@
     "server_address": "localhost:8080",
     "file_storage_path": "",
     "enable_https": "0",
+    "enable_grps": "0",
     "audit_file": "audit.json",
     "audit_url": "",
     "base_url": "http://localhost:8080",
-    "database_dsn": ""
+    "database_dsn": "",
+    "trusted_subnet": "127.0.0.1/32"
 }
