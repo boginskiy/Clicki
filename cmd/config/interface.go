@@ -9,7 +9,7 @@ type ConfigPrioryty interface {
 	GetTrustedSubnet() (TrustedSubnet string)
 	GetEnableHTTPS() (EnableHTTPS string)
 	GetPathToStore() (PathToStore string)
-	GetEnableGRps() (EnableGRps string)
+	GetEnableGRPC() (EnableGRPC string)
 	GetAuditFile() (AuditFile string)
 	GetAuditURL() (AuditURL string)
 	GetSrvAddr() (ServerAddress string)

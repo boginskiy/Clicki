@@ -23,7 +23,7 @@ func RunHTTP(cfg config.Config, logg logg.Logger, router router.Router, mdlwere 
 }
 
 func RunGRPC(cfg config.Config, logg logg.Logger, service rpc.ShortenerServiceServer, intercept mv.Interceptor) {
-	if cfg.GetEnableGRps() == "1" {
+	if cfg.GetEnableGRPC() == "1" {
 		fmt.Fprintf(os.Stdout, "Protocol:      %s\n", "gRPC")
 		NewServgRPC(cfg, logg, service, intercept).Run()
 	}

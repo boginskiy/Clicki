@@ -12,7 +12,7 @@ type Variables struct {
 	ServerAddress string
 	TrustedSubnet string
 	EnableHTTPS   string
-	EnableGRps    string
+	EnableGRPC    string
 	PathToStore   string
 	ConfigFile    string
 	AuditFile     string
@@ -47,7 +47,7 @@ func (v *Variables) settingsPrioryty(obj1, obj2 ConfigPrioryty) {
 	v.TrustedSubnet = v.argsPrioryty(obj1.GetTrustedSubnet, obj2.GetTrustedSubnet)
 	v.PathToStore = v.argsPrioryty(obj1.GetPathToStore, obj2.GetPathToStore)
 	v.EnableHTTPS = v.argsPrioryty(obj1.GetEnableHTTPS, obj2.GetEnableHTTPS)
-	v.EnableGRps = v.argsPrioryty(obj1.GetEnableGRps, obj2.GetEnableGRps)
+	v.EnableGRPC = v.argsPrioryty(obj1.GetEnableGRPC, obj2.GetEnableGRPC)
 	v.ServerAddress = v.argsPrioryty(obj1.GetSrvAddr, obj2.GetSrvAddr)
 	v.AuditFile = v.argsPrioryty(obj1.GetAuditFile, obj2.GetAuditFile)
 	v.AuditURL = v.argsPrioryty(obj1.GetAuditURL, obj2.GetAuditURL)
@@ -122,8 +122,8 @@ func (v *Variables) GetHardDeleteTime() (HardDeleteTime int) {
 	return v.ArgsENV.HardDeleteTime
 }
 
-func (v *Variables) GetEnableGRps() (EnableGRps string) {
-	return v.EnableGRps
+func (v *Variables) GetEnableGRPC() (EnableGRPC string) {
+	return v.EnableGRPC
 }
 
 func (v *Variables) GetAuditFile() (AuditFile string) {

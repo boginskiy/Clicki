@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"reflect"
 
 	mv "github.com/boginskiy/Clicki/internal/middleware"
 	p "github.com/boginskiy/Clicki/internal/protocol"
@@ -81,12 +80,12 @@ func (a *APIURLHandlers) CreateSet(w http.ResponseWriter, r *http.Request) {
 
 func (a *APIURLHandlers) ReadSet(w http.ResponseWriter, r *http.Request) {
 	data, err := a.APIURLServ.ReadSet(r.Context(), a.Protocol)
-	if err != nil || reflect.TypeOf(data) != reflect.TypeOf([]byte{}) {
+	dataByte, ok := data.([]byte)
+
+	if err != nil || !ok {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	dataByte := data.([]byte)
 
 	// if user does't have record.
 	if len(dataByte) == 0 {
